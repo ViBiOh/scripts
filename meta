@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+meta_download_script() {
+  printf "Download %s\n" "${dep}"
+
+  mkdir -p "$(dirname "${1}")"
+  curl -q -sSL --max-time 10 -o "${1}" "${REMOTE_DEPENDENCIES_URL}/${1}"
+  chmod +x "${1}"
+}
+
+meta_init() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/master/"
+
+  cd "${SCRIPT_DIR}"
+
+  for dep in "${@}"; do
+    if ! [[ -e "./${dep}" ]]; then
+      meta_download_script "${dep}"
+    fi
+
+    if [[ "$(grep -c "main()" "./${dep}")" -eq 0 ]]; then
+      source "./${dep}"
+    fi
+  done
+
+  cd - > /dev/null
+}

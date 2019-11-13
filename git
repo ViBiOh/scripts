@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+git_root() {
+  if [[ "$(git rev-parse --is-inside-work-tree 2>&1)" != "true" ]]; then
+    pwd
+    return
+  fi
+
+  git rev-parse --show-toplevel
+}
+
+git_remote_repository() {
+  if [[ "$(git rev-parse --is-inside-work-tree 2>&1)" != "true" ]]; then
+    return
+  fi
+
+  local REMOTE_URL
+  REMOTE_URL="$(git remote get-url --push "$(git remote show | head -1)")"
+
+  if [[ "${REMOTE_URL}" =~ ^.*@.*:(.*)\/(.*).git$ ]]; then
+    printf "%s/%s" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+  fi
+}
+
+git_last_tag() {
+  if [[ "$(git rev-parse --is-inside-work-tree 2>&1)" != "true" ]]; then
+    return
+  fi
+
+  git describe --tag 2> /dev/null | awk -F "-" '{print $1}'
+}

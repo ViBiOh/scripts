@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail
+
+run_command() {
+  if ! "${@}"; then
+    printf "%bCommit Failed%b\n" "${RED}" "${RESET}"
+    printf "%bPlease fix errors and try committing again.%b\n" "${RED}" "${RESET}"
+
+    exit 1
+  fi
+}
+
+golang_check() {
+  local GO_FILES
+  GO_FILES=$(git diff --name-only --diff-filter=ACMR --cached -- "*.go" | tr '\n' ' ')
+
+  if [[ -n "${GO_FILES:-}" ]]; then
+    printf "%bFormating golang files%b\n" "${BLUE}" "${RESET}"
+    GO_FILES="${GO_FILES}" run_command make --silent format
+
+    printf "%bLinting golang packages%b\n" "${BLUE}" "${RESET}"
+    run_command make --silent style
+  fi
+}
+
+javascript_check() {
+  local PACKAGE_JSON
+  PACKAGE_JSON=$(git diff --name-only --diff-filter=ACMR --cached -- "package.json")
+
+  local JS_FILES
+  JS_FILES=$(git diff --name-only --diff-filter=ACMR --cached -- "*.js{,x}" | tr '\n' ' ')
+
+  if [[ -n "${PACKAGE_JSON:-}" ]] || [[ -n "${JS_FILES:-}" ]]; then
+    printf "%bChecking node_modules installation%b\n" "${BLUE}" "${RESET}"
+    run_command npm install --silent install --no-audit
+  fi
+
+  if [[ -n "${JS_FILES:-}" ]]; then
+    printf "%bFormating javascript files%b\n" "${BLUE}" "${RESET}"
+    run_command npm run --silent format "${JS_FILES}"
+
+    printf "%bLinting javascript files%b\n" "${BLUE}" "${RESET}"
+    run_command npm run --silent lint "${JS_FILES}"
+  fi
+}
+
+get_diff() {
+  git diff --name-only --diff-filter=ACMR
+}
+
+diff_check() {
+  if ! [[ "${1}" == "$(get_diff)" ]]; then
+    printf "%bPre-commit has changed files%b\n" "${RED}" "${RESET}"
+    printf "%bConsider adding updated file with %bgit add -i \&\& git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}"
+  fi
+}
+
+tag_check() {
+  local PREVIOUS_TAG
+  PREVIOUS_TAG="$(git tag --sort=-creatordate | head -n 1)"
+
+  if [[ -z "${PREVIOUS_TAG:-}" ]]; then
+    return
+  fi
+
+  local COMMITS_SINCE_LAST_TAG
+  COMMITS_SINCE_LAST_TAG="$(git rev-list --count "${PREVIOUS_TAG}..HEAD")"
+
+  if [[ "${COMMITS_SINCE_LAST_TAG}" -ne 0 ]]; then
+    printf "%b%d commits since last tag%b\n" "${YELLOW}" "${COMMITS_SINCE_LAST_TAG}" "${RESET}"
+  fi
+}
+
+main() {
+  local SCRIPT_REAL_PATH
+  SCRIPT_REAL_PATH="$(python -c 'import sys; import os.path; print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_REAL_PATH}")" && pwd)"
+
+  source "${SCRIPT_DIR}/../meta" && meta_init "var" "git"
+  var_color
+
+  local INITIAL_DIFF
+  INITIAL_DIFF=$(get_diff)
+
+  golang_check
+  javascript_check
+
+  diff_check "${INITIAL_DIFF}"
+  tag_check
+
+  exit 0
+}
+
+main

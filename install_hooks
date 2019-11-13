@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+main() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "git" "hooks/pre-commit" "hooks/prepare-commit-msg"
+  var_color
+
+  local HOOKS_SOURCE_DIR="${SCRIPT_DIR}/hooks"
+  local HOOKS_TARGET_DIR
+  HOOKS_TARGET_DIR="$(git_root)/.git/hooks"
+  
+  (
+    cd "${HOOKS_SOURCE_DIR}"
+
+    for file in *; do
+      ln -s -f "${HOOKS_SOURCE_DIR}/${file}" "${HOOKS_TARGET_DIR}/${file}"
+      printf "%b✔ %s hook installed %b\n" "${GREEN}" "${file}" "${RESET}"
+    done
+  )
+}
+
+main

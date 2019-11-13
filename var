@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+var_read() {
+  local SECRET_ARG=""
+  if [[ "${3:-}" == "secret" ]]; then
+    SECRET_ARG="-s"
+  fi
+
+  if [[ -z "${!1:-}" ]]; then
+    read ${SECRET_ARG?} -r -p "${1}${2:+ [${2}]}=" READ_VALUE
+    eval "${1}=${READ_VALUE:-${2}}"
+
+    if [[ "${SECRET_ARG}" == "-s" ]]; then
+      printf "\n"
+    fi
+  elif [[ "${SECRET_ARG}" != "-s" ]]; then
+    printf "%s=%s\n" "${1}" "${!1}"
+  else
+    printf "Using secret %s\n" "${1}"
+  fi
+}
+
+var_color() {
+  export RED='\033[0;31m'
+  export GREEN='\033[0;32m'
+  export BLUE='\033[0;34m'
+  export YELLOW='\033[33m'
+  export RESET='\033[0m'
+}
