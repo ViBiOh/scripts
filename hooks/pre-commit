@@ -35,7 +35,7 @@ golang_check() {
   fi
 }
 
-javascript_check() {
+npm_check() {
   local PACKAGE_JSON
   PACKAGE_JSON=$(git diff --name-only --diff-filter=ACMR --cached -- "package.json")
 
@@ -87,7 +87,7 @@ main() {
   INITIAL_DIFF=$(get_diff)
 
   golang_check
-  javascript_check
+  npm_check
 
   diff_check "${INITIAL_DIFF}"
   tag_check
