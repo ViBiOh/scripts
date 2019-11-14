@@ -43,10 +43,8 @@ npm_check() {
   JS_FILES=$(git diff --name-only --diff-filter=ACMR --cached -- "*.js{,x}" | tr '\n' ' ')
 
   if [[ -n "${PACKAGE_JSON:-}" ]] || [[ -n "${JS_FILES:-}" ]]; then
-    if [[ -e "package.json" ]]; then
-      printf "%bChecking node_modules installation%b\n" "${BLUE}" "${RESET}"
-      run_command npm --silent install --no-audit
-    fi
+    printf "%bChecking node_modules installation%b\n" "${BLUE}" "${RESET}"
+    run_command npm --silent install --no-audit
   fi
 
   if [[ -n "${JS_FILES:-}" ]]; then
