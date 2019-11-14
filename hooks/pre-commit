@@ -11,6 +11,17 @@ run_command() {
   fi
 }
 
+get_diff() {
+  git diff --name-only --diff-filter=ACMR
+}
+
+diff_check() {
+  if ! [[ "${1}" == "$(get_diff)" ]]; then
+    printf "%bPre-commit has changed files%b\n" "${RED}" "${RESET}"
+    printf "%bConsider adding updated file with %bgit add -i \&\& git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}"
+  fi
+}
+
 golang_check() {
   local GO_FILES
   GO_FILES=$(git diff --name-only --diff-filter=ACMR --cached -- "*.go" | tr '\n' ' ')
@@ -32,27 +43,18 @@ javascript_check() {
   JS_FILES=$(git diff --name-only --diff-filter=ACMR --cached -- "*.js{,x}" | tr '\n' ' ')
 
   if [[ -n "${PACKAGE_JSON:-}" ]] || [[ -n "${JS_FILES:-}" ]]; then
-    printf "%bChecking node_modules installation%b\n" "${BLUE}" "${RESET}"
-    run_command npm install --silent install --no-audit
+    if [[ -e "package.json" ]]; then
+      printf "%bChecking node_modules installation%b\n" "${BLUE}" "${RESET}"
+      run_command npm --silent install --no-audit
+    fi
   fi
 
   if [[ -n "${JS_FILES:-}" ]]; then
     printf "%bFormating javascript files%b\n" "${BLUE}" "${RESET}"
-    run_command npm run --silent format "${JS_FILES}"
+    run_command npm --silent run format "${JS_FILES}"
 
     printf "%bLinting javascript files%b\n" "${BLUE}" "${RESET}"
-    run_command npm run --silent lint "${JS_FILES}"
-  fi
-}
-
-get_diff() {
-  git diff --name-only --diff-filter=ACMR
-}
-
-diff_check() {
-  if ! [[ "${1}" == "$(get_diff)" ]]; then
-    printf "%bPre-commit has changed files%b\n" "${RED}" "${RESET}"
-    printf "%bConsider adding updated file with %bgit add -i \&\& git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}"
+    run_command npm --silent run lint "${JS_FILES}"
   fi
 }
 
