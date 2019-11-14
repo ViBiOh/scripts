@@ -16,7 +16,11 @@ install() {
   local HOOKS_SOURCE_DIR="${SCRIPT_DIR}/hooks"
   local HOOKS_TARGET_DIR
   HOOKS_TARGET_DIR="$(git_root)/.git/hooks"
-  
+
+  if ! [[ -d "${HOOKS_TARGET_DIR}" ]]; then
+    return
+  fi
+
   (
     cd "${HOOKS_SOURCE_DIR}"
 
