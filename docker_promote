@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+main() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ "${#}" -ne 2 ]]; then
+    printf "%bUsage: docker_promote [IMAGE_NAME] [IMAGE_VERSION]%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  docker pull "${1}:${2}"
+  docker tag "${1}:${2}" "${1}:latest"
+  docker push "${1}:latest"
+}
+
+main "${@:-}"
