@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+bump_deps() {
+  if [[ -e "package.json" ]]; then
+    ncu -u
+    npm install --ignore-scripts
+    npm audit fix
+  fi
+
+  if [[ -e "go.mod" ]]; then
+    go get -u ./...
+    go mod tidy
+    git diff go.mod
+  fi
+
+  if [[ -e "provider.tf" ]]; then
+    terraform init -upgrade
+  fi
+}
+
+semver() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ "${#}" -ne 1 ]]; then
+    printf "%bUsage: semver [major|minor|patch]%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  local PREFIX="v"
+  local MAJOR="0"
+  local MINOR="0"
+  local PATCH="0"
+
+  local CURRENT_VERSION
+  CURRENT_VERSION="$(git describe --tag 2> /dev/null | awk -F "-" '{print $1}')"
+
+  if [[ -n "${CURRENT_VERSION}" ]]; then
+    if ! [[ "${CURRENT_VERSION}" =~ ([a-zA-Z]*)([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+      printf "%bcannot parse existing version: %s%b\n" "${RED}" "${CURRENT_VERSION}" "${RESET}"
+      return 1
+    fi
+
+    local PREFIX="${BASH_REMATCH[1]}"
+    local MAJOR="${BASH_REMATCH[2]}"
+    local MINOR="${BASH_REMATCH[3]}"
+    local PATCH="${BASH_REMATCH[4]}"
+  fi
+
+  case "${1}" in
+    "major")
+      MAJOR="$(( MAJOR+1 ))"
+      MINOR="0"
+      PATCH="0"
+      ;;
+
+    "minor")
+      MINOR="$(( MINOR+1 ))"
+      PATCH="0"
+      ;;
+
+    "patch")
+      PATCH="$(( PATCH+1 ))"
+      ;;
+
+    *)
+      printf "%bunknown version name: %s%b\n" "${RED}" "${1}" "${RESET}"
+      return 1
+  esac
+
+  local NEW_VERSION="${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
+
+  printf "%bNew version is: %s%b\n" "${GREEN}" "${NEW_VERSION}" "${RESET}"
+  git tag "${NEW_VERSION}"
+}
