@@ -14,7 +14,7 @@ main() {
     return 1
   fi
 
-  var_read DEPLOY_URL "https://deploy.vibioh.fr"
+  var_read DEPLOY_URL
   var_read DEPLOY_CREDENTIALS
 
   local HTTP_OUTPUT="http_output.txt"
