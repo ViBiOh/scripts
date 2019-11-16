@@ -34,8 +34,6 @@ build() {
 }
 
 get_release_body() {
-  var_read GIT_TAG
-
   local PREVIOUS_TAG
   PREVIOUS_TAG=$(git tag --sort=-creatordate | grep -v "${GIT_TAG}" | head -n 1)
 
