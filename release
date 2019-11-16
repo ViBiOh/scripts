@@ -46,7 +46,7 @@ release() {
   var_read GITHUB_OAUTH_TOKEN "" "secret"
   var_read GITHUB_REPOSITORY "$(git_remote_repository)"
   var_read GIT_TAG "$(git_last_tag)"
-  var_read RELEASE_NAME "${RELEASE_NAME}"
+  var_read RELEASE_NAME "${GIT_TAG}"
 
   printf "%bCreating release %s for %s...%b\n" "${BLUE}" "${GIT_TAG}" "${GITHUB_REPOSITORY}" "${RESET}"
 
