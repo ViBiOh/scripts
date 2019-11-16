@@ -11,6 +11,10 @@ run_command() {
   fi
 }
 
+get_files() {
+  git diff --name-only --diff-filter=ACMR --cached -- "${@}" | tr '\n' ' ' | sed "s| *$||g"
+}
+
 get_diff() {
   git diff --name-only --diff-filter=ACMR
 }
@@ -24,7 +28,7 @@ diff_check() {
 
 golang_check() {
   local GO_FILES
-  GO_FILES=$(git diff --name-only --diff-filter=ACMR --cached -- "*.go" | tr '\n' ' ')
+  GO_FILES=$(get_files "*.go")
 
   if [[ -n "${GO_FILES:-}" ]]; then
     printf "%bFormating golang files%b\n" "${BLUE}" "${RESET}"
@@ -40,7 +44,7 @@ npm_check() {
   PACKAGE_JSON=$(git diff --name-only --diff-filter=ACMR --cached -- "package.json")
 
   local JS_FILES
-  JS_FILES=$(git diff --name-only --diff-filter=ACMR --cached -- "*.js{,x}" | tr '\n' ' ')
+  JS_FILES=$(get_files "*.js" "*.jsx")
 
   if [[ -n "${PACKAGE_JSON:-}" ]] || [[ -n "${JS_FILES:-}" ]]; then
     printf "%bChecking node_modules installation%b\n" "${BLUE}" "${RESET}"
