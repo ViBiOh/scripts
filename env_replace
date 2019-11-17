@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+main() {
+  eval "echo \"$(cat "${1}")\""
+}
+
+main "${@}"
