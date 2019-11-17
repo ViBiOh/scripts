@@ -3,7 +3,28 @@
 set -o nounset -o pipefail -o errexit
 
 main() {
-  eval "echo \"$(cat "${1}")\""
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ "${#}" -lt 2 ]]; then
+    printf "%bUsage: env_replace [FILENAME] [ENV_VARS...]%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  local FILENAME="${1}"
+  shift
+
+  local SED_COMMAND=("sed")
+  for name in "${@}"; do
+    SED_COMMAND+=("-e" "s|\${${name}}|${!name}|g")
+  done
+
+  SED_COMMAND+=("${FILENAME}")
+
+  "${SED_COMMAND[@]}"
 }
 
 main "${@}"
