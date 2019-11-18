@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-install() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+install() {
   source "${SCRIPT_DIR}/meta" && meta_init "var" "git" "hooks/pre-commit" "hooks/prepare-commit-msg"
   var_color
 
