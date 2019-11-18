@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+main() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  var_read DOCKER_REGISTRY "https://hub.docker.com/v2"
+  var_read DOCKER_OWNER
+  var_read DOCKER_USER
+  var_read DOCKER_PASSWORD "" "secret"
+
+  local HTTP_OUTPUT="http_output.txt"
+  local HTTP_STATUS
+
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
+
+  # Login to registry
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X POST "${DOCKER_REGISTRY}/users/login/" \
+    -H "Content-Type: application/json" \
+    --data "{ \"username\": \"${DOCKER_USER}\", \"password\": \"${DOCKER_PASSWORD}\" }"
+  )"
+  unset DOCKER_PASSWORD
+
+  if [[ "${HTTP_STATUS}" != "200" ]]; then
+    printf "%bUnable to login to registry %s%b\n" "${RED}" "${DOCKER_REGISTRY}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  CLIENT_ARGS+=("-H" "Authorization: JWT $(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['token'])")")
+  rm "${HTTP_OUTPUT}"
+
+  # Listing repositories
+  printf "%bListing repositories for %s...%b\n" "${BLUE}" "${DOCKER_OWNER}" "${RESET}"
+
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/users/${DOCKER_OWNER}/repositories/?page_size=100")"
+  if [[ "${HTTP_STATUS}" != "200" ]]; then
+    printf "%bUnable to list images for %s%b\n" "${RED}" "${DOCKER_OWNER}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  local REPOSITORIES
+  IFS=" " read -r -a REPOSITORIES <<< "$(python -c "import json; images = json.load(open('${HTTP_OUTPUT}')); print(' '.join([image['name'] for image in images]))")"
+  rm "${HTTP_OUTPUT}"
+
+  for repository in "${REPOSITORIES[@]}"; do
+    printf "%bListing tags for %s...%b\n" "${BLUE}" "${DOCKER_OWNER}/${repository}" "${RESET}"
+
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/?page_size=100")"
+    if [[ "${HTTP_STATUS}" != "200" ]]; then
+      printf "%bUnable to list tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}" "${RESET}"
+      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+      continue
+    fi
+
+    local TAGS
+    IFS=" " read -r -a TAGS <<< "$(python -c "import json; tags = json.load(open('${HTTP_OUTPUT}')); print(' '.join([tag['name'] for tag in tags['results']]))")"
+    rm "${HTTP_OUTPUT}"
+
+    for tag in "${TAGS[@]}"; do
+      if [[ "${tag}" =~ ^[0-9A-Fa-f]{6,}$ ]]; then
+        HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/")"
+        if [[ "${HTTP_STATUS}" != "204" ]]; then
+          printf "%bUnable to delete tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}:${tag}" "${RESET}"
+          cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+          continue
+        fi
+
+        rm "${HTTP_OUTPUT}"
+        printf "%b%s deleted!%b\n" "${GREEN}" "${DOCKER_OWNER}/${repository}:${tag}" "${RESET}"
+      fi
+    done
+
+  done
+}
+
+main
