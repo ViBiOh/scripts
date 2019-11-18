@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o nounset -o pipefail -o errexit
-
 git_is_inside() {
   git rev-parse --is-inside-work-tree 2>&1
 }

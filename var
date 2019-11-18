@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o nounset -o pipefail -o errexit
-
 var_read() {
   local SECRET_ARG=""
   if [[ "${3:-}" == "secret" ]]; then
@@ -21,6 +19,8 @@ var_read() {
     printf "Using secret %s\n" "${1}"
   fi
 }
+
+export -f var_read
 
 var_color() {
   export RED='\033[0;31m'

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o nounset -o pipefail -o errexit
-
 meta_download_script() {
   1>&2 printf "Download %s\n" "${dep}"
 
@@ -16,7 +14,7 @@ meta_init() {
 
   local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/master/"
 
-  cd "${SCRIPT_DIR}"
+  cd "${SCRIPT_DIR}" || return 1
 
   for dep in "${@}"; do
     if ! [[ -e "./${dep}" ]]; then
@@ -28,5 +26,5 @@ meta_init() {
     fi
   done
 
-  cd - > /dev/null
+  cd - > /dev/null || return 1
 }

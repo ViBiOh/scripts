@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o nounset -o pipefail -o errexit
-
 github_last_release() {
   source "${SCRIPT_DIR}/meta" && meta_init "var"
   var_color
@@ -25,6 +23,8 @@ github_last_release() {
   python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['tag_name'])"
   rm "${HTTP_OUTPUT}"
 }
+
+export -f github_last_release
 
 github_configure() {
   if [[ "${#}" -ne 1 ]]; then
