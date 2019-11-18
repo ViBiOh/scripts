@@ -9,25 +9,30 @@ install() {
   source "${SCRIPT_DIR}/meta" && meta_init "var" "git" "hooks/pre-commit" "hooks/prepare-commit-msg"
   var_color
 
-  if [[ "$(git_is_inside)" != "true" ]]; then
-    return
-  fi
-
-  local HOOKS_SOURCE_DIR="${SCRIPT_DIR}/hooks"
-  local HOOKS_TARGET_DIR
-  HOOKS_TARGET_DIR="$(git_root)/.git/hooks"
-
-  if ! [[ -d "${HOOKS_TARGET_DIR}" ]]; then
-    return
-  fi
-
   (
-    cd "${HOOKS_SOURCE_DIR}"
+    cd "${SCRIPT_DIR}"
 
-    for file in *; do
-      ln -s -f "${HOOKS_SOURCE_DIR}/${file}" "${HOOKS_TARGET_DIR}/${file}"
-      printf "%b✔ %s hook installed %b\n" "${GREEN}" "${file}" "${RESET}"
-    done
+    if [[ "$(git_is_inside)" != "true" ]]; then
+      printf "%bnot inside a git tree%b" "${YELLOW}" "${RESET}"
+      return
+    fi
+
+    local HOOKS_SOURCE_DIR="${SCRIPT_DIR}/hooks"
+    local HOOKS_TARGET_DIR
+    HOOKS_TARGET_DIR="$(git_root)/.git/hooks"
+
+    if ! [[ -d "${HOOKS_TARGET_DIR}" ]]; then
+      mkdir -p "${HOOKS_TARGET_DIR}"
+    fi
+
+    (
+      cd "${HOOKS_SOURCE_DIR}"
+
+      for file in *; do
+        ln -s -f "${HOOKS_SOURCE_DIR}/${file}" "${HOOKS_TARGET_DIR}/${file}"
+        printf "%b✔ %s hook installed %b\n" "${GREEN}" "${file}" "${RESET}"
+      done
+    )
   )
 }
 
