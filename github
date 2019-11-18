@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
-github_last_release() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var"
+github_last_release() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
   if [[ "${#}" -ne 1 ]]; then

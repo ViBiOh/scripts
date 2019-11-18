@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 
-install() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GIT_HOOKS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var" "git" "hooks/pre-commit" "hooks/prepare-commit-msg"
+install() {
+  source "${GIT_HOOKS_SCRIPT_DIR}/meta" && meta_init "var" "git" "hooks/pre-commit" "hooks/prepare-commit-msg"
   var_color
 
   (
-    cd "${SCRIPT_DIR}" || return 1
+    cd "${GIT_HOOKS_SCRIPT_DIR}" || return 1
 
     if [[ "$(git_is_inside)" != "true" ]]; then
       printf "%bnot inside a git tree%b" "${YELLOW}" "${RESET}"
       return
     fi
 
-    local HOOKS_SOURCE_DIR="${SCRIPT_DIR}/hooks"
+    local HOOKS_SOURCE_DIR="${GIT_HOOKS_SCRIPT_DIR}/hooks"
     local HOOKS_TARGET_DIR
     HOOKS_TARGET_DIR="$(git_root)/.git/hooks"
 

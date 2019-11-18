@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+META_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 meta_download_script() {
   1>&2 printf "Download %s\n" "${dep}"
 
@@ -9,12 +11,9 @@ meta_download_script() {
 }
 
 meta_init() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
   local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/master/"
 
-  cd "${SCRIPT_DIR}" || return 1
+  cd "${META_SCRIPT_DIR}" || return 1
 
   for dep in "${@}"; do
     if ! [[ -e "./${dep}" ]]; then
