@@ -19,7 +19,7 @@ main() {
 
   local SED_COMMAND=("sed")
   for name in "${@}"; do
-    SED_COMMAND+=("-e" "s|\${${name}}|${!name}|g")
+    SED_COMMAND+=("-e" "s|\${\{0,1\}${name}}\{0,1\}|${!name}|g")
   done
 
   SED_COMMAND+=("${FILENAME}")
