@@ -2,19 +2,27 @@
 
 set -o nounset -o pipefail
 
+sed_inplace() {
+  if [[ "${OSTYPE}" =~ ^darwin ]]; then
+    sed -i '' "${@}"
+  else
+    sed -i "${@}"
+  fi
+}
+
 main() {
   local BRANCH_NAME
   BRANCH_NAME=$(git symbolic-ref --short HEAD)
 
   if [[ -n "${BRANCH_NAME}" && "${BRANCH_NAME}" =~ (features|fixes)/([A-Z0-9]+[-_][0-9]+) ]]; then
-    local PREFIX="${BASH_REMATCH[${#BASH_REMATCH[@]}-1]}"
+    local PREFIX="${BASH_REMATCH[2]}"
 
     if [[ ! "$(cat "${1}")" =~ ^${PREFIX} ]] && [[ ! "$(cat "${1}")" =~ ^fixup! ]]; then
-      sed -i.bak -e "1s/^/$PREFIX /" "${1}"
+      sed_inplace -e "1s|^|${PREFIX} |" "${1}"
     fi
   fi
 
   exit 0
 }
 
-main "${@:-}"
+main "${@}"
