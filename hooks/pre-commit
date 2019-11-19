@@ -41,7 +41,7 @@ golang_check() {
 
 npm_check() {
   local PACKAGE_JSON
-  PACKAGE_JSON=$(git diff --name-only --diff-filter=ACMR --cached -- "package.json")
+  PACKAGE_JSON=$(get_files "package.json")
 
   local JS_FILES
   JS_FILES=$(get_files \*.js{,x})
@@ -57,6 +57,19 @@ npm_check() {
 
     printf "%bLinting javascript files%b\n" "${BLUE}" "${RESET}"
     run_command npm --silent run lint "${JS_FILES}"
+  fi
+}
+
+terraform_check() {
+  local TERRAFORM_FILES
+  TERRAFORM_FILES=$(get_files "*.tf")
+
+  if [[ -n "${TERRAFORM_FILES}" ]]; then
+      printf "%bFormating terraform files%b\n" "${BLUE}" "${RESET}"
+
+      for file in "${TERRAFORM_FILES[@]}"; do
+        run_command terraform fmt "$(dirname "${file}")"
+      done
   fi
 }
 
@@ -90,6 +103,7 @@ main() {
 
   golang_check
   npm_check
+  terraform_check
 
   diff_check "${INITIAL_DIFF}"
   tag_check
