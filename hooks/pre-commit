@@ -79,7 +79,7 @@ yaml_check() {
 
   if [[ -n "${YAML_FILES}" ]]; then
       printf "%bFormating yaml files%b\n" "${BLUE}" "${RESET}"
-      run_command yamllint "${YAML_FILES[@]}"
+      run_command yamllint -d "{rules: {line-length: disable}}" ${YAML_FILES[@]}
   fi
 }
 
