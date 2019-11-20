@@ -10,7 +10,7 @@ install() {
     cd "${GIT_HOOKS_SCRIPT_DIR}" || return 1
 
     if [[ "$(git_is_inside)" != "true" ]]; then
-      printf "%bnot inside a git tree%b" "${YELLOW}" "${RESET}"
+      printf "%bnot inside a git tree%b\n" "${YELLOW}" "${RESET}"
       return
     fi
 
