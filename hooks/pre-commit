@@ -67,7 +67,7 @@ terraform_check() {
   if [[ -n "${TERRAFORM_FILES}" ]]; then
       printf "%bFormating terraform files%b\n" "${BLUE}" "${RESET}"
 
-      for file in "${TERRAFORM_FILES[@]}"; do
+      for file in ${TERRAFORM_FILES}; do
         run_command terraform fmt "$(dirname "${file}")"
       done
   fi
