@@ -53,10 +53,10 @@ npm_check() {
 
   if [[ -n "${JS_FILES:-}" ]]; then
     printf "%bFormating javascript files%b\n" "${BLUE}" "${RESET}"
-    run_command npm --silent run format "${JS_FILES}"
+    run_command npm --silent run format ${JS_FILES[@]}
 
     printf "%bLinting javascript files%b\n" "${BLUE}" "${RESET}"
-    run_command npm --silent run lint "${JS_FILES}"
+    run_command npm --silent run style ${JS_FILES[@]}
   fi
 }
 
