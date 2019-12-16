@@ -3,7 +3,7 @@
 GIT_HOOKS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 install() {
-  source "${GIT_HOOKS_SCRIPT_DIR}/meta" && meta_init "var" "git" "hooks/pre-commit" "hooks/prepare-commit-msg"
+  source "${GIT_HOOKS_SCRIPT_DIR}/meta" && meta_init "var" "git" "hooks/pre-commit" "hooks/prepare-commit-msg" "hooks/commit-msg"
   var_color
 
   (
