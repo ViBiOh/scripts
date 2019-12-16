@@ -10,6 +10,28 @@ sed_inplace() {
   fi
 }
 
+git_semantic() {
+  printf "# %bGuidelines for good commit message%b\n" "${YELLOW}" "${RESET}"
+  printf "# %bbuild:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tChanges that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)\n"
+  printf "# %bci:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tChanges to our CI configuration files and scripts (example scopes: Circle, BrowserStack, SauceLabs)\n"
+  printf "# %bdocs:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tDocumentation only changes\n"
+  printf "# %bfeat:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tA new feature\n"
+  printf "# %bfix:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tA bug fix\n"
+  printf "# %bperf:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tA code change that improves performance\n"
+  printf "# %brefactor:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tA code change that neither fixes a bug nor adds a feature\n"
+  printf "# %bstyle:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tChanges that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)\n"
+  printf "# %btest:%b\n" "${BLUE}" "${RESET}"
+  printf "# \tAdding missing tests or correcting existing tests\n"
+}
+
 main() {
   local BRANCH_NAME
   BRANCH_NAME=$(git symbolic-ref --short HEAD)
@@ -21,6 +43,8 @@ main() {
       sed_inplace -e "1s|^|${PREFIX} |" "${1}"
     fi
   fi
+
+  git_semantic >> "${1}"
 
   exit 0
 }
