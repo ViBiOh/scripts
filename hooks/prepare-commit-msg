@@ -14,10 +14,13 @@ main() {
   local BRANCH_NAME
   BRANCH_NAME=$(git symbolic-ref --short HEAD)
 
-  if [[ -n "${BRANCH_NAME}" && "${BRANCH_NAME}" =~ (features|fixes)/([A-Z0-9]+[-_][0-9]+) ]]; then
+  local FIRST_LINE
+  FIRST_LINE="$(head -1 "${1}")"
+
+  if [[ ! "${FIRST_LINE}" =~ ^fixup! ]] && [[ -n "${BRANCH_NAME}" && "${BRANCH_NAME}" =~ (features|fixes)/([A-Z0-9]+[-_][0-9]+) ]]; then
     local PREFIX="${BASH_REMATCH[2]}"
 
-    if [[ ! "$(cat "${1}")" =~ ^${PREFIX} ]] && [[ ! "$(cat "${1}")" =~ ^fixup! ]]; then
+    if [[ ! "${FIRST_LINE}" =~ ^${PREFIX} ]]; then
       sed_inplace -e "1s|^|${PREFIX} |" "${1}"
     fi
   fi
