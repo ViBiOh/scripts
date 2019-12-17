@@ -3,9 +3,10 @@
 set -o nounset -o pipefail
 
 git_semantic() {
-  printf "%bGuidelines for prefixing commit message%b\n\n" "${YELLOW}" "${RESET}"
+  printf "%bGuidelines for prefixing commit message from conventionalcommits.org%b\n\n" "${YELLOW}" "${RESET}"
+
   for prefix in "${!PREFIXES[@]}"; do
-    printf "%b%s(%bcomponent%b)%b\n" "${GREEN}" "${prefix}" "${BLUE}" "${GREEN}" "${RESET}"
+    printf "%b%s%b(component)%b:%b\n" "${GREEN}" "${prefix}" "${BLUE}" "${GREEN}" "${RESET}"
     printf "\t%s\n" "${PREFIXES[${prefix}]}"
   done
 }
@@ -34,7 +35,7 @@ main() {
   PREFIXES['style']='Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)'
   PREFIXES['test']='Adding missing tests or correcting existing tests'
 
-  if [[ ! "${FIRST_LINE}" =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))\(.+\) ]]; then
+  if [[ ! "${FIRST_LINE}" =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?: ]]; then
     git_semantic
   fi
 
