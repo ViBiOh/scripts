@@ -11,6 +11,14 @@ git_semantic() {
 }
 
 main() {
+  local SCRIPT_REAL_PATH
+  SCRIPT_REAL_PATH="$(python -c 'import sys; import os.path; print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_REAL_PATH}")" && pwd)"
+
+  source "${SCRIPT_DIR}/../meta" && meta_init "var" "git"
+  var_color
+
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
 
@@ -26,7 +34,7 @@ main() {
   PREFIXES['style']='Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)'
   PREFIXES['test']='Adding missing tests or correcting existing tests'
 
-  if [[ ! "${FIRST_LINE}" =~ ^($(IFS='|'; echo "${!PREFIXES[*]}"))\(.+\) ]]; then
+  if [[ ! "${FIRST_LINE}" =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))\(.+\) ]]; then
     git_semantic
   fi
 
