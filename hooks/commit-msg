@@ -24,16 +24,13 @@ main() {
   FIRST_LINE="$(head -1 "${1}")"
 
   declare -A PREFIXES
-  PREFIXES['build']='Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)'
   PREFIXES['chore']='Changes in the core of the repository'
-  PREFIXES['ci']='Changes to our CI configuration files and scripts (example scopes: Circle, BrowserStack, SauceLabs)'
   PREFIXES['docs']='Documentation only changes'
-  PREFIXES['feat']='A new feature'
-  PREFIXES['fix']='A bug fix'
-  PREFIXES['perf']='A code change that improves performance'
-  PREFIXES['refactor']='A code change that neither fixes a bug nor adds a feature'
-  PREFIXES['style']='Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)'
-  PREFIXES['test']='Adding missing tests or correcting existing tests'
+  PREFIXES['feat']='A new feature for user (production change)'
+  PREFIXES['fix']='A bug fix for user (production change)'
+  PREFIXES['refactor']='A change that is not a feature not a bug (production change)'
+  PREFIXES['style']='A change that do not affect the meaning of the code'
+  PREFIXES['test']='A new test or correcting existing tests'
 
   if [[ ! "${FIRST_LINE}" =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?: ]]; then
     git_semantic
