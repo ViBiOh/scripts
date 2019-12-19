@@ -64,7 +64,7 @@ main() {
     rm "${HTTP_OUTPUT}"
 
     for tag in "${TAGS[@]}"; do
-      if [[ "${tag}" =~ ^[0-9A-Fa-f]{6,}$ ]]; then
+      if [[ "${tag}" =~ ^[0-9A-Fa-f]{6,} ]]; then
         HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/")"
         if [[ "${HTTP_STATUS}" != "204" ]]; then
           printf "%bUnable to delete tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}:${tag}" "${RESET}"
