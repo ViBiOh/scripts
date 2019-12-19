@@ -9,14 +9,14 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ "${#}" -ne 2 ]]; then
-    printf "%bUsage: docker_promote [IMAGE_NAME] [IMAGE_VERSION]%b\n" "${RED}" "${RESET}"
+  if [[ "${#}" -lt 2 ]]; then
+    printf "%bUsage: docker_promote [IMAGE_NAME] [IMAGE_VERSION] [VERSION_TARGET]%b\n" "${RED}" "${RESET}"
     return 1
   fi
 
   docker pull "${1}:${2}"
-  docker tag "${1}:${2}" "${1}:latest"
-  docker push "${1}:latest"
+  docker tag "${1}:${2}" "${1}:${3:-latest}"
+  docker push "${1}:${3:-latest}"
 }
 
 main "${@:-}"
