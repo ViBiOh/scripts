@@ -9,7 +9,7 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ "${#}" -lt 2 ]]; then
+  if [[ ${#} -lt 2 ]]; then
     printf "%bUsage: docker_promote [IMAGE_NAME] [IMAGE_VERSION] [VERSION_TARGET]%b\n" "${RED}" "${RESET}"
     return 1
   fi

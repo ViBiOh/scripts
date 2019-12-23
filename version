@@ -3,19 +3,19 @@
 VERSION_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 bump_deps() {
-  if [[ -e "package.json" ]]; then
+  if [[ -e package.json ]]; then
     ncu -u
     npm install --ignore-scripts
     npm audit fix
   fi
 
-  if [[ -e "go.mod" ]]; then
+  if [[ -e go.mod ]]; then
     go get -u ./...
     go mod tidy
     git diff go.mod
   fi
 
-  if [[ -e "provider.tf" ]]; then
+  if [[ -e provider.tf ]]; then
     terraform init -upgrade
   fi
 }
@@ -24,7 +24,7 @@ semver() {
   source "${VERSION_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ "${#}" -ne 1 ]]; then
+  if [[ ${#} -ne 1 ]]; then
     printf "%bUsage: semver [major|minor|patch]%b\n" "${RED}" "${RESET}"
     return 1
   fi
@@ -37,8 +37,8 @@ semver() {
   local CURRENT_VERSION
   CURRENT_VERSION="$(git describe --tag 2> /dev/null | awk -F "-" '{print $1}')"
 
-  if [[ -n "${CURRENT_VERSION}" ]]; then
-    if ! [[ "${CURRENT_VERSION}" =~ ([a-zA-Z]*)([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+  if [[ -n ${CURRENT_VERSION} ]]; then
+    if ! [[ ${CURRENT_VERSION} =~ ([a-zA-Z]*)([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
       printf "%bcannot parse existing version: %s%b\n" "${RED}" "${CURRENT_VERSION}" "${RESET}"
       return 1
     fi

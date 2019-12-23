@@ -5,7 +5,7 @@ git_is_inside() {
 }
 
 git_root() {
-  if [[ "$(git_is_inside)" != "true" ]]; then
+  if [[ $(git_is_inside) != "true" ]]; then
     pwd
     return
   fi
@@ -14,20 +14,20 @@ git_root() {
 }
 
 git_remote_repository() {
-  if [[ "$(git_is_inside)" != "true" ]]; then
+  if [[ $(git_is_inside) != "true" ]]; then
     return
   fi
 
   local REMOTE_URL
   REMOTE_URL="$(git remote get-url --push "$(git remote show | head -1)")"
 
-  if [[ "${REMOTE_URL}" =~ ^.*@.*:(.*)\/(.*).git$ ]]; then
+  if [[ ${REMOTE_URL} =~ ^.*@.*:(.*)\/(.*).git$ ]]; then
     printf "%s/%s" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
   fi
 }
 
 git_last_tag() {
-  if [[ "$(git_is_inside)" != "true" ]]; then
+  if [[ $(git_is_inside) != "true" ]]; then
     return
   fi
 

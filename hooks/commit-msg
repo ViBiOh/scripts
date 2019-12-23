@@ -32,7 +32,7 @@ main() {
   PREFIXES['style']='A change that do not affect the meaning of the code'
   PREFIXES['test']='A new test or correcting existing tests'
 
-  if [[ ! "${FIRST_LINE}" =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?: ]]; then
+  if [[ ! ${FIRST_LINE} =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?: ]]; then
     git_semantic
   fi
 

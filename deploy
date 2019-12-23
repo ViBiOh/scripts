@@ -9,7 +9,7 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ "${#}" -ne 2 ]]; then
+  if [[ ${#} -ne 2 ]]; then
     printf "%bUsage: deploy [APP_NAME] [COMPOSE_FILE]%b\n" "${RED}" "${RESET}"
     return 1
   fi
@@ -23,7 +23,7 @@ main() {
   HTTP_STATUS=$(curl -q -sSL --max-time 90 -X POST -u "${DEPLOY_CREDENTIALS}" -o "${HTTP_OUTPUT}" -w "%{http_code}" "${DEPLOY_URL}/${1}/" --data-binary "${2}")
 
   cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-  if [[ "${HTTP_STATUS}" != "200" ]]; then
+  if [[ ${HTTP_STATUS} != "200" ]]; then
      exit 1
   fi
 }

@@ -10,7 +10,7 @@ release_clean() {
 }
 
 build() {
-  if [[ "${#}" -ne 2 ]]; then
+  if [[ ${#} -ne 2 ]]; then
     printf "%bUsage: build [BINARY_NAME] [MAIN_SOURCE]%b\n" "${RED}" "${RESET}"
     return 1
   fi
@@ -67,7 +67,7 @@ release() {
       \"body\": \"${BODY}\"
     }")"
 
-  if [[ "${HTTP_STATUS}" != "201" ]]; then
+  if [[ ${HTTP_STATUS} != "201" ]]; then
      printf "%bFailed to create release%b\n" "${RED}" "${RESET}"
      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
      exit 1
@@ -87,7 +87,7 @@ release() {
       --data-binary "@${asset}"
     )"
 
-    if [[ "${HTTP_STATUS}" != "201" ]]; then
+    if [[ ${HTTP_STATUS} != "201" ]]; then
        printf "%bFailed to upload asset %s%b\n" "${RED}" "${asset}" "${RESET}"
        cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
        exit 1

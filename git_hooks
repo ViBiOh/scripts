@@ -9,7 +9,7 @@ install() {
   (
     cd "${GIT_HOOKS_SCRIPT_DIR}" || return 1
 
-    if [[ "$(git_is_inside)" != "true" ]]; then
+    if [[ $(git_is_inside) != "true" ]]; then
       printf "%bnot inside a git tree%b\n" "${YELLOW}" "${RESET}"
       return
     fi
@@ -18,7 +18,7 @@ install() {
     local HOOKS_TARGET_DIR
     HOOKS_TARGET_DIR="$(git_root)/.git/hooks"
 
-    if ! [[ -d "${HOOKS_TARGET_DIR}" ]]; then
+    if ! [[ -d ${HOOKS_TARGET_DIR} ]]; then
       mkdir -p "${HOOKS_TARGET_DIR}"
     fi
 
