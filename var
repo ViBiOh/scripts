@@ -20,8 +20,6 @@ var_read() {
   fi
 }
 
-export -f var_read
-
 var_color() {
   export RED='\033[0;31m'
   export GREEN='\033[0;32m'

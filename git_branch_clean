@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -o nounset -o errexit
+
+main() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  local BASE="${1:-master}"
+  local HEAD="${2:-$(git rev-parse --abbrev-ref HEAD)}"
+
+  local UNCLEAN_COMMITS
+  UNCLEAN_COMMITS=$(git log --oneline "${BASE}..${HEAD}")
+
+  if [[ -n ${UNCLEAN_COMMITS} ]]; then
+    printf "%s\n\n%bYou have unclean commits, please cleanup before merge!%b\n" "${UNCLEAN_COMMITS}" "${RED}" "${RESET}"
+    exit 1
+  fi
+
+  printf "%b✔ Everything looks fine%b\n" "${GREEN}" "${RESET}"
+  exit 0
+}
+
+main "${@:-}"
