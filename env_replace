@@ -10,7 +10,7 @@ main() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    printf "%bUsage: env_replace [FILENAME] [ENV_VARS...]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: ${0} [FILENAME] [ENV_VARS...]%b\n" "${RED}" "${RESET}"
     return 1
   fi
 

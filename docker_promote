@@ -10,7 +10,7 @@ main() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    printf "%bUsage: docker_promote [IMAGE_NAME] [IMAGE_VERSION] [VERSION_TARGET]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: ${0} [IMAGE_NAME] [IMAGE_VERSION] [VERSION_TARGET]%b\n" "${RED}" "${RESET}"
     return 1
   fi
 
