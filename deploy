@@ -10,7 +10,7 @@ main() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: deploy [APP_NAME] [COMPOSE_FILE]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: ${0} [APP_NAME] [COMPOSE_FILE]%b\n" "${RED}" "${RESET}"
     return 1
   fi
 
