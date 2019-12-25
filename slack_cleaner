@@ -14,7 +14,7 @@ main() {
     return 1
   fi
 
-  var_read SLACK_LEGACY_TOKEN
+  var_read SLACK_LEGACY_TOKEN "" "secret"
   var_read SLACK_USER
 
   local UNTIL_DATE
@@ -24,9 +24,12 @@ main() {
 
   printf "%bCleanning all messages and files until %s%b" "${BLUE}" "${UNTIL_DATE}" "${RESET}"
 
-  for target in "channel group direct"; do
-    for type in "message file"; do
-      ${CLEANER_ARGS[@]} "slack-cleaner --token ${SLACK_LEGACY_TOKEN} --user ${SLACK_USER} --rate 1 --quiet --perform --${type} --regex --${target} '.*' --keeppinned --before ${UNTIL_DATE}"
+  local TARGETS=('channel' 'group' 'direct')
+  local TYPES=('message' 'file')
+
+  for target in ${TARGETS[@]}; do
+    for type in ${TYPES[@]}; do
+      ${CLEANER_ARGS[@]} "slack-cleaner --token ${SLACK_LEGACY_TOKEN} --user ${SLACK_USER} --rate 1 --perform --${type} --regex --${target} '.*' --keeppinned --before ${UNTIL_DATE}"
     done
   done
 }
