@@ -15,16 +15,16 @@ main() {
   local UNTIL_DATE
   UNTIL_DATE="$(date -d "${1:-6 month ago}" +%Y%m%d)"
 
+  local TARGETS=("${2:-channel group direct}")
+  local TYPES=("${3:-message file}")
+
   local CLEANER_ARGS=("docker" "run" "-it" "--rm" "sgratzl/slack-cleaner" "-c")
 
   printf "%bCleanning all messages and files until %s%b\n" "${BLUE}" "${UNTIL_DATE}" "${RESET}"
 
-  local TARGETS=('channel' 'group' 'direct')
-  local TYPES=('message' 'file')
-
   for target in ${TARGETS[@]}; do
     for type in ${TYPES[@]}; do
-      ${CLEANER_ARGS[@]} "slack-cleaner --token ${SLACK_LEGACY_TOKEN} --user ${SLACK_USER} --rate 1 --perform --${type} --regex --${target} '.*' --keeppinned --before ${UNTIL_DATE}"
+      ${CLEANER_ARGS[@]} "slack-cleaner --token ${SLACK_LEGACY_TOKEN} --user ${SLACK_USER} --rate 1 --perform --${type} --regex --${target} '.*' --before ${UNTIL_DATE}"
     done
   done
 }
