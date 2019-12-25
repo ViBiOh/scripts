@@ -9,20 +9,15 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ ${#} -ne 1 ]]; then
-    printf "%bUsage: ${0} [DATE_DELTA]"
-    return 1
-  fi
-
   var_read SLACK_LEGACY_TOKEN "" "secret"
   var_read SLACK_USER
 
   local UNTIL_DATE
-  UNTIL_DATE="$(date -d "${1}" +%Y%m%d)"
+  UNTIL_DATE="$(date -d "${1:-6 month ago}" +%Y%m%d)"
 
   local CLEANER_ARGS=("docker" "run" "-it" "--rm" "sgratzl/slack-cleaner" "-c")
 
-  printf "%bCleanning all messages and files until %s%b" "${BLUE}" "${UNTIL_DATE}" "${RESET}"
+  printf "%bCleanning all messages and files until %s%b\n" "${BLUE}" "${UNTIL_DATE}" "${RESET}"
 
   local TARGETS=('channel' 'group' 'direct')
   local TYPES=('message' 'file')
