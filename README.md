@@ -1,7 +1,5 @@
 # scripts
 
-[![Build Status](https://travis-ci.com/ViBiOh/scripts.svg?branch=master)](https://travis-ci.com/ViBiOh/scripts)
-
 Common scripts used accross my repositories.
 
 ```bash
