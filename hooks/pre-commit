@@ -48,7 +48,7 @@ npm_check() {
 
   if [[ -n ${PACKAGE_JSON:-} ]] || [[ -n ${JS_FILES:-} ]]; then
     printf "%bChecking node_modules installation%b\n" "${BLUE}" "${RESET}"
-    run_command npm --silent install --no-audit
+    run_command npm --silent install --no-audit --ignore-scripts
   fi
 
   if [[ -n ${JS_FILES:-} ]]; then
