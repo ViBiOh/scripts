@@ -14,8 +14,9 @@ main() {
     return 1
   fi
 
-  var_read DOCKER_REGISTRY "https://registry-1.docker.io/v2"
-  var_read DOCKER_AUTH_TOKEN "https://auth.docker.io/token?service=registry.docker.io"
+  local DOCKER_REGISTRY="https://registry-1.docker.io/v2"
+  local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
+
   var_read DOCKER_USER
   var_read DOCKER_PASSWORD "" "secret"
 
