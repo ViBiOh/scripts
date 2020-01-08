@@ -18,7 +18,7 @@ main() {
   local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
 
   var_read DOCKER_USER
-  var_read DOCKER_PASSWORD "" "secret"
+  var_read DOCKER_PASS "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
   local HTTP_STATUS
@@ -29,9 +29,9 @@ main() {
 
   # Getting token
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_AUTH_TOKEN}&scope=repository:${1}:pull,push" \
-    -u "${DOCKER_USER}:${DOCKER_PASSWORD}"
+    -u "${DOCKER_USER}:${DOCKER_PASS}"
   )"
-  unset DOCKER_PASSWORD
+  unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
     printf "%bUnable to retrieve token for %s%b\n" "${RED}" "${1}" "${RESET}"
