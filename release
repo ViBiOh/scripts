@@ -68,9 +68,10 @@ release() {
     }")"
 
   if [[ ${HTTP_STATUS} != "201" ]]; then
-     printf "%bFailed to create release%b\n" "${RED}" "${RESET}"
-     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-     exit 1
+    printf "%bFailed to create release%b\n" "${RED}" "${RESET}"
+    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    exit 1
   fi
 
   local RESPONSE_URL
@@ -88,9 +89,10 @@ release() {
     )"
 
     if [[ ${HTTP_STATUS} != "201" ]]; then
-       printf "%bFailed to upload asset %s%b\n" "${RED}" "${asset}" "${RESET}"
-       cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-       exit 1
+      printf "%bFailed to upload asset %s%b\n" "${RED}" "${asset}" "${RESET}"
+      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+      exit 1
     fi
 
     rm "${HTTP_OUTPUT}"

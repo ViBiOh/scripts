@@ -9,13 +9,13 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
+  local DOCKER_REGISTRY="https://registry-1.docker.io/v2"
+  local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
+
   if [[ ${#} -lt 2 ]]; then
     printf "%bUsage: ${0} [IMAGE_NAME] [IMAGE_VERSION] [VERSION_TARGET]%b\n" "${RED}" "${RESET}"
     return 1
   fi
-
-  local DOCKER_REGISTRY="https://registry-1.docker.io/v2"
-  local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
 
   var_read DOCKER_USER
   var_read DOCKER_PASS "" "secret"

@@ -24,7 +24,8 @@ main() {
 
   cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-     exit 1
+    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+    exit 1
   fi
 }
 
