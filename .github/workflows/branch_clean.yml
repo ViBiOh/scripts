@@ -18,7 +18,7 @@ jobs:
           BASE: ${{ github.base_ref }}
           HEAD: ${{ github.head_ref }}
 
-      - name: Check no WIP of fixup commit
+      - name: Check no WIP or fixup commit
         env:
           BASE: origin/${{ github.base_ref }}
           HEAD: origin/${{ github.head_ref }}
