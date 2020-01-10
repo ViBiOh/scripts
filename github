@@ -7,7 +7,7 @@ github_last_release() {
   var_color
 
   if [[ ${#} -lt 1 ]]; then
-    printf "%bUsage: github_last_release owner/repo [verbose] %b\n" "${RED}" "${RESET}"
+    printf "%bUsage: github_last_release owner/repo [previous_version] %b\n" "${RED}" "${RESET}"
     return 1
   fi
 
@@ -31,11 +31,16 @@ github_last_release() {
     return
   fi
 
+  if [[ ${2} == "${RELEASE_VERSION}" ]]; then
+    printf "%b✔ %s is up to date %s%b\n" "${GREEN}" "${1}" "${RELEASE_VERSION}" "${RESET}"
+    return
+  fi
+
   local RELEASE_NOTES
   RELEASE_NOTES="$(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['body'])")"
   rm "${HTTP_OUTPUT}"
 
-  printf "%bLast version of %b%s%b is %b%s%b %s%b\n" "${BLUE}" "${YELLOW}" "${1}" "${BLUE}" "${GREEN}" "${RELEASE_VERSION}" "${BLUE}" "https://github.com/${1}/releases/tag/${RELEASE_VERSION}" "${RESET}"
+  printf "%bNew version for %b%s%b is %b%s%b %s%b\n" "${BLUE}" "${YELLOW}" "${1}" "${BLUE}" "${GREEN}" "${RELEASE_VERSION}" "${BLUE}" "https://github.com/${1}/releases/tag/${RELEASE_VERSION}" "${RESET}"
   printf "%s\n" "${RELEASE_NOTES}"
 }
 
