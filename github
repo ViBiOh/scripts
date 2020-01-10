@@ -33,6 +33,7 @@ github_last_release() {
 
   if [[ ${2} == "${RELEASE_VERSION}" ]]; then
     printf "%b✔ %s is up to date %s%b\n" "${GREEN}" "${1}" "${RELEASE_VERSION}" "${RESET}"
+    rm "${HTTP_OUTPUT}"
     return
   fi
 
