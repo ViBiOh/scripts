@@ -2,6 +2,60 @@
 
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+github_compare_version() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ "${#}" -lt 2 ]]; then
+    printf "%bUsage: github_compare_version owner/repo latest_version [current_version] [release_api_output_file]%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  if [[ -z ${3} ]]; then
+    printf "%s" "${2}"
+    rm "${4}"
+    return
+  fi
+
+  if [[ ${3} == "${2}" ]]; then
+    printf "%b✔ %s is up to date %s%b\n" "${GREEN}" "${1}" "${2}" "${RESET}"
+    rm "${4}"
+    return
+  fi
+
+  local RELEASE_NOTES
+  RELEASE_NOTES="$(python -c "import json; print(json.load(open('${4}'))['body'])")"
+  rm "${4}"
+
+  printf "%bNew version for %b%s%b is %b%s%b %s%b\n" "${BLUE}" "${YELLOW}" "${1}" "${BLUE}" "${GREEN}" "${2}" "${BLUE}" "https://github.com/${1}/releases/tag/${2}" "${RESET}"
+  printf "%s\n" "${RELEASE_NOTES}"
+}
+
+# Slower but works with private
+github_last_release_private() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ "${#}" -lt 1 ]]; then
+    printf "%bUsage: github_last_release_private owner/repo%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  var_read GITHUB_OAUTH_TOKEN "" "secret"
+
+  local HTTP_OUTPUT="http_output.txt"
+
+  local LATEST_RELEASE
+  LATEST_RELEASE="$(curl -q -sS -o "${HTTP_OUTPUT}" -w "%{http_code}" -H "Authorization: token ${GITHUB_OAUTH_TOKEN}" "https://api.github.com/repos/${1}/releases/latest")"
+  if [[ "${LATEST_RELEASE}" != "200" ]]; then
+    printf "%bUnable to list latest release for %s%b\n" "${RED}" "${1}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  github_compare_version "${1}" "$(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['tag_name'])")" "${2:-}" "${HTTP_OUTPUT}"
+}
+
 github_last_release() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
@@ -22,30 +76,13 @@ github_last_release() {
     return
   fi
 
-  local RELEASE_VERSION
-  RELEASE_VERSION="$(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['tag_name'])")"
-
-  if [[ -z ${2} ]]; then
-    printf "%s" "${RELEASE_VERSION}"
-    rm "${HTTP_OUTPUT}"
-    return
-  fi
-
-  if [[ ${2} == "${RELEASE_VERSION}" ]]; then
-    printf "%b✔ %s is up to date %s%b\n" "${GREEN}" "${1}" "${RELEASE_VERSION}" "${RESET}"
-    rm "${HTTP_OUTPUT}"
-    return
-  fi
-
-  local RELEASE_NOTES
-  RELEASE_NOTES="$(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['body'])")"
-  rm "${HTTP_OUTPUT}"
-
-  printf "%bNew version for %b%s%b is %b%s%b %s%b\n" "${BLUE}" "${YELLOW}" "${1}" "${BLUE}" "${GREEN}" "${RELEASE_VERSION}" "${BLUE}" "https://github.com/${1}/releases/tag/${RELEASE_VERSION}" "${RESET}"
-  printf "%s\n" "${RELEASE_NOTES}"
+  github_compare_version "${1}" "$(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['tag_name'])")" "${2:-}" "${HTTP_OUTPUT}"
 }
 
 github_configure() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
   if [[ ${#} -ne 1 ]]; then
     printf "%bUsage: configure_repository owner/repo%b\n" "${RED}" "${RESET}"
     return 1
