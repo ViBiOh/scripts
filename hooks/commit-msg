@@ -9,6 +9,9 @@ git_semantic() {
     printf "%b%s%b(component)%b:%b\n" "${GREEN}" "${prefix}" "${BLUE}" "${GREEN}" "${RESET}"
     printf "\t%s\n" "${PREFIXES[${prefix}]}"
   done
+
+  printf "\n\n%bYou can add '!' before ':', for indicating breaking change%b\n" "${YELLOW}" "${RESET}"
+  printf "\n\t%bfeat%b(api)%b!%b:%b Adding mandatory parameter on signup\n\n" "${GREEN}" "${BLUE}" "${RED}" "${GREEN}" "${RESET}"
 }
 
 main() {
@@ -26,13 +29,13 @@ main() {
   declare -A PREFIXES
   PREFIXES['chore']='Changes in the core of the repository'
   PREFIXES['docs']='Documentation only changes'
-  PREFIXES['feat']='A new feature for user (production change)'
-  PREFIXES['fix']='A bug fix for user (production change)'
-  PREFIXES['refactor']='A change that is not a feature not a bug (production change)'
+  PREFIXES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
+  PREFIXES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
+  PREFIXES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
   PREFIXES['style']='A change that do not affect the meaning of the code'
   PREFIXES['test']='A new test or correcting existing tests'
 
-  if [[ ! ${FIRST_LINE} =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?: ]]; then
+  if [[ ! ${FIRST_LINE} =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?\!?: ]]; then
     git_semantic
   fi
 
