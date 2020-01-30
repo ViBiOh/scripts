@@ -12,6 +12,8 @@ git_semantic() {
 
   printf "\n\n%bYou can add '!' before ':', for indicating breaking change%b\n" "${YELLOW}" "${RESET}"
   printf "\n\t%bfeat%b(api)%b!%b:%b Adding mandatory parameter on signup\n\n" "${GREEN}" "${BLUE}" "${RED}" "${GREEN}" "${RESET}"
+
+  printf "\n%bYou must add a short commit description (max 80 characters)%b\n" "${YELLOW}" "${RESET}"
 }
 
 main() {
@@ -35,7 +37,8 @@ main() {
   PREFIXES['style']='A change that do not affect the meaning of the code'
   PREFIXES['test']='A new test or correcting existing tests'
 
-  if [[ ! ${FIRST_LINE} =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?\!?: ]]; then
+  shopt -s nocasematch
+  if [[ ! ${FIRST_LINE} =~ ($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?\!?:\ [a-zA-Z0-9]{1:80} ]]; then
     git_semantic
   fi
 
