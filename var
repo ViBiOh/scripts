@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+var_is_interactive() {
+  if [[ $- =~ i ]]; then
+    printf "true"
+  else
+    printf "false"
+  fi
+}
+
 var_read() {
   local SECRET_ARG=""
   if [[ ${3:-} == "secret" ]]; then
@@ -7,7 +15,10 @@ var_read() {
   fi
 
   if [[ -z ${!1:-} ]]; then
-    read ${SECRET_ARG?} -r -p "${1}${2:+ [${2}]}=" READ_VALUE
+    if [[ $(var_is_interactive) == "true" ]]; then
+      read ${SECRET_ARG?} -r -p "${1}${2:+ [${2}]}=" READ_VALUE
+    fi
+
     eval "${1}=${READ_VALUE:-${2}}"
 
     if [[ ${SECRET_ARG} == "-s" ]]; then
