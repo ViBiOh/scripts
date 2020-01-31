@@ -9,11 +9,12 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
+  local DEFAULT_UNTIL_DATE
+  DEFAULT_UNTIL_DATE="$(date -d "${1:-6 month ago}" +%Y%m%d)"
+
   var_read SLACK_LEGACY_TOKEN "" "secret"
   var_read SLACK_USER
-
-  local UNTIL_DATE
-  UNTIL_DATE="$(date -d "${1:-6 month ago}" +%Y%m%d)"
+  var_read UNTIL_DATE "${DEFAULT_UNTIL_DATE}"
 
   local TARGETS=("${2:-channel group direct}")
   local TYPES=("${3:-message file}")
