@@ -29,6 +29,7 @@ main() {
   FIRST_LINE="$(head -1 "${1}")"
 
   declare -A PREFIXES
+
   PREFIXES['chore']='Changes in the core of the repository'
   PREFIXES['docs']='Documentation only changes'
   PREFIXES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")

@@ -52,7 +52,7 @@ release() {
   local HTTP_STATUS
 
   local BODY
-  BODY=$(get_release_body "${GIT_TAG}" | sed 's|"|'"'"'|g')
+  BODY=$(git_changelog "${GIT_TAG}" "$(git tag --sort=-creatordate | grep -v "${GIT_TAG}" | head -1)" | sed 's|"|'"'"'|g')
   printf "%b%s%b\n" "${GREEN}" "${BODY}" "${RESET}"
 
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "300" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")

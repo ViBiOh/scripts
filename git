@@ -33,3 +33,87 @@ git_last_tag() {
 
   git describe --tag 2> /dev/null | awk -F "-" '{print $1}'
 }
+
+git_changelog() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ "${#}" -ne 2 ]]; then
+    printf "%bUsage: git_changelog [END_REF] [START_REF]%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  if [[ $(git_is_inside) != "true" ]]; then
+    printf "%bnot inside a git tree%b\n" "${YELLOW}" "${RESET}"
+    return 2
+  fi
+
+  declare FEATURES
+  declare FIXES
+  declare MISC
+  declare BREAKING
+
+  local VERSION_MESSAGE
+  local COMMIT_MESSAGE
+
+  shopt -s nocasematch
+  for hash in $(git log --no-merges --pretty=format:'%h' "${1}...${2}"); do
+    COMMIT_MESSAGE="$(git show -s --format='%h %B' "${hash}")"
+
+    if [[ $(echo "${COMMIT_MESSAGE}" | head -1) =~ ^([0-9a-f]{1,16})\ (revert )?(chore|docs|feat|fix|refactor|style|test)(\(.+\))?(\!)?:\ (.*)$ ]]; then
+
+      local HASH="${BASH_REMATCH[1]}"
+      local REVERT="${BASH_REMATCH[2]}"
+      local TYPE="${BASH_REMATCH[3]}"
+      local COMPONENT="${BASH_REMATCH[4]}"
+      local BREAK="${BASH_REMATCH[5]}"
+      local CONTENT="${BASH_REMATCH[6]}"
+
+      VERSION_MESSAGE="*"
+
+      if [[ -n ${REVERT} ]]; then
+        VERSION_MESSAGE+=" **reverted**"
+      fi
+
+      if [[ -n ${COMPONENT} ]]; then
+        VERSION_MESSAGE+=" *${COMPONENT}*"
+      fi
+
+      VERSION_MESSAGE+=" ${CONTENT}"
+      VERSION_MESSAGE+=" #${HASH}"
+
+      if [[ ${TYPE} == "feat" ]]; then
+        FEATURES+=("${VERSION_MESSAGE}")
+      elif [[ ${TYPE} == "fix" ]]; then
+        FIXES+=("${VERSION_MESSAGE}")
+      else
+        MISC+=("${VERSION_MESSAGE}")
+      fi
+
+      if [[ ${COMMIT_MESSAGE} =~ ^BREAKING[-\ ]CHANGE:\ (.*)$ ]]; then
+        BREAKING+=("* ${BASH_REMATCH[1]}")
+      elif [[ ${BREAK} == "!" ]]; then
+        BREAKING+=("${VERSION_MESSAGE}")
+      fi
+    fi
+  done
+
+  if [[ ${#FEATURES[@]} -gt 0 ]]; then
+    printf "# Features\n\n%s\n\n" "$(printf "%s\n" "${FEATURES[@]}")"
+  fi
+
+  if [[ ${#FIXES[@]} -gt 0 ]]; then
+    printf "# Fixes\n\n%s\n\n" "$(printf "%s\n" "${FIXES[@]}")"
+  fi
+
+  if [[ ${#MISC[@]} -gt 0 ]]; then
+    printf "# Miscellaneous\n\n%s\n\n" "$(printf "%s\n" "${MISC[@]}")"
+  fi
+
+  if [[ ${#BREAKING[@]} -gt 0 ]]; then
+    printf "# BREAKING CHANGES\n\n%s\n\n" "$(printf "%s\n" "${BREAKING[@]}")"
+  fi
+}
