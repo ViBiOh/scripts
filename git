@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+GIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 git_is_inside() {
   git rev-parse --is-inside-work-tree 2>&1
 }
@@ -35,10 +37,7 @@ git_last_tag() {
 }
 
 git_changelog() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
   if [[ "${#}" -ne 2 ]]; then
@@ -51,10 +50,10 @@ git_changelog() {
     return 2
   fi
 
-  declare FEATURES
-  declare FIXES
-  declare MISC
-  declare BREAKING
+  local FEATURES=()
+  local FIXES=()
+  local MISC=()
+  local BREAKING=()
 
   local VERSION_MESSAGE
   local COMMIT_MESSAGE
@@ -83,7 +82,7 @@ git_changelog() {
       fi
 
       VERSION_MESSAGE+=" ${CONTENT}"
-      VERSION_MESSAGE+=" #${HASH}"
+      VERSION_MESSAGE+=" ${HASH}"
 
       if [[ ${TYPE} == "feat" ]]; then
         FEATURES+=("${VERSION_MESSAGE}")

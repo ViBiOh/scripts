@@ -60,7 +60,7 @@ release() {
     -d "{
       \"tag_name\": \"${GIT_TAG}\",
       \"name\": \"${RELEASE_NAME}\",
-      \"body\": \"${BODY}\"
+      \"body\": \"$(echo "${BODY}" | awk '{printf "%s\\n", $0}')\"
     }")"
 
   if [[ ${HTTP_STATUS} != "201" ]]; then
