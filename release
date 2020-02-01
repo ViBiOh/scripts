@@ -9,35 +9,31 @@ release_clean() {
   mkdir "${OUTPUT_DIR}"
 }
 
-build() {
-  if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: build [BINARY_NAME] [MAIN_SOURCE]%b\n" "${RED}" "${RESET}"
-    return 1
-  fi
-
+golang_build() {
   local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
 
-  for OS_ARCH in "${TARGETS[@]}"; do
-    IFS='/' read -ra context <<< "${OS_ARCH}"
+  local OUTPUT_BINARIES
+  mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${ROOT_DIR}/..." | grep "main" | awk '{print $1}')
 
-    local GOOS="${context[0]}"
-    local GOARCH="${context[1]}"
+  for main in "${OUTPUT_BINARIES[@]}"; do
+    local NAME
+    NAME="$(basename "${main}")"
 
-    (
-      export GOOS="${GOOS}"
-      export GOARCH="${GOARCH}"
-      export CGO_ENABLED=0
-      printf "%bBuilding binary %s to %s%b\n" "${BLUE}" "${1}_${GOOS}_${GOARCH}" "${OUTPUT_DIR}" "${RESET}"
-      go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${1}_${GOOS}_${GOARCH}" "${2}"
-    )
+    for OS_ARCH in "${TARGETS[@]}"; do
+      IFS='/' read -ra context <<< "${OS_ARCH}"
+
+      local GOOS="${context[0]}"
+      local GOARCH="${context[1]}"
+
+      (
+        export GOOS="${GOOS}"
+        export GOARCH="${GOARCH}"
+        export CGO_ENABLED=0
+        printf "%bBuilding binary %s to %s%b\n" "${BLUE}" "${NAME}_${GOOS}_${GOARCH}" "${OUTPUT_DIR}" "${RESET}"
+        go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
+      )
+    done
   done
-}
-
-get_release_body() {
-  local PREVIOUS_TAG
-  PREVIOUS_TAG=$(git tag --sort=-creatordate | grep -v "${GIT_TAG}" | head -n 1)
-
-  git log --no-merges --pretty=format:'%h %s' "${GIT_TAG}...${PREVIOUS_TAG}" | awk '!a[substr($0,8)]++' | awk '{printf "* %s\\n",$0}'
 }
 
 release() {
@@ -104,7 +100,7 @@ release() {
 release_usage() {
   printf "Usage of %s\n" "${0}"
   printf "clean\n\tClean output dir %s\n" "${OUTPUT_DIR}"
-  printf "build\n\tBuild binary for %s\n" "${OUTPUT_BINARIES[*]}"
+  printf "build\n\tBuild artifacts\n"
   printf "release\n\tCreate GitHub release and upload output dir content\n"
 }
 
@@ -120,16 +116,14 @@ main() {
 
   local OUTPUT_DIR="${ROOT_DIR}/release"
 
-  local OUTPUT_BINARIES
-  mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${ROOT_DIR}/..." | grep "main" | awk '{print $1}')
-
   for arg in "${@}"; do
     case "${arg}" in
       "build")
         release_clean
-        for main in "${OUTPUT_BINARIES[@]}"; do
-          build "$(basename "${main}")" "${main}"
-        done
+
+        if [[ -f "${ROOT_DIR}/go.mod" ]]; then
+          golang_build
+        fi
         ;;
       "release")
         release
