@@ -2,7 +2,7 @@
 
 set -o nounset -o pipefail
 
-convetionnal_commit_guidelines() {
+conventionnal_commit_guidelines() {
   printf "%bGuidelines for prefixing commit message from conventionalcommits.org%b\n\n" "${YELLOW}" "${RESET}"
 
   for prefix in "${!PREFIXES[@]}"; do
@@ -42,7 +42,7 @@ main() {
 
   shopt -s nocasematch
   if [[ ! ${FIRST_LINE} =~ ^(revert:\ )?($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?\!?:\ [a-zA-Z0-9]+ ]]; then
-    convetionnal_commit_guidelines
+    conventionnal_commit_guidelines
     exit 1
   fi
 

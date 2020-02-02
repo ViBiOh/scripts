@@ -20,7 +20,7 @@ golang_build() {
     NAME="$(basename "${main}")"
 
     for OS_ARCH in "${TARGETS[@]}"; do
-      IFS='/' read -ra context <<< "${OS_ARCH}"
+      IFS='/' read -r -a context <<< "${OS_ARCH}"
 
       local GOOS="${context[0]}"
       local GOARCH="${context[1]}"
