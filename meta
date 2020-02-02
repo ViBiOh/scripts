@@ -16,6 +16,10 @@ meta_init() {
   cd "${META_SCRIPT_DIR}" || return 1
 
   for dep in "${@}"; do
+    if [[ -z ${dep:-} ]]; then
+      continue
+    fi
+
     if ! [[ -e "./${dep}" ]]; then
       meta_download_script "${dep}"
     fi
