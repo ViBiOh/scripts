@@ -37,12 +37,17 @@ golang_build() {
 }
 
 release() {
+  if [[ $(git_is_inside) != "true" ]]; then
+    printf "%bnot inside a git tree%b\n" "${YELLOW}" "${RESET}"
+    return 1
+  fi
+
   printf "%bIdentifying semver%b\n" "${BLUE}" "${RESET}"
-  var_read START_REF "HEAD"
-  var_read END_REF "$(git tag --sort=-creatordate | grep -v "${START_REF}" | head -1)"
+  var_read VERSION_REF "HEAD"
+  var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep -v "${VERSION_REF}" | head -1)"
 
   local CHANGELOG
-  CHANGELOG=$(git_changelog "${START_REF}" "${END_REF}")
+  CHANGELOG=$(git_changelog "${VERSION_REF}" "${PREVIOUS_REF}")
   printf "%bCHANGELOG:%b\n\n%s%b\n\n" "${YELLOW}" "${GREEN}" "${CHANGELOG}" "${RESET}"
 
   local VERSION_TYPE="patch"
@@ -58,7 +63,7 @@ release() {
 
   local GIT_TAG
   if [[ ${VERSION} =~ (major|minor|patch) ]]; then
-    GIT_TAG="$(version_semver "${VERSION}" "${START_REF}" "quiet")"
+    GIT_TAG="$(version_semver "${VERSION}" "${VERSION_REF}" "quiet")"
   else
     GIT_TAG="${VERSION}"
   fi
@@ -80,6 +85,7 @@ release() {
     "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" \
     -d "{
       \"tag_name\": \"${GIT_TAG}\",
+      \"target_commitish\": \"$(git rev-parse --short "${VERSION_REF}")\",
       \"name\": \"${RELEASE_NAME}\",
       \"body\": \"$(echo "${CHANGELOG}" | sed 's|"|'"'"'|g' | awk '{printf "%s\\n", $0}')\"
     }")"
