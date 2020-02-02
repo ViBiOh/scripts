@@ -48,7 +48,7 @@ main() {
 
   if [[ ! ${FIRST_LINE} =~ ^.{1,80}$ ]]; then
     commit_message_guidelines
-    exit 1
+    exit 2
   fi
 
   exit 0
