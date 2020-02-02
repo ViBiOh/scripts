@@ -55,34 +55,62 @@ git_changelog() {
   local MISC=()
   local BREAKING=()
 
-  local VERSION_MESSAGE
-  local COMMIT_MESSAGE
+  IFS=$'\n'
 
   shopt -s nocasematch
   for hash in $(git log --no-merges --pretty=format:'%h' "${1}...${2}"); do
-    COMMIT_MESSAGE="$(git show -s --format='%h %B' "${hash}")"
 
-    if [[ $(echo "${COMMIT_MESSAGE}" | head -1) =~ ^([0-9a-f]{1,16})\ (revert )?(chore|docs|feat|fix|refactor|style|test)(\(.+\))?(\!)?:\ (.*)$ ]]; then
+    local VERSION_MESSAGE=""
+    local HASH=""
+    local TYPE=""
+    local BREAK=""
 
-      local HASH="${BASH_REMATCH[1]}"
-      local REVERT="${BASH_REMATCH[2]}"
-      local TYPE="${BASH_REMATCH[3]}"
-      local COMPONENT="${BASH_REMATCH[4]}"
-      local BREAK="${BASH_REMATCH[5]}"
-      local CONTENT="${BASH_REMATCH[6]}"
+     for line in $(git show -s --format='%h %B' "${hash}" | grep -v '^\s*$'); do
+      if [[ -z ${VERSION_MESSAGE} ]] && [[ ${line} =~ ^([0-9a-f]{1,16})\ (revert )?(chore|docs|feat|fix|refactor|style|test)(\(.+\))?(\!)?:\ (.*)$ ]]; then
 
-      VERSION_MESSAGE="*"
+        HASH="${BASH_REMATCH[1]}"
+        local REVERT="${BASH_REMATCH[2]}"
+        TYPE="${BASH_REMATCH[3]}"
+        local COMPONENT="${BASH_REMATCH[4]}"
+        local CONTENT="${BASH_REMATCH[6]}"
+        BREAK="${BASH_REMATCH[5]}"
 
-      if [[ -n ${REVERT} ]]; then
-        VERSION_MESSAGE+=" **reverted**"
+        VERSION_MESSAGE="*"
+
+        if [[ -n ${REVERT} ]]; then
+          VERSION_MESSAGE+=" **reverted**"
+        fi
+
+        if [[ -n ${COMPONENT} ]]; then
+          VERSION_MESSAGE+=" *${COMPONENT}*"
+        fi
+
+        VERSION_MESSAGE+=" ${CONTENT}"
       fi
 
-      if [[ -n ${COMPONENT} ]]; then
-        VERSION_MESSAGE+=" *${COMPONENT}*"
+      if [[ -z ${VERSION_MESSAGE} ]]; then
+        break
       fi
 
-      VERSION_MESSAGE+=" ${CONTENT}"
-      VERSION_MESSAGE+=" ${HASH}"
+      if [[ ${line} =~ ^BREAKING[-\ ]CHANGE:\ (.*)$ ]]; then
+        BREAKING+=("* ${BASH_REMATCH[1]}")
+        BREAK=""
+
+        continue
+      fi
+
+      if [[ ${line} =~ ^((closes?)|(fix(ed)?))\ (#[0-9]+)$ ]]; then
+        VERSION_MESSAGE+=" ${BASH_REMATCH[5]}"
+        HASH=""
+
+        continue
+      fi
+    done
+
+    if [[ -n ${VERSION_MESSAGE} ]]; then
+      if [[ -n ${HASH} ]]; then
+        VERSION_MESSAGE+=" ${HASH}"
+      fi
 
       if [[ ${TYPE} == "feat" ]]; then
         FEATURES+=("${VERSION_MESSAGE}")
@@ -92,9 +120,7 @@ git_changelog() {
         MISC+=("${VERSION_MESSAGE}")
       fi
 
-      if [[ ${COMMIT_MESSAGE} =~ ^BREAKING[-\ ]CHANGE:\ (.*)$ ]]; then
-        BREAKING+=("* ${BASH_REMATCH[1]}")
-      elif [[ ${BREAK} == "!" ]]; then
+      if [[ ${BREAK} == "!" ]]; then
         BREAKING+=("${VERSION_MESSAGE}")
       fi
     fi
