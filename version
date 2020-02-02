@@ -2,7 +2,7 @@
 
 VERSION_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-bump_deps() {
+version_bump() {
   if [[ -e package.json ]]; then
     ncu -u
     npm install --ignore-scripts
@@ -20,7 +20,7 @@ bump_deps() {
   fi
 }
 
-semver() {
+version_semver() {
   source "${VERSION_SCRIPT_DIR}/meta" && meta_init "var" "git"
   var_color
 
@@ -49,9 +49,9 @@ semver() {
     local PATCH="${BASH_REMATCH[4]}"
   fi
 
-  if [[ ${#} -ne 1 ]]; then
+  if [[ ${#} -lt 1 ]]; then
     printf "%bCurrent version is: %s%b\n" "${BLUE}" "${PREFIX}${MAJOR}.${MINOR}.${PATCH}" "${RESET}"
-    printf "%bUsage: semver [major|minor|patch]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: version_semver [major|minor|patch] [git ref] [quiet]%b\n" "${RED}" "${RESET}"
     return 3
   fi
 
@@ -78,6 +78,10 @@ semver() {
 
   local NEW_VERSION="${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
 
-  printf "%bNew version is: %s%b\n" "${GREEN}" "${NEW_VERSION}" "${RESET}"
-  git tag "${NEW_VERSION}"
+  git tag -a "${NEW_VERSION}" -m "${NEW_VERSION}" "${2:-HEAD}"
+  if [[ ${#} -lt 3 ]]; then
+    printf "%bNew version is: %s%b\n" "${GREEN}" "${NEW_VERSION}" "${RESET}"
+  else
+    printf "%s" "${NEW_VERSION}"
+  fi
 }

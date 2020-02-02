@@ -37,19 +37,40 @@ golang_build() {
 }
 
 release() {
+  printf "%bIdentifying semver%b\n" "${BLUE}" "${RESET}"
+  var_read START_REF "HEAD"
+  var_read END_REF "$(git tag --sort=-creatordate | grep -v "${START_REF}" | head -1)"
+
+  local CHANGELOG
+  CHANGELOG=$(git_changelog "${START_REF}" "${END_REF}")
+  printf "%bCHANGELOG:%b\n\n%s%b\n\n" "${YELLOW}" "${GREEN}" "${CHANGELOG}" "${RESET}"
+
+  local VERSION_TYPE="patch"
+  if [[ ${CHANGELOG} =~ \#\ BREAKING\ CHANGES ]]; then
+    VERSION_TYPE="major"
+  elif [[ ${CHANGELOG} =~ \#\ Features ]]; then
+    VERSION_TYPE="minor"
+  fi
+
+  printf "%bRelease seems to be a %b%s%b\n" "${BLUE}" "${YELLOW}" "${VERSION_TYPE}" "${RESET}"
+  printf "%bSpecify explicit git tag or major|minor|patch for semver increment%b\n" "${BLUE}" "${RESET}"
+  var_read VERSION "${VERSION_TYPE}" ""
+
+  local GIT_TAG
+  if [[ ${VERSION} =~ (major|minor|patch) ]]; then
+    GIT_TAG="$(version_semver "${VERSION}" "${START_REF}" "quiet")"
+  else
+    GIT_TAG="${VERSION}"
+  fi
+
   var_read GITHUB_OAUTH_TOKEN "" "secret"
   var_read GITHUB_REPOSITORY "$(git_remote_repository)"
-  var_read GIT_TAG "$(git_last_tag)"
   var_read RELEASE_NAME "${GIT_TAG}"
 
   printf "%bCreating release %s for %s...%b\n" "${BLUE}" "${GIT_TAG}" "${GITHUB_REPOSITORY}" "${RESET}"
 
   local HTTP_OUTPUT="http_output.txt"
   local HTTP_STATUS
-
-  local BODY
-  BODY=$(git_changelog "${GIT_TAG}" "$(git tag --sort=-creatordate | grep -v "${GIT_TAG}" | head -1)" | sed 's|"|'"'"'|g')
-  printf "%b%s%b\n" "${GREEN}" "${BODY}" "${RESET}"
 
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "300" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
 
@@ -60,7 +81,7 @@ release() {
     -d "{
       \"tag_name\": \"${GIT_TAG}\",
       \"name\": \"${RELEASE_NAME}\",
-      \"body\": \"$(echo "${BODY}" | awk '{printf "%s\\n", $0}')\"
+      \"body\": \"$(echo "${CHANGELOG}" | sed 's|"|'"'"'|g' | awk '{printf "%s\\n", $0}')\"
     }")"
 
   if [[ ${HTTP_STATUS} != "201" ]]; then
@@ -108,7 +129,7 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var" "git"
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "git" "version"
   var_color
 
   local ROOT_DIR
