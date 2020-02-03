@@ -45,9 +45,9 @@ github_last_release_private() {
 
   local HTTP_OUTPUT="http_output.txt"
 
-  local LATEST_RELEASE
-  LATEST_RELEASE="$(curl -q -sS -o "${HTTP_OUTPUT}" -w "%{http_code}" -H "Authorization: token ${GITHUB_OAUTH_TOKEN}" "https://api.github.com/repos/${1}/releases/latest")"
-  if [[ "${LATEST_RELEASE}" != "200" ]]; then
+  local HTTP_STATUS
+  HTTP_STATUS="$(curl -q -sS -o "${HTTP_OUTPUT}" -w "%{http_code}" -H "Authorization: token ${GITHUB_OAUTH_TOKEN}" "https://api.github.com/repos/${1}/releases/latest")"
+  if [[ "${HTTP_STATUS}" != "200" ]]; then
     printf "%bUnable to list latest release for %s%b\n" "${RED}" "${1}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
@@ -68,9 +68,9 @@ github_last_release() {
   local HTTP_OUTPUT="http_output.txt"
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
 
-  local REQUEST_STATUS
-  REQUEST_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${1}/releases/latest")"
-  if [[ ${REQUEST_STATUS} != "200" ]]; then
+  local HTTP_STATUS
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${1}/releases/latest")"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
     printf "%bUnable to list latest release for %s%b\n" "${RED}" "${1}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
@@ -91,8 +91,8 @@ github_configure() {
   local HTTP_OUTPUT="http_output.txt"
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
 
-  local REQUEST_STATUS
-  REQUEST_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "-X" "PATCH" "https://api.github.com/repos/${1}" "-d" '{
+  local HTTP_STATUS
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "-X" "PATCH" "https://api.github.com/repos/${1}" "-d" '{
     "default_branch": "master",
     "allow_merge_commit": false,
     "allow_squash_merge": false,
@@ -100,21 +100,21 @@ github_configure() {
     "has_wiki": false,
     "has_projects": false
   }')"
-  if [[ ${REQUEST_STATUS} != "200" ]]; then
+  if [[ ${HTTP_STATUS} != "200" ]]; then
     printf "%bUnable to edit ${1}%b\n" "${RED}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
 
-  REQUEST_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.dorian-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/vulnerability-alerts")"
-  if [[ ${REQUEST_STATUS} != "204" ]]; then
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.dorian-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/vulnerability-alerts")"
+  if [[ ${HTTP_STATUS} != "204" ]]; then
     printf "%bUnable to enable vulnerability alerts for ${1}%b\n" "${RED}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
 
-  REQUEST_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.london-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/automated-security-fixes")"
-  if [[ ${REQUEST_STATUS} != "204" ]]; then
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.london-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/automated-security-fixes")"
+  if [[ ${HTTP_STATUS} != "204" ]]; then
     printf "%bUnable to enable automated security fixes for ${1}%b\n" "${RED}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
