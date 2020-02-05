@@ -13,7 +13,7 @@ main() {
   local HEAD="${2:-$(git rev-parse --abbrev-ref HEAD)}"
 
   local UNCLEAN_COMMITS
-  UNCLEAN_COMMITS="$(git log --oneline --grep "(fixup|wip)" -E -i "${BASE}..${HEAD}")"
+  UNCLEAN_COMMITS="$(git log --oneline --grep "(^fixup\!|\bwip\b)" -E -i "${BASE}..${HEAD}")"
 
   if [[ -n ${UNCLEAN_COMMITS} ]]; then
     printf "%s\n\n%bYou have unclean commits, please cleanup before merge!%b\n" "${UNCLEAN_COMMITS}" "${RED}" "${RESET}"
