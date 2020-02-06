@@ -65,6 +65,16 @@ git_changelog() {
     return 2
   fi
 
+  declare -A PREFIXES
+
+  PREFIXES['chore']='Changes in the core of the repository'
+  PREFIXES['docs']='Documentation only changes'
+  PREFIXES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
+  PREFIXES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
+  PREFIXES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
+  PREFIXES['style']='A change that do not affect the meaning of the code'
+  PREFIXES['test']='A new test or correcting existing tests'
+
   local FEATURES=()
   local FIXES=()
   local MISC=()
@@ -74,14 +84,13 @@ git_changelog() {
 
   shopt -s nocasematch
   for hash in $(git log --no-merges --pretty=format:'%h' "${1}...${2}"); do
-
     local VERSION_MESSAGE=""
     local HASH=""
     local TYPE=""
     local BREAK=""
 
      for line in $(git show -s --format='%h %B' "${hash}" | grep -v '^\s*$'); do
-      if [[ -z ${VERSION_MESSAGE} ]] && [[ ${line} =~ ^([0-9a-f]{1,16})\ (revert )?(chore|docs|feat|fix|refactor|style|test)(\(.+\))?(\!)?:\ (.*)$ ]]; then
+      if [[ -z ${VERSION_MESSAGE} ]] && [[ ${line} =~ ^([0-9a-f]{1,16})\ (revert )?($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?(\!)?:\ (.*)$ ]]; then
 
         HASH="${BASH_REMATCH[1]}"
         local REVERT="${BASH_REMATCH[2]}"
