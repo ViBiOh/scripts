@@ -40,6 +40,10 @@ main() {
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
 
+  if [[ ${FIRST_LINE} =~ ^fixup! ]]; then
+    exit 0
+  fi
+
   shopt -s nocasematch
   if [[ ! ${FIRST_LINE} =~ ^(revert:\ )?($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?\!?:\ [a-zA-Z0-9]+ ]]; then
     conventionnal_commit_guidelines
