@@ -40,7 +40,7 @@ main() {
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
 
-  if [[ ${FIRST_LINE} =~ ^fixup! ]]; then
+  if [[ $(git_is_commit_wip "${FIRST_LINE}") == "true" ]]; then
     exit 0
   fi
 

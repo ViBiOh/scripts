@@ -36,6 +36,21 @@ git_last_tag() {
   git describe --tag 2> /dev/null | awk -F "-" '{print $1}'
 }
 
+git_is_commit_wip() {
+  if [[ ${1} =~ ^fixup\! ]]; then
+    printf "true"
+  fi
+
+  local WIP_REGEX="\\bwip\\b"
+  if [[ ${OSTYPE} =~ ^darwin ]]; then
+    WIP_REGEX="[[:<:]]wip[[:>:]]"
+  fi
+
+  if [[ ${1} =~ ${WIP_REGEX} ]]; then
+    printf "true"
+  fi
+}
+
 git_changelog() {
   source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
   var_color

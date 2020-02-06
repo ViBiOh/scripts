@@ -11,6 +11,13 @@ sed_inplace() {
 }
 
 main() {
+  local SCRIPT_REAL_PATH
+  SCRIPT_REAL_PATH="$(python -c 'import sys; import os.path; print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_REAL_PATH}")" && pwd)"
+
+  source "${SCRIPT_DIR}/../meta" && meta_init "git"
+
   declare -A PREFIXES
 
   PREFIXES['chore']='Changes in the core of the repository'
@@ -27,7 +34,11 @@ main() {
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
 
-  if [[ ! ${FIRST_LINE} =~ ^fixup! ]] && [[ -n ${BRANCH_NAME} && ${BRANCH_NAME} =~ (features|fixes)/([A-Z0-9]+[-_][0-9]+) ]]; then
+  if [[ $(git_is_commit_wip "${FIRST_LINE}") == "true" ]]; then
+    exit 0
+  fi
+
+  if [[ -n ${BRANCH_NAME} && ${BRANCH_NAME} =~ (features|fixes)/([A-Z0-9]+[-_][0-9]+) ]]; then
     local PREFIX="${BASH_REMATCH[2]}"
 
     if [[ ! ${FIRST_LINE} =~ ${PREFIX} ]]; then
