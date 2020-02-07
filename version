@@ -2,6 +2,21 @@
 
 VERSION_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+version_value() {
+  source "${VERSION_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ ${#} -ne 2 ]]; then
+    printf "%bversion_value [regex] [folder]%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  local SED_REGEX
+  SED_REGEX="$(printf "%s" "${1}" | sed 's|\((\)|\\\1|g' | sed 's|\()\)|\\\1|g')"
+
+  grep -hoEr "${1}" "${2}" | head -1 | sed "s|${SED_REGEX}|\1|"
+}
+
 version_bump() {
   if [[ -e package.json ]]; then
     ncu -u
