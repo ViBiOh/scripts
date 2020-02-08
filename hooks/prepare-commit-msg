@@ -18,16 +18,6 @@ main() {
 
   source "${SCRIPT_DIR}/../meta" && meta_init "git"
 
-  declare -A PREFIXES
-
-  PREFIXES['chore']='Changes in the core of the repository'
-  PREFIXES['docs']='Documentation only changes'
-  PREFIXES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
-  PREFIXES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
-  PREFIXES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
-  PREFIXES['style']='A change that do not affect the meaning of the code'
-  PREFIXES['test']='A new test or correcting existing tests'
-
   local BRANCH_NAME
   BRANCH_NAME=$(git symbolic-ref --short HEAD)
 
@@ -42,8 +32,8 @@ main() {
     local PREFIX="${BASH_REMATCH[2]}"
 
     if [[ ! ${FIRST_LINE} =~ ${PREFIX} ]]; then
-      if [[ ${FIRST_LINE} =~ ^(revert:\ )?($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?(\!?): ]]; then
-        perl -pi'' -e "s|^(revert:\ )?($(printf "%s\|" "${!PREFIXES[@]}"))(\(.+\))?(\!?):|\1\2\3\4: ${PREFIX}|" "${1}"
+      if [[ $(git_is_conventional_commit "${FIRST_LINE}") == "true" ]]; then
+        perl -pi'' -e "s|^(revert:\ )?($(printf "%s\|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"))(\(.+\))?(\!?):|\1\2\3\4: ${PREFIX}|" "${1}"
       else
         sed_inplace -e "1s|^|${PREFIX} |" "${1}"
       fi
