@@ -6,17 +6,35 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "git"
   var_color
 
   local BASE="${1:-master}"
   local HEAD="${2:-$(git rev-parse --abbrev-ref HEAD)}"
 
-  local UNCLEAN_COMMITS
-  UNCLEAN_COMMITS="$(git log --oneline --grep "(^fixup\!|\bwip\b)" -E -i "${BASE}..${HEAD}")"
+  local UNCLEAR="false"
 
-  if [[ -n ${UNCLEAN_COMMITS} ]]; then
-    printf "%s\n\n%bYou have unclean commits, please cleanup before merge!%b\n" "${UNCLEAN_COMMITS}" "${RED}" "${RESET}"
+  for commit in $(git log --pretty=format:'%s' "${BASE}..${HEAD}"); do
+    if [[ $(git_is_commit_wip "${commit}") == "true" ]]; then
+      printf "%s %bis a wip commit, please rebase%b\n" "${commit}" "${RED}" "${RESET}"
+      UNCLEAR="true"
+      continue
+    fi
+
+    if [[ $(git_is_conventional_commit "${commit}") != "true" ]]; then
+      printf "%s %bis not a conventional commit, please reword%b\n" "${commit}" "${RED}" "${RESET}"
+      UNCLEAR="true"
+      continue
+    fi
+
+    if [[ $(git_is_valid_description "${FIRST_LINE}") != "true" ]]; then
+      printf "%s %bis too long, please reword%b\n" "${commit}" "${RED}" "${RESET}"
+      UNCLEAR="true"
+      continue
+    fi
+  done
+
+  if [[ ${UNCLEAR} == "true" ]]; then
     exit 1
   fi
 

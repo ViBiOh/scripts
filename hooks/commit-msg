@@ -2,22 +2,6 @@
 
 set -o nounset -o pipefail
 
-conventionnal_commit_guidelines() {
-  printf "%bGuidelines for prefixing commit message from conventionalcommits.org%b\n\n" "${YELLOW}" "${RESET}"
-
-  for prefix in "${!PREFIXES[@]}"; do
-    printf "%b%s%b(component)%b:%b\n" "${GREEN}" "${prefix}" "${BLUE}" "${GREEN}" "${RESET}"
-    printf "\t%s\n" "${PREFIXES[${prefix}]}"
-  done
-
-  printf "\n\n%bYou can add '!' before ':', for indicating breaking change%b\n" "${YELLOW}" "${RESET}"
-  printf "\n\t%bfeat%b(api)%b!%b:%b Adding mandatory parameter on signup\n\n" "${GREEN}" "${BLUE}" "${RED}" "${GREEN}" "${RESET}"
-}
-
-commit_message_guidelines() {
-  printf "\n%bYou have to use a short commit description (max 80 characters)%b\n\n" "${YELLOW}" "${RESET}"
-}
-
 main() {
   local SCRIPT_REAL_PATH
   SCRIPT_REAL_PATH="$(python -c 'import sys; import os.path; print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"
@@ -27,16 +11,6 @@ main() {
   source "${SCRIPT_DIR}/../meta" && meta_init "var" "git"
   var_color
 
-  declare -A PREFIXES
-
-  PREFIXES['chore']='Changes in the core of the repository'
-  PREFIXES['docs']='Documentation only changes'
-  PREFIXES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
-  PREFIXES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
-  PREFIXES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
-  PREFIXES['style']='A change that do not affect the meaning of the code'
-  PREFIXES['test']='A new test or correcting existing tests'
-
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
 
@@ -44,15 +18,14 @@ main() {
     exit 0
   fi
 
-  shopt -s nocasematch
-  if [[ ! ${FIRST_LINE} =~ ^(revert:\ )?($(IFS='|'; echo "${!PREFIXES[*]}"))(\(.+\))?\!?:\ [a-zA-Z0-9]+ ]]; then
-    conventionnal_commit_guidelines
+  if [[ $(git_is_conventional_commit "${FIRST_LINE}") != "true" ]]; then
+    git_conventionnal_commit_guidelines
     exit 1
   fi
 
-  if [[ ! ${FIRST_LINE} =~ ^.{1,80}$ ]]; then
-    commit_message_guidelines
-    exit 2
+  if [[ $(git_is_valid_description "${FIRST_LINE}") != "true" ]]; then
+    git_valid_description_guidelines
+    exit 1
   fi
 
   exit 0
