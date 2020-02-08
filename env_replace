@@ -19,7 +19,21 @@ main() {
 
   local SED_COMMAND=("sed")
   for name in "${@}"; do
-    SED_COMMAND+=("-e" "s|\${\{0,1\}${name}}\{0,1\}|${!name}|g")
+    if [[ -z ${name:-} ]]; then
+      continue
+    fi
+
+    local KEY
+    local VALUE
+    if [[ ${name} =~ (.*)=(.*) ]]; then
+      KEY=${BASH_REMATCH[1]}
+      VALUE="${!BASH_REMATCH[2]}"
+    else
+      KEY="${name}"
+      VALUE="${!name}"
+    fi
+
+    SED_COMMAND+=("-e" "s|\${\{0,1\}${KEY}}\{0,1\}|${VALUE}|g")
   done
 
   SED_COMMAND+=("${FILENAME}")
