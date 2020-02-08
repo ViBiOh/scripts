@@ -17,6 +17,7 @@ main() {
   SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_REAL_PATH}")" && pwd)"
 
   source "${SCRIPT_DIR}/../meta" && meta_init "git"
+  git_conventionnal_commits
 
   local BRANCH_NAME
   BRANCH_NAME=$(git symbolic-ref --short HEAD)

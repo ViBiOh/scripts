@@ -2,14 +2,19 @@
 
 GIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-declare -A CONVENTIONAL_COMMIT_SCOPES
-CONVENTIONAL_COMMIT_SCOPES['chore']='Changes in the core of the repository'
-CONVENTIONAL_COMMIT_SCOPES['docs']='Documentation only changes'
-CONVENTIONAL_COMMIT_SCOPES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
-CONVENTIONAL_COMMIT_SCOPES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
-CONVENTIONAL_COMMIT_SCOPES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
-CONVENTIONAL_COMMIT_SCOPES['style']='A change that do not affect the meaning of the code'
-CONVENTIONAL_COMMIT_SCOPES['test']='A new test or correcting existing tests'
+git_conventionnal_commits() {
+  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  declare -gA CONVENTIONAL_COMMIT_SCOPES
+  CONVENTIONAL_COMMIT_SCOPES['chore']='Changes in the core of the repository'
+  CONVENTIONAL_COMMIT_SCOPES['docs']='Documentation only changes'
+  CONVENTIONAL_COMMIT_SCOPES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
+  CONVENTIONAL_COMMIT_SCOPES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
+  CONVENTIONAL_COMMIT_SCOPES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
+  CONVENTIONAL_COMMIT_SCOPES['style']='A change that do not affect the meaning of the code'
+  CONVENTIONAL_COMMIT_SCOPES['test']='A new test or correcting existing tests'
+}
 
 git_is_inside() {
   git rev-parse --is-inside-work-tree 2>&1
@@ -61,6 +66,8 @@ git_is_commit_wip() {
 }
 
 git_is_conventional_commit() {
+  git_conventionnal_commits
+
   shopt -s nocasematch
   if [[ ${1} =~ ^(revert:\ )?($(IFS='|'; echo "${!CONVENTIONAL_COMMIT_SCOPES[*]}"))(\(.+\))?\!?:\ [a-zA-Z0-9]+ ]]; then
     printf "true"
@@ -78,6 +85,10 @@ git_is_valid_description() {
 }
 
 git_conventionnal_commit_guidelines() {
+  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+  git_conventionnal_commits
+
   printf "%bGuidelines for prefixing commit message from conventionalcommits.org%b\n\n" "${YELLOW}" "${RESET}"
 
   for prefix in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do
@@ -90,12 +101,16 @@ git_conventionnal_commit_guidelines() {
 }
 
 git_valid_description_guideline() {
+  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
   printf "\n%bYou have to use a short commit description (max 80 characters)%b\n\n" "${YELLOW}" "${RESET}"
 }
 
 git_changelog() {
   source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
+  git_conventionnal_commits
 
   if [[ "${#}" -ne 2 ]]; then
     printf "%bUsage: git_changelog [END_REF] [START_REF]%b\n" "${RED}" "${RESET}"

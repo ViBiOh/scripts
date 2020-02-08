@@ -8,8 +8,7 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_REAL_PATH}")" && pwd)"
 
-  source "${SCRIPT_DIR}/../meta" && meta_init "var" "git"
-  var_color
+  source "${SCRIPT_DIR}/../meta" && meta_init "git"
 
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
