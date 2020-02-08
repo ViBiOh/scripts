@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -o nounset -o errexit
+set -o nounset -o pipefail -o errexit
 
 main() {
   local SCRIPT_DIR
@@ -28,7 +28,7 @@ main() {
       continue
     fi
 
-    if [[ $(git_is_valid_description "${FIRST_LINE}") != "true" ]]; then
+    if [[ $(git_is_valid_description "${commit}") != "true" ]]; then
       printf "%s %bis too long, please reword%b\n" "${commit}" "${RED}" "${RESET}"
       UNCLEAR="true"
       continue
