@@ -120,5 +120,23 @@ github_configure() {
     return
   fi
 
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.luke-cage-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/branches/master/protection" "-d" '{
+    "enforce_admins": true,
+    "required_linear_history": true,
+    "required_pull_request_reviews": null,
+    "required_status_checks": {
+      "strict": true,
+      "contexts": [
+        "Branch is clean"
+      ]
+    },
+    "restrictions": null
+  }')"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    printf "%bUnable to update branch protection ${1}%b\n" "${RED}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    return
+  fi
+
   rm "${HTTP_OUTPUT}"
 }
