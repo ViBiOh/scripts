@@ -30,7 +30,13 @@ main() {
       VALUE="${!BASH_REMATCH[2]}"
     else
       KEY="${name}"
-      VALUE="${!name}"
+      VALUE="${!name:-}"
+    fi
+
+    VALUE="${VALUE/\&/\\\&}"
+
+    if [[ -z ${VALUE:-} ]]; then
+      continue
     fi
 
     SED_COMMAND+=("-e" "s|\${\{0,1\}${KEY}}\{0,1\}|${VALUE}|g")
