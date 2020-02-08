@@ -13,6 +13,7 @@ main() {
   local HEAD="${2:-$(git rev-parse --abbrev-ref HEAD)}"
 
   local UNCLEAR="false"
+  IFS=$'\n'
 
   for commit in $(git log --pretty=format:'%s' "${BASE}..${HEAD}"); do
     if [[ $(git_is_commit_wip "${commit}") == "true" ]]; then
