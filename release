@@ -63,6 +63,7 @@ docker_build() {
     DOCKER_MANIFEST_ARGS+=("${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}")
   done
 
+  printf "%bCreating docker manifest for %s%b\n" "${BLUE}" "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${RESET}"
   docker manifest create "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_MANIFEST_ARGS[@]}"
 
   for DOCKER_ARCH in ${DOCKER_ARCHS[*]}; do
@@ -70,6 +71,7 @@ docker_build() {
     local OS="${context[0]}"
     local ARCH="${context[1]}"
 
+    printf "%bBuilding image for %s%b\n" "${BLUE}" "${DOCKER_ARCH}" "${RESET}"
     docker build -f "${DOCKERFILE}" -t "${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}" --build-arg OS --build-arg ARCH "${OUTPUT_DIR}/"
     docker manifest annotate "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}" --arch "${ARCH}" --os "${OS}"
   done
