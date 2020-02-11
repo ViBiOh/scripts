@@ -12,7 +12,7 @@ release_clean() {
 golang_build() {
   local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
 
-  if command -v go > /dev/null 2>&1; then
+  if ! command -v go > /dev/null 2>&1; then
     printf "%bgo not found%b\n" "${RED}" "${RESET}"
     return
   fi
@@ -44,7 +44,7 @@ golang_build() {
 docker_build() {
   local DOCKER_ARCHS=('linux/amd64' 'linux/arm' 'linux/arm64')
 
-  if command -v docker > /dev/nul: 2>&1; then
+  if ! command -v docker > /dev/null 2>&1; then
     printf "%bdocker not found%b\n" "${RED}" "${RESET}"
     return
   fi
