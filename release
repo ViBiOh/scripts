@@ -12,6 +12,11 @@ release_clean() {
 golang_build() {
   local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
 
+  if command -v go > /dev/null 2>&1; then
+    printf "%bgo not found%b\n" "${RED}" "${RESET}"
+    return
+  fi
+
   local OUTPUT_BINARIES
   mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${ROOT_DIR}/..." | grep "main" | awk '{print $1}')
 
@@ -34,6 +39,42 @@ golang_build() {
       )
     done
   done
+}
+
+docker_build() {
+  local DOCKER_ARCHS=('linux/amd64' 'linux/arm' 'linux/arm64')
+
+  if command -v docker > /dev/nul: 2>&1; then
+    printf "%bdocker not found%b\n" "${RED}" "${RESET}"
+    return
+  fi
+
+  var_read DOCKER_IMAGE
+  var_read IMAGE_VERSION
+  var_read DOCKERFILE "Dockerfile"
+
+  local DOCKER_MANIFEST_ARGS=()
+  export DOCKER_CLI_EXPERIMENTAL="enabled"
+
+  for DOCKER_ARCH in ${DOCKER_ARCHS[*]}; do
+    IFS='/' read -r -a context <<< "${DOCKER_ARCH}"
+    local OS="${context[0]}"
+    local ARCH="${context[1]}"
+    DOCKER_MANIFEST_ARGS+=("${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}")
+  done
+
+  docker manifest create "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_MANIFEST_ARGS[@]}"
+
+  for DOCKER_ARCH in ${DOCKER_ARCHS[*]}; do
+    IFS='/' read -r -a context <<< "${DOCKER_ARCH}"
+    local OS="${context[0]}"
+    local ARCH="${context[1]}"
+
+    docker build -f "${DOCKERFILE}" -t "${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}" --build-arg OS --build-arg ARCH "${OUTPUT_DIR}/"
+    docker manifest annotate "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}" --arch "${ARCH}" --os "${OS}"
+  done
+
+  docker manifest push "${DOCKER_IMAGE}:${IMAGE_VERSION}"
 }
 
 release() {
@@ -151,13 +192,18 @@ main() {
         if [[ -f "${ROOT_DIR}/go.mod" ]]; then
           golang_build
         fi
+
+        docker_build
         ;;
+
       "release")
         release
         ;;
+
       "clean")
         release_clean
         ;;
+
       *)
         release_usage
         ;;
