@@ -62,7 +62,7 @@ docker_build() {
     local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}"
 
     printf "%bBuilding and pushing image for %s%b\n" "${BLUE}" "${DOCKER_ARCH}" "${RESET}"
-    docker build -f "${DOCKERFILE}" -t "${BUILT_IMAGE}" --build-arg "OS=${OS}" --build-arg "ARCH=${ARCH}" "${OUTPUT_DIR}/"
+    docker build -f "${DOCKERFILE}" -t "${BUILT_IMAGE}" --build-arg "OS=${OS}" --build-arg "ARCH=${ARCH}" "."
     docker push "${BUILT_IMAGE}"
 
     DOCKER_MANIFEST_ARGS+=("${BUILT_IMAGE}")
