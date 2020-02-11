@@ -20,21 +20,26 @@ main() {
   var_read DOCKER_USER
   var_read DOCKER_PASS "" "secret"
 
+  local DOCKER_IMAGE="${1}"
+  local IMAGE_VERSION="${2}"
+  local VERSION_TARGET="${3:-latest}"
+  local MANIFEST_ACCEPT="application/vnd.docker.distribution.manifest.list.v2+json"
+
   local HTTP_OUTPUT="http_output.txt"
   local HTTP_STATUS
 
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
 
-  printf "%bGetting token from %s for pulling and pushing to %s...%b\n" "${BLUE}" "${DOCKER_AUTH_TOKEN}" "${1}" "${RESET}"
+  printf "%bGetting token from %s for pulling and pushing to %s...%b\n" "${BLUE}" "${DOCKER_AUTH_TOKEN}" "${DOCKER_IMAGE}" "${RESET}"
 
   # Getting token
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_AUTH_TOKEN}&scope=repository:${1}:pull,push" \
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_AUTH_TOKEN}&scope=repository:${DOCKER_IMAGE}:pull,push" \
     -u "${DOCKER_USER}:${DOCKER_PASS}"
   )"
   unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to retrieve token for %s%b\n" "${RED}" "${1}" "${RESET}"
+    printf "%bUnable to retrieve token for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
     printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
@@ -43,15 +48,15 @@ main() {
   CLIENT_ARGS+=("-H" "Authorization: Bearer $(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['token'])")")
   rm "${HTTP_OUTPUT}"
 
-  printf "%bTagging image %s from %s to %s...%b\n" "${BLUE}" "${1}" "${2}" "${3:-latest}" "${RESET}"
+  printf "%bTagging image %s from %s to %s...%b\n" "${BLUE}" "${DOCKER_IMAGE}" "${IMAGE_VERSION}" "${VERSION_TARGET}" "${RESET}"
 
   # Getting manifest
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/${1}/manifests/${2}" \
-    -H "Accept: application/vnd.docker.distribution.manifest.v2+json"
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" \
+    -H "Accept: ${MANIFEST_ACCEPT}"
   )"
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to retrieve manifest for %s%b\n" "${RED}" "${1}" "${RESET}"
+    printf "%bUnable to retrieve manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
     printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
@@ -62,13 +67,13 @@ main() {
   rm "${HTTP_OUTPUT}"
 
   # Promoting image
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X PUT "${DOCKER_REGISTRY}/${1}/manifests/${3:-latest}" \
-    -H "Content-Type: application/vnd.docker.distribution.manifest.v2+json" \
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
+    -H "Content-Type: ${MANIFEST_ACCEPT}" \
     -d "${MANIFEST_PAYLOAD}"
   )"
 
   if [[ ${HTTP_STATUS} != "201" ]]; then
-    printf "%bUnable to promote manifest for %s%b\n" "${RED}" "${1}" "${RESET}"
+    printf "%bUnable to promote manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
     printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
