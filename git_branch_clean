@@ -16,22 +16,21 @@ main() {
   IFS=$'\n'
 
   for commit in $(git log --pretty=format:'%s' "${BASE}..${HEAD}"); do
+    printf "%bAnalyzing %b%s%b\n" "${BLUE}" "${YELLOW}" "${commit}" "${RESET}"
     if [[ $(git_is_commit_wip "${commit}") == "true" ]]; then
-      printf "%s %bis a wip commit, please rebase%b\n" "${commit}" "${RED}" "${RESET}"
+      printf "\t%bwip commit, please rebase%b\n" "${RED}" "${RESET}"
       UNCLEAR="true"
       continue
     fi
 
     if [[ $(git_is_conventional_commit "${commit}") != "true" ]]; then
-      printf "%s %bis not a conventional commit, please reword%b\n" "${commit}" "${RED}" "${RESET}"
+      printf "\t%bnot a conventional commit, please reword%b\n" "${RED}" "${RESET}"
       UNCLEAR="true"
-      continue
     fi
 
     if [[ $(git_is_valid_description "${commit}") != "true" ]]; then
-      printf "%s %bis too long, please reword%b\n" "${commit}" "${RED}" "${RESET}"
+      printf "\t%btoo long, please rewor%b\n" "${RED}" "${RESET}"
       UNCLEAR="true"
-      continue
     fi
   done
 
