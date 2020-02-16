@@ -23,7 +23,6 @@ main() {
   local DOCKER_IMAGE="${1}"
   local IMAGE_VERSION="${2}"
   local VERSION_TARGET="${3:-latest}"
-  local MANIFEST_ACCEPT="application/vnd.docker.distribution.manifest.list.v2+json"
 
   local HTTP_OUTPUT="http_output.txt"
   local HTTP_STATUS
@@ -50,36 +49,43 @@ main() {
 
   printf "%bTagging image %s from %s to %s...%b\n" "${BLUE}" "${DOCKER_IMAGE}" "${IMAGE_VERSION}" "${VERSION_TARGET}" "${RESET}"
 
-  # Getting manifest
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" \
-    -H "Accept: ${MANIFEST_ACCEPT}"
-  )"
+  local MANIFEST_ACCEPT=("application/vnd.docker.distribution.manifest.list.v2+json" "application/vnd.docker.distribution.manifest.v2+json")
+  for manifest in "${MANIFEST_ACCEPT[@]}"; do
+    printf "%bTrying with manifest %s%b\n" "${YELLOW}" "${manifest}" "${RESET}"
 
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to retrieve manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    # Getting manifest
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" \
+      -H "Accept: ${manifest}"
+    )"
+
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      printf "%bUnable to retrieve manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
+      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+      return
+    fi
+
+    local MANIFEST_PAYLOAD
+    MANIFEST_PAYLOAD="$(cat ${HTTP_OUTPUT})"
+    rm "${HTTP_OUTPUT}"
+
+    # Promoting image
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
+      -H "Content-Type: ${manifest}" \
+      -d "${MANIFEST_PAYLOAD}"
+    )"
+
+    if [[ ${HTTP_STATUS} != "201" ]]; then
+      printf "%bUnable to promote manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
+      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+      continue
+    fi
+
+    printf "%b✔ Image promoted to latest%b\n" "${GREEN}" "${RESET}"
+    rm "${HTTP_OUTPUT}"
     return
-  fi
-
-  local MANIFEST_PAYLOAD
-  MANIFEST_PAYLOAD="$(cat ${HTTP_OUTPUT})"
-  rm "${HTTP_OUTPUT}"
-
-  # Promoting image
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
-    -H "Content-Type: ${MANIFEST_ACCEPT}" \
-    -d "${MANIFEST_PAYLOAD}"
-  )"
-
-  if [[ ${HTTP_STATUS} != "201" ]]; then
-    printf "%bUnable to promote manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
-  fi
-
-  rm "${HTTP_OUTPUT}"
+  done
 }
 
 main "${@:-}"
