@@ -63,9 +63,11 @@ docker_build() {
 
     printf "%bBuilding and pushing image for %s%b\n" "${BLUE}" "${PLATFORM}" "${RESET}"
     docker build -f "${DOCKERFILE}" -t "${BUILT_IMAGE}" \
+      --build-arg "VERSION=${IMAGE_VERSION}" \
       --build-arg "PLATFORM=${PLATFORM}" \
       --build-arg "OS=${OS}" \
-      --build-arg "ARCH=${ARCH}" "."
+      --build-arg "ARCH=${ARCH}" \
+      "."
     docker push "${BUILT_IMAGE}"
 
     DOCKER_MANIFEST_ARGS+=("${BUILT_IMAGE}")
