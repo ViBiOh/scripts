@@ -54,6 +54,8 @@ docker_build() {
   var_read DOCKERFILE "Dockerfile"
 
   local DOCKER_MANIFEST_ARGS=()
+  export DOCKER_CLI_EXPERIMENTAL="enabled"
+  export DOCKER_BUILDKIT="1"
 
   for PLATFORM in ${DOCKER_ARCHS[*]}; do
     IFS='/' read -r -a context <<< "${PLATFORM}"
@@ -67,13 +69,12 @@ docker_build() {
       --build-arg "PLATFORM=${PLATFORM}" \
       --build-arg "OS=${OS}" \
       --build-arg "ARCH=${ARCH}" \
+      --platform "${PLATFORM}" \
       "."
     docker push "${BUILT_IMAGE}"
 
     DOCKER_MANIFEST_ARGS+=("${BUILT_IMAGE}")
   done
-
-  export DOCKER_CLI_EXPERIMENTAL="enabled"
 
   printf "%bCreating docker manifest for %s%b\n" "${BLUE}" "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${RESET}"
   docker manifest create "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_MANIFEST_ARGS[@]}"
