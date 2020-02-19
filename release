@@ -10,12 +10,12 @@ release_clean() {
 }
 
 golang_build() {
-  local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
-
   if ! command -v go > /dev/null 2>&1; then
     printf "%bgo not found%b\n" "${RED}" "${RESET}"
     return
   fi
+
+  local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
 
   local OUTPUT_BINARIES
   mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${ROOT_DIR}/..." | grep "main" | awk '{print $1}')
@@ -42,12 +42,12 @@ golang_build() {
 }
 
 docker_build() {
-  local DOCKER_ARCHS=('linux/amd64' 'linux/arm' 'linux/arm64')
-
   if ! command -v docker > /dev/null 2>&1; then
     printf "%bdocker not found%b\n" "${RED}" "${RESET}"
     return
   fi
+
+  local DOCKER_ARCHS=('linux/amd64' 'linux/arm' 'linux/arm64')
 
   var_read DOCKER_IMAGE
   var_read IMAGE_VERSION
@@ -55,14 +55,17 @@ docker_build() {
 
   local DOCKER_MANIFEST_ARGS=()
 
-  for DOCKER_ARCH in ${DOCKER_ARCHS[*]}; do
-    IFS='/' read -r -a context <<< "${DOCKER_ARCH}"
+  for PLATFORM in ${DOCKER_ARCHS[*]}; do
+    IFS='/' read -r -a context <<< "${PLATFORM}"
     local OS="${context[0]}"
     local ARCH="${context[1]}"
     local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}"
 
-    printf "%bBuilding and pushing image for %s%b\n" "${BLUE}" "${DOCKER_ARCH}" "${RESET}"
-    docker build -f "${DOCKERFILE}" -t "${BUILT_IMAGE}" --build-arg "OS=${OS}" --build-arg "ARCH=${ARCH}" "."
+    printf "%bBuilding and pushing image for %s%b\n" "${BLUE}" "${PLATFORM}" "${RESET}"
+    docker build -f "${DOCKERFILE}" -t "${BUILT_IMAGE}" \
+      --build-arg "PLATFORM=${PLATFORM}" \
+      --build-arg "OS=${OS}" \
+      --build-arg "ARCH=${ARCH}" "."
     docker push "${BUILT_IMAGE}"
 
     DOCKER_MANIFEST_ARGS+=("${BUILT_IMAGE}")
