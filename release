@@ -176,6 +176,7 @@ release_usage() {
   printf "Usage of %s\n" "${0}"
   printf "clean\n\tClean output dir %s\n" "${OUTPUT_DIR}"
   printf "build\n\tBuild artifacts\n"
+  printf "docker\n\tBuild docker images\n"
   printf "release\n\tCreate GitHub release and upload output dir content\n"
 }
 
