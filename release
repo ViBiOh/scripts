@@ -41,7 +41,7 @@ golang_build() {
   done
 }
 
-docker_build() {
+docker() {
   if ! command -v docker > /dev/null 2>&1; then
     printf "%bdocker not found%b\n" "${RED}" "${RESET}"
     return
@@ -199,8 +199,10 @@ main() {
         if [[ -f "${ROOT_DIR}/go.mod" ]]; then
           golang_build
         fi
+        ;;
 
-        docker_build
+      "docker")
+        docker
         ;;
 
       "release")
