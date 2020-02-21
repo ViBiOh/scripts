@@ -11,6 +11,7 @@ release_clean() {
 
 golang_build() {
   local GO
+  local SOURCE_DIR
 
   if [[ ${BUILD_WITH_DOCKER:-} != "true" ]]; then
     if ! command -v go > /dev/null 2>&1; then
@@ -19,17 +20,19 @@ golang_build() {
     fi
 
     GO=("go")
+    SOURCE_DIR="${ROOT_DIR}/..."
   else
     if ! command -v docker > /dev/null 2>&1; then
       printf "%bdocker not found%b\n" "${RED}" "${RESET}"
       return
     fi
 
-    GO=("docker" "run" "--rm" "-w" "/go/src/app" "-v" "$(pwd):/go/src/app" "-e" "GOOS=${GOOS:-linux}" "-e" "GOARCH=${GOARCH:-amd64}" "-e" "CGO_ENABLED=${CGO_ENABLED:-1}" "golang:1.13" "go")
+    GO=("docker" "run" "--rm" "-w" "/go/src/app" "-v" "$(realpath "${ROOT_DIR}"):/go/src/app" "-e" "GOOS=${GOOS:-linux}" "-e" "GOARCH=${GOARCH:-amd64}" "-e" "CGO_ENABLED=${CGO_ENABLED:-1}" "golang:1.13" "go")
+    SOURCE_DIR="/go/src/app/..."
   fi
 
   local OUTPUT_BINARIES
-  mapfile -t OUTPUT_BINARIES < <(${GO[@]} list -f '{{ .Dir }} {{ .Name }}' "${ROOT_DIR}/..." | grep "main" | awk '{print $1}')
+  mapfile -t OUTPUT_BINARIES < <(${GO[@]} list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
 
   local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
 
