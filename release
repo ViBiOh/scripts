@@ -27,7 +27,7 @@ golang_build() {
       return
     fi
 
-    GO=("docker" "run" "--rm" "-w" "/go/src/app" "-v" "$(realpath "${ROOT_DIR}"):/go/src/app" "-e" "GOOS=${GOOS:-linux}" "-e" "GOARCH=${GOARCH:-amd64}" "-e" "CGO_ENABLED=${CGO_ENABLED:-1}" "golang:1.13" "go")
+    GO=("docker" "run" "--rm" "-w" "/go/src/app" "-v" "$(realpath "${ROOT_DIR}"):/go/src/app" "-v" "$(pwd)/.docker_cache/bin:/go/bin" "-v" "$(pwd)/.docker_cache/pkg:/go/pkg" "-e" "GOOS=${GOOS:-linux}" "-e" "GOARCH=${GOARCH:-amd64}" "-e" "CGO_ENABLED=${CGO_ENABLED:-1}" "golang:1.13" "go")
     SOURCE_DIR="/go/src/app/..."
   fi
 
