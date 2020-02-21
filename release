@@ -29,7 +29,7 @@ golang_build() {
   local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
 
   local OUTPUT_BINARIES
-  mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${ROOT_DIR}/..." | grep "main" | awk '{print $1}')
+  mapfile -t OUTPUT_BINARIES < <(${GO} list -f '{{ .Dir }} {{ .Name }}' "${ROOT_DIR}/..." | grep "main" | awk '{print $1}')
 
   for main in "${OUTPUT_BINARIES[@]}"; do
     local NAME
