@@ -23,7 +23,7 @@ golang_build() {
       return
     fi
 
-    GO="docker run -it --rm -w /go/src/app -v /Users/macbook/code/api:/go/src/app -v /Users/macbook/code/api/.docker_cache/bin:/go/bin -v /Users/macbook/code/api/.docker_cache/pkg:/go/pkg -e GOOS=\${GOOS} -e GOARCH=\${GOARCH} -e CGO_ENABLED=\${CGO_ENABLED} golang:1.13 go"
+    GO="docker run --rm -w /go/src/app -v /Users/macbook/code/api:/go/src/app -v /Users/macbook/code/api/.docker_cache/bin:/go/bin -v /Users/macbook/code/api/.docker_cache/pkg:/go/pkg -e GOOS=\${GOOS} -e GOARCH=\${GOARCH} -e CGO_ENABLED=\${CGO_ENABLED} golang:1.13 go"
   fi
 
   local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
