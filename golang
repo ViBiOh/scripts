@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+golang_go() {
+  if [[ ${BUILD_WITH_DOCKER:-} == "true" ]]; then
+    docker run --rm \
+      -w /go/src/app \
+      -v "$(pwd):/go/src/app" \
+      -v "$(pwd)/.docker_cache/bin:/go/bin" \
+      -v "$(pwd)/.docker_cache/pkg:/go/pkg" \
+      -e GOOS="${GOOS:-linux}" \
+      -e GOARCH="${GOARCH:-amd64}" \
+      -e CGO_ENABLED="${CGO_ENABLED:-1}" \
+      golang:1.13 go "${@:-}"
+  else
+    go "${@:-}"
+  fi
+}

@@ -10,49 +10,50 @@ release_clean() {
 }
 
 golang_build() {
-  local GO
   local SOURCE_DIR
 
-  if [[ ${BUILD_WITH_DOCKER:-} != "true" ]]; then
-    if ! command -v go > /dev/null 2>&1; then
-      printf "%bgo not found%b\n" "${RED}" "${RESET}"
-      return
-    fi
-
-    GO=("go")
-    SOURCE_DIR="${ROOT_DIR}/..."
-  else
+  if [[ ${BUILD_WITH_DOCKER:-} == "true" ]]; then
     if ! command -v docker > /dev/null 2>&1; then
       printf "%bdocker not found%b\n" "${RED}" "${RESET}"
       return
     fi
 
-    GO=("docker" "run" "--rm" "-w" "/go/src/app" "-v" "$(realpath "${ROOT_DIR}"):/go/src/app" "-v" "$(pwd)/.docker_cache/bin:/go/bin" "-v" "$(pwd)/.docker_cache/pkg:/go/pkg" "-e" "GOOS=\${GOOS:-linux}" "-e" "GOARCH=\${GOARCH:-amd64}" "-e" "CGO_ENABLED=\${CGO_ENABLED:-1}" "golang:1.13" "go")
     SOURCE_DIR="/go/src/app/..."
     OUTPUT_DIR="/go/src/app/release"
+  else
+    if ! command -v go > /dev/null 2>&1; then
+      printf "%bgo not found%b\n" "${RED}" "${RESET}"
+      return
+    fi
+
+    SOURCE_DIR="${ROOT_DIR}/..."
   fi
 
-  local OUTPUT_BINARIES
-  mapfile -t OUTPUT_BINARIES < <(${GO[@]} list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
+  (
+    cd "${ROOT_DIR}"
 
-  local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
+    local OUTPUT_BINARIES
+    mapfile -t OUTPUT_BINARIES < <(golang_go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
 
-  for main in "${OUTPUT_BINARIES[@]}"; do
-    local NAME
-    NAME="$(basename "${main}")"
+    local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
 
-    for OS_ARCH in "${TARGETS[@]}"; do
-      IFS='/' read -r -a context <<< "${OS_ARCH}"
+    for main in "${OUTPUT_BINARIES[@]}"; do
+      local NAME
+      NAME="$(basename "${main}")"
 
-      (
-        export GOOS="${context[0]}"
-        export GOARCH="${context[1]}"
-        export CGO_ENABLED="0"
-        printf "%bBuilding binary %s to %s%b\n" "${BLUE}" "${NAME}_${GOOS}_${GOARCH}" "${OUTPUT_DIR}" "${RESET}"
-        ${GO[@]} build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
-      )
+      for OS_ARCH in "${TARGETS[@]}"; do
+        IFS='/' read -r -a context <<< "${OS_ARCH}"
+
+        (
+          export GOOS="${context[0]}"
+          export GOARCH="${context[1]}"
+          export CGO_ENABLED="0"
+          printf "%bBuilding binary %s to %s%b\n" "${BLUE}" "${NAME}_${GOOS}_${GOARCH}" "${OUTPUT_DIR}" "${RESET}"
+          golang_go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
+        )
+      done
     done
-  done
+  )
 }
 
 docker_build() {
@@ -198,7 +199,7 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var" "git" "version"
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "git" "version" "golang"
   var_color
 
   local ROOT_DIR

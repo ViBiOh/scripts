@@ -6,6 +6,8 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+  source "${SCRIPT_DIR}/meta" && meta_init "golang"
+
   local COVERAGE_OUTPUT="coverage.txt"
   local COVER_PROFILE="profile.out"
   local COVER_MODE="atomic"
@@ -16,8 +18,8 @@ main() {
 
     printf "%s\n" "${MODE}" > "${COVERAGE_OUTPUT}"
 
-    for pkg in $(go list "${PACKAGES:-./...}"); do
-      go test -race -covermode="${COVER_MODE}" -coverprofile="${COVER_PROFILE}" "${pkg}"
+    for pkg in $(golang_go list "${PACKAGES:-./...}"); do
+      golang_go test -race -covermode="${COVER_MODE}" -coverprofile="${COVER_PROFILE}" "${pkg}"
 
       if [[ -f ${COVER_PROFILE} ]]; then
         grep -v "${MODE}" "${COVER_PROFILE}" >> "${COVERAGE_OUTPUT}" || true
@@ -26,7 +28,7 @@ main() {
     done
 
     if [[ $(wc -l < "${COVERAGE_OUTPUT}") -ne 1 ]]; then
-       go tool cover -func="${COVERAGE_OUTPUT}"
+       golang_go tool cover -func="${COVERAGE_OUTPUT}"
     fi
   )
 }
