@@ -6,15 +6,15 @@ version_value() {
   source "${VERSION_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ ${#} -ne 2 ]]; then
-    printf "%bversion_value [regex] [folder]%b\n" "${RED}" "${RESET}"
+  if [[ ${#} -lt 2 ]]; then
+    printf "%bversion_value [regex] [files]%b\n" "${RED}" "${RESET}"
     return 1
   fi
 
-  local SED_REGEX
-  SED_REGEX="$(printf "%s" "${1}" | sed 's|\((\)|\\\1|g' | sed 's|\()\)|\\\1|g')"
+  local REGEX="${1}"
+  shift 1
 
-  grep -hoEr "${1}" "${2}" | head -1 | sed "s|${SED_REGEX}|\1|"
+  pcregrep --recursive --multiline --no-filename -o1 "${REGEX}" "${@}"
 }
 
 version_bump() {
