@@ -17,6 +17,12 @@ main() {
 
   for commit in $(git log --pretty=format:'%s' "${BASE}..${HEAD}"); do
     printf "%bAnalyzing %b%s%b\n" "${BLUE}" "${YELLOW}" "${commit}" "${RESET}"
+
+    if [[ $(git_is_merge_commit "${commit}") == "true" ]]; then
+      printf "\t%bmerge commit, ignoring%b\n" "${YELLOW}" "${RESET}"
+      continue
+    fi
+
     if [[ $(git_is_commit_wip "${commit}") == "true" ]]; then
       printf "\t%bwip commit, please rebase%b\n" "${RED}" "${RESET}"
       UNCLEAR="true"
@@ -24,12 +30,12 @@ main() {
     fi
 
     if [[ $(git_is_conventional_commit "${commit}") != "true" ]]; then
-      printf "\t%bnot a conventional commit, please reword%b\n" "${RED}" "${RESET}"
+      printf "\t%bnot a conventional commit, please reword accord to %bconventionalcommits.org/en/v1.0.0/%b\n" "${RED}" "${GREEN}" "${RESET}"
       UNCLEAR="true"
     fi
 
     if [[ $(git_is_valid_description "${commit}") != "true" ]]; then
-      printf "\t%btoo long, please rewor%b\n" "${RED}" "${RESET}"
+      printf "\t%btoo long, please reword below %b%s characters%b\n" "${RED}" "${GREEN}" "${COMMIT_MAX_LENGTH:-70}" "${RESET}"
       UNCLEAR="true"
     fi
   done

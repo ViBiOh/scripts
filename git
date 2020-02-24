@@ -50,6 +50,14 @@ git_last_tag() {
   git describe --tag 2> /dev/null | awk -F "-" '{print $1}'
 }
 
+git_is_merge_commit() {
+  if [[ ${1} =~ Merge\ (pull\ request|branch) ]]; then
+    printf "true"
+  else
+    printf "false"
+  fi
+}
+
 git_is_commit_wip() {
   if [[ ${1} =~ ^fixup\! ]]; then
     printf "true"
@@ -80,7 +88,9 @@ git_is_conventional_commit() {
 }
 
 git_is_valid_description() {
-  if [[ ${1} =~ ^.{1,80}$ ]]; then
+  export COMMIT_MAX_LENGTH="70"
+
+  if [[ ${1} =~ ^.{1,${COMMIT_MAX_LENGTH}}$ ]]; then
     printf "true"
   else
     printf "false"
@@ -107,7 +117,7 @@ git_valid_description_guideline() {
   source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  printf "\n%bYou have to use a short commit description (max 80 characters)%b\n\n" "${YELLOW}" "${RESET}"
+  printf "\n%bYou have to use a short commit description (max %d characters)%b\n\n" "${YELLOW}" "${COMMIT_MAX_LENGTH:-70}" "${RESET}"
 }
 
 git_changelog() {
