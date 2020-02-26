@@ -27,7 +27,7 @@ github_compare_version() {
   RELEASE_NOTES="$(python -c "import json; print(json.load(open('${4}'))['body'])")"
   rm "${4}"
 
-  printf "%bCurrent version is %b%s%b, new version for %b%s%b is %b%s%b %s%b\n" "${BLUE}" "${YELLOW}" "${3}" "${BLUE}" "${YELLOW}" "${1}" "${BLUE}" "${GREEN}" "${2}" "${BLUE}" "https://github.com/${1}/releases/tag/${2}" "${RESET}"
+  printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${1}" "${BLUE}" "${RED}" "${3}" "${BLUE}" "${YELLOW}" "${2}" "${GREEN}" "https://github.com/${1}/releases/tag/${2}" "${RESET}"
   printf "%s\n" "${RELEASE_NOTES}"
 }
 
