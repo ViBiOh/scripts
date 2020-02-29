@@ -21,10 +21,9 @@ main() {
 
   local CLEANER_ARGS=("docker" "run" "-it" "--rm" "sgratzl/slack-cleaner" "-c")
 
-  printf "%bCleanning all messages and files until %s%b\n" "${BLUE}" "${UNTIL_DATE}" "${RESET}"
-
   for target in ${TARGETS[@]}; do
     for type in ${TYPES[@]}; do
+      printf "%bCleanning %s in %s until %s%b\n" "${BLUE}" "${type}" "${target}" "${UNTIL_DATE}" "${RESET}"
       ${CLEANER_ARGS[@]} "slack-cleaner --token ${SLACK_LEGACY_TOKEN} --user ${SLACK_USER} --rate 1 --perform --${type} --regex --${target} '.*' --before ${UNTIL_DATE}"
     done
   done
