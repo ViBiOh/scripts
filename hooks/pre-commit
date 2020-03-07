@@ -22,7 +22,7 @@ get_diff() {
 diff_check() {
   if [[ ${1} != $(get_diff) ]]; then
     printf "%bPre-commit has changed files%b\n" "${RED}" "${RESET}"
-    printf "%bConsider adding updated file with %bgit add -i \&\& git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}"
+    printf "%bConsider adding updated file with %bgit add -i && git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}"
   fi
 }
 
