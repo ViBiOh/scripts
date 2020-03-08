@@ -23,7 +23,7 @@ main() {
   fi
 
   if [[ $(git_is_valid_description "${FIRST_LINE}") != "true" ]]; then
-    git_valid_description_guidelines
+    git_valid_description_guideline
     exit 1
   fi
 
