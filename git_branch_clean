@@ -30,7 +30,7 @@ main() {
     fi
 
     if [[ $(git_is_conventional_commit "${commit}") != "true" ]]; then
-      printf "\t%bnot a conventional commit, please reword accord to %bconventionalcommits.org/en/v1.0.0/%b\n" "${RED}" "${GREEN}" "${RESET}"
+      printf "\t%bnot a conventional commit, please reword according to %bconventionalcommits.org/en/v1.0.0/%b\n" "${RED}" "${GREEN}" "${RESET}"
       UNCLEAR="true"
     fi
 
