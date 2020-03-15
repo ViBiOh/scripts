@@ -97,6 +97,7 @@ github_configure() {
     "allow_merge_commit": false,
     "allow_squash_merge": false,
     "allow_rebase_merge": true,
+    "delete_branch_on_merge": true,
     "has_wiki": false,
     "has_projects": false
   }')"
@@ -121,6 +122,8 @@ github_configure() {
   fi
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.luke-cage-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/branches/master/protection" "-d" '{
+    "allow_force_pushes": false,
+    "allow_deletions": false,
     "enforce_admins": true,
     "required_linear_history": true,
     "required_pull_request_reviews": null,
@@ -134,6 +137,13 @@ github_configure() {
   }')"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     printf "%bUnable to update branch protection ${1}%b\n" "${RED}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.zzzax-preview+json" "-X" "POST" "https://api.github.com/repos/${1}/branches/master/protection/required_signatures")"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    printf "%bUnable to enable required signed commits for ${1}%b\n" "${RED}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
