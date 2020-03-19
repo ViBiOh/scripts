@@ -160,29 +160,31 @@ release() {
     exit 1
   fi
 
-  local RESPONSE_URL
-  RESPONSE_URL=$(python -c "import json; data = json.load(open('${HTTP_OUTPUT}')); print(data['upload_url']);" | sed 's|{.*||')
-  rm "${HTTP_OUTPUT}"
-
-  for asset in "${OUTPUT_DIR}"/*; do
-    printf "%bUploading asset %s%b\n" "${BLUE}" "${asset}" "${RESET}"
-
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" \
-      -H "Content-Type: application/x-executable" \
-      -X POST \
-      "${RESPONSE_URL}?name=$(basename "${asset}")" \
-      --data-binary "@${asset}"
-    )"
-
-    if [[ ${HTTP_STATUS} != "201" ]]; then
-      printf "%bFailed to upload asset %s%b\n" "${RED}" "${asset}" "${RESET}"
-      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
-      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-      exit 1
-    fi
-
+  if [[ -d ${OUTPUT_DIR} ]]; then
+    local RESPONSE_URL
+    RESPONSE_URL=$(python -c "import json; data = json.load(open('${HTTP_OUTPUT}')); print(data['upload_url']);" | sed 's|{.*||')
     rm "${HTTP_OUTPUT}"
-  done
+
+    for asset in "${OUTPUT_DIR}"/*; do
+      printf "%bUploading asset %s%b\n" "${BLUE}" "${asset}" "${RESET}"
+
+      HTTP_STATUS="$("${CLIENT_ARGS[@]}" \
+        -H "Content-Type: application/x-executable" \
+        -X POST \
+        "${RESPONSE_URL}?name=$(basename "${asset}")" \
+        --data-binary "@${asset}"
+      )"
+
+      if [[ ${HTTP_STATUS} != "201" ]]; then
+        printf "%bFailed to upload asset %s%b\n" "${RED}" "${asset}" "${RESET}"
+        printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+        cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+        exit 1
+      fi
+
+      rm "${HTTP_OUTPUT}"
+    done
+  fi
 
   printf "%b✔ Done!%b\n" "${GREEN}" "${RESET}"
 }
