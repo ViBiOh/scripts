@@ -31,31 +31,6 @@ github_compare_version() {
   printf "%s\n" "${RELEASE_NOTES}"
 }
 
-# Slower but works with private
-github_last_release_private() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
-
-  if [[ "${#}" -lt 1 ]]; then
-    printf "%bUsage: github_last_release_private owner/repo%b\n" "${RED}" "${RESET}"
-    return 1
-  fi
-
-  var_read GITHUB_OAUTH_TOKEN "" "secret"
-
-  local HTTP_OUTPUT="http_output.txt"
-
-  local HTTP_STATUS
-  HTTP_STATUS="$(curl -q -sS -o "${HTTP_OUTPUT}" -w "%{http_code}" -H "Authorization: token ${GITHUB_OAUTH_TOKEN}" "https://api.github.com/repos/${1}/releases/latest")"
-  if [[ "${HTTP_STATUS}" != "200" ]]; then
-    printf "%bUnable to list latest release for %s%b\n" "${RED}" "${1}" "${RESET}"
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
-  fi
-
-  github_compare_version "${1}" "$(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['tag_name'])")" "${2:-}" "${HTTP_OUTPUT}"
-}
-
 github_last_release() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
@@ -67,6 +42,9 @@ github_last_release() {
 
   local HTTP_OUTPUT="http_output.txt"
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
+  if [[ -n ${GITHUB_OAUTH_TOKEN:-} ]]; then
+    CLIENT_ARGS+=("-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  fi
 
   local HTTP_STATUS
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${1}/releases/latest")"
