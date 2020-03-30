@@ -238,7 +238,7 @@ head_sync() {
 
   local branch
   branch="$(git symbolic-ref -q HEAD | sed -e 's|^refs/heads/||')"
-  ssh "${1}" "cd ${2} && git reset HEAD . && git clean -f && git status -u -s | awk '{print $2}' | xargs rm -rf && git checkout -- . && git fetch && git checkout ${branch} && git pull"
+  ssh -A "${1}" "cd ${2} && git reset HEAD . && git clean -f && git status -u -s | awk '{print $2}' | xargs rm -rf && git checkout -- . && git fetch && git checkout ${branch} && git pull"
 }
 
 git_sync() {
