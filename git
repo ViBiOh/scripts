@@ -29,6 +29,14 @@ git_root() {
   git rev-parse --show-toplevel
 }
 
+git_browse() {
+  shopt -s nullglob
+  for dir in "$(pwd)"/*; do
+    (cd "${dir}" && [[ $(git_is_inside) = "true" ]] && echo "${dir}" && eval "${@}")
+  done
+  shopt -u nullglob
+}
+
 git_remote_repository() {
   if [[ $(git_is_inside) != "true" ]]; then
     return
