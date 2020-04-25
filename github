@@ -2,6 +2,37 @@
 
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+github_clone_user() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  local HTTP_OUTPUT="http_output.txt"
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+
+  local HTTP_STATUS
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "https://api.github.com/user/repos?type=owner")"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    printf "%bUnable to list user repos%b\n" "${RED}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  local REPOSITORIES
+  IFS=" " read -r -a REPOSITORIES <<< "$(python -c "import json; repos = json.load(open('${HTTP_OUTPUT}')); print(' '.join([repo['name'] + ',' + repo['ssh_url'] for repo in repos if repo['archived'] == False]))")"
+  rm "${HTTP_OUTPUT}"
+
+  for REPO in "${REPOSITORIES[@]}"; do
+    IFS=',' read -r -a details <<< "${REPO}"
+
+    if [[ -d ${details[0]} ]]; then
+      printf "%b%s already cloned%b\n" "${GREEN}" "${details[0]}" "${RESET}"
+    else
+      printf "%bCloning %s%b\n" "${BLUE}" "${details[0]}" "${RESET}"
+      git clone "${details[1]}" "${details[0]}"
+    fi
+  done
+}
+
 github_compare_version() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
