@@ -16,7 +16,7 @@ main() {
   var_read SLACK_USER
   var_read UNTIL_DATE "${DEFAULT_UNTIL_DATE}"
 
-  local TARGETS=("${2:-channel group direct}")
+  local TARGETS=("${2:-channel group direct mpdirect}")
   local TYPES=("${3:-message file}")
 
   local CLEANER_ARGS=("docker" "run" "-it" "--rm" "sgratzl/slack-cleaner" "-c")
