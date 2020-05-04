@@ -10,7 +10,7 @@ github_clone_user() {
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
 
   local HTTP_STATUS
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "https://api.github.com/user/repos?type=owner")"
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=100")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     printf "%bUnable to list user repos%b\n" "${RED}" "${RESET}"
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
