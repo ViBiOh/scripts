@@ -8,6 +8,7 @@ git_conventionnal_commits() {
 
   declare -gA CONVENTIONAL_COMMIT_SCOPES
   CONVENTIONAL_COMMIT_SCOPES['chore']='Changes in the core of the repository'
+  CONVENTIONAL_COMMIT_SCOPES['ci']='Changes in continuous integration configuration and files'
   CONVENTIONAL_COMMIT_SCOPES['docs']='Documentation only changes'
   CONVENTIONAL_COMMIT_SCOPES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
   CONVENTIONAL_COMMIT_SCOPES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
