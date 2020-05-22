@@ -133,7 +133,7 @@ github_configure() {
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.luke-cage-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/branches/master/protection" "-d" '{
     "allow_force_pushes": false,
     "allow_deletions": false,
-    "enforce_admins": true,
+    "enforce_admins": false,
     "required_linear_history": true,
     "required_pull_request_reviews": null,
     "required_status_checks": {
