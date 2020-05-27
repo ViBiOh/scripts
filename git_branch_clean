@@ -35,7 +35,7 @@ main() {
     fi
 
     if [[ $(git_is_valid_description "${commit}") != "true" ]]; then
-      printf "\t%btoo long, please reword below %b%s characters%b\n" "${RED}" "${GREEN}" "${COMMIT_MAX_LENGTH:-70}" "${RESET}"
+      printf "\t%btoo long, please reword below %b%s characters%b, currently %d%b\n" "${RED}" "${GREEN}" "${COMMIT_MAX_LENGTH:-70}" "${YELLOW}" "${#commit}" "${RESET}"
       UNCLEAR="true"
     fi
   done
