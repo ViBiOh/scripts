@@ -249,7 +249,7 @@ head_sync() {
 
   local branch
   branch="$(git symbolic-ref -q HEAD | sed -e 's|^refs/heads/||')"
-  ssh -A "${1}" "cd '${2}' && git reset HEAD . && git clean -d -f && git status -u -s | awk '{print \$2}' | xargs rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
+  ssh -A "${1}" "cd '${2}' && git reset HEAD . && git clean -f && git status -u -s | awk '{print \$2}' | xargs rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
 }
 
 git_sync() {
@@ -317,7 +317,7 @@ git_sync() {
 
   if ! ${dry}; then
     printf "%bCleaning remote%b\n" "${YELLOW}" "${RESET}"
-    ssh "${1}" "cd ${REMOTE_PATH_PREFIX} && git clean -d -f && git checkout -- ."
+    ssh "${1}" "cd ${REMOTE_PATH_PREFIX} && git clean -f && git checkout -- ."
   fi
 
   if [[ ${#toDelete[@]} -ne 0 ]]; then
