@@ -1,8 +1,7 @@
 ---
 
 name: Automerge
-on:
-  status
+on: status
 jobs:
   build:
     name: Automerge
