@@ -2,8 +2,7 @@
 
 name: Automerge
 on:
-  check_suite:
-    types: [completed]
+  status
 jobs:
   build:
     name: Automerge
@@ -11,10 +10,10 @@ jobs:
     steps:
       - name: Merge pull request
         run: |
-          if [[ "${{ github.event.check_suite.conclusion }}" -eq "success" ]]; then
+          if [[ "${{ github.event.state }}" -eq "success" ]]; then
             curl -q -sSL "https://raw.githubusercontent.com/ViBiOh/scripts/master/bootstrap" | bash -s "github_merge"
 
-            for pr in ${{ github.event.check_suite.pull_requests }}; do
-              scripts/github_merge "${{ github.token }}" "${{ github.repository }}" "$(echo "${pr}" | jq '.number')"
-            done
+            scripts/github_merge "${{ github.token }}" "${{ github.repository }}" "${{ github.event.commit.author.login }}:${{ github.event.branches[0].name }}"
+          else
+            return 78
           fi
