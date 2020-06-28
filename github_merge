@@ -27,7 +27,7 @@ main() {
     return
   fi
 
-  # rm "${HTTP_OUTPUT}"
+  rm "${HTTP_OUTPUT}"
   printf "%b✔ Success%b\n" "${GREEN}" "${RESET}"
   exit 0
 }
