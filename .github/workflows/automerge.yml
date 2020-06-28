@@ -11,8 +11,5 @@ jobs:
         run: |
           if [[ "${{ github.event.state }}" -eq "success" ]]; then
             curl -q -sSL "https://raw.githubusercontent.com/ViBiOh/scripts/master/bootstrap" | bash -s "github_merge"
-
             scripts/github_merge "${{ github.token }}" "${{ github.repository }}" "${{ github.event.commit.author.login }}:${{ github.event.branches[0].name }}"
-          else
-            return 78
           fi
