@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+main() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ "${#}" -lt 3 ]]; then
+    printf "%bUsage: ${0} github_token owner/repo pull_request_id%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  printf "%bMerging pull-request #%s of %s with rebase strategy%b\n" "${BLUE}" "${3}" "${2}" "${RESET}"
+
+  local HTTP_OUTPUT="http_output.txt"
+  local HTTP_STATUS
+  HTTP_STATUS="$(curl -q -sSL --max-time 10 -o ${HTTP_OUTPUT} -w "%{http_code}" -H "Authorization: token ${1}" -H "Content-Type: application/json" "https://api.github.com/repos/${2}/pulls/${3}/merge" -d "merge_method=rebase")"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    printf "%bUnable to merge pull-request%b\n" "${RED}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  printf "%b✔ Success%b\n" "${GREEN}" "${RESET}"
+  exit 0
+}
+
+main "${@:-}"
