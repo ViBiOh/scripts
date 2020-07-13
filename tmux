@@ -13,7 +13,7 @@ tmux_split_cmd() (
   source "${TMUX_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ $(tmux_is_inside) == "true" ]]; then
+  if [[ $(tmux_is_inside) == "false" ]]; then
     printf "%bnot inside a tmux%b\n" "${RED}" "${RESET}"
     return 1
   fi
