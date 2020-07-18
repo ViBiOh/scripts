@@ -90,52 +90,6 @@ github_last_release() {
   github_compare_version "${1}" "$(jq --raw-output .tag_name "${HTTP_OUTPUT}")" "${2:-}" "${HTTP_OUTPUT}"
 }
 
-github_merge() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
-
-  if [[ "${#}" -lt 2 ]]; then
-    printf "%bUsage: ${0} owner/repo git_ref%b\n" "${RED}" "${RESET}"
-    return 1
-  fi
-
-  if ! [[ ${2} =~ .*:.* ]]; then
-    printf "%bgit_ref must be in the form user:ref (cf. https://developer.github.com/v3/pulls/#list-pull-requests)%b\n" "${RED}" "${RESET}"
-    return 1
-  fi
-
-  var_read GITHUB_OAUTH_TOKEN "" "secret"
-
-  local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-
-  printf "%bSearching pull-request associated with %b%s%b on %b%s%b\n" "${BLUE}" "${YELLOW}" "${2}" "${BLUE}" "${GREEN}" "${1}" "${RESET}"
-
-  local HTTP_STATUS
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "https://api.github.com/repos/${1}/pulls?state=open&head=${2}")"
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to find pull-request%b\n" "${RED}" "${RESET}"
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
-  fi
-
-  local PULL_REQUEST_ID
-  PULL_REQUEST_ID="$(python -c "import json; prs=json.load(open('${HTTP_OUTPUT}')); print(prs[0]['number']) if len(prs) > 0 else print('-1')")"
-
-  printf "%bMerging pull-request %b#%s%b of %b%s%b with rebase strategy%b\n" "${BLUE}" "${YELLOW}" "${PULL_REQUEST_ID}" "${BLUE}" "${GREEN}" "${1}" "${BLUE}" "${RESET}"
-
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X PUT -H "Content-Type: application/json" "https://api.github.com/repos/${2}/pulls/${PULL_REQUEST_ID}/merge" -d '{"merge_method":"rebase"}')"
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to merge pull-request%b\n" "${RED}" "${RESET}"
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
-  fi
-
-  rm "${HTTP_OUTPUT}"
-  printf "%b✔ Success%b\n" "${GREEN}" "${RESET}"
-  exit 0
-}
-
 github_configure() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
