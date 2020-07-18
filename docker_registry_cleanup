@@ -33,7 +33,7 @@ main() {
     return
   fi
 
-  CLIENT_ARGS+=("-H" "Authorization: JWT $(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['token'])")")
+  CLIENT_ARGS+=("-H" "Authorization: JWT $(jq --raw-output '.token' "${HTTP_OUTPUT}")")
   rm "${HTTP_OUTPUT}"
 
   # Listing repositories
@@ -48,7 +48,7 @@ main() {
   fi
 
   local REPOSITORIES
-  IFS=" " read -r -a REPOSITORIES <<< "$(python -c "import json; images = json.load(open('${HTTP_OUTPUT}')); print(' '.join([image['name'] for image in images]))")"
+  mapfile -t REPOSITORIES < <(jq --raw-output '.[] | .name' "${HTTP_OUTPUT}")
   rm "${HTTP_OUTPUT}"
 
   for repository in "${REPOSITORIES[@]}"; do
@@ -63,7 +63,7 @@ main() {
     fi
 
     local TAGS
-    IFS=" " read -r -a TAGS <<< "$(python -c "import json; tags = json.load(open('${HTTP_OUTPUT}')); print(' '.join([tag['name'] for tag in tags['results']]))")"
+    mapfile -t TAGS < <(jq --raw-output '.results[] | .name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for tag in "${TAGS[@]}"; do

@@ -20,7 +20,7 @@ github_clone_user() {
   fi
 
   local REPOSITORIES
-  IFS=" " read -r -a REPOSITORIES <<< "$(python -c "import json; repos = json.load(open('${HTTP_OUTPUT}')); print(' '.join([repo['name'] + ',' + repo['ssh_url'] for repo in repos if repo['archived'] == False]))")"
+  mapfile -t REPOSITORIES < <(jq --raw-output '.[] | select (.archived | not) | .name + "," + .ssh_url' "${HTTP_OUTPUT}")
   rm "${HTTP_OUTPUT}"
 
   for REPO in "${REPOSITORIES[@]}"; do
@@ -57,7 +57,7 @@ github_compare_version() {
   fi
 
   local RELEASE_NOTES
-  RELEASE_NOTES="$(python -c "import json; print(json.load(open('${4}'))['body'])")"
+  RELEASE_NOTES="$(jq --raw-output .body "${4}")"
   rm "${4}"
 
   printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${1}" "${BLUE}" "${RED}" "${3}" "${BLUE}" "${YELLOW}" "${2}" "${GREEN}" "https://github.com/${1}/releases/tag/${2}" "${RESET}"
@@ -87,7 +87,7 @@ github_last_release() {
     return
   fi
 
-  github_compare_version "${1}" "$(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['tag_name'])")" "${2:-}" "${HTTP_OUTPUT}"
+  github_compare_version "${1}" "$(jq --raw-output .tag_name "${HTTP_OUTPUT}")" "${2:-}" "${HTTP_OUTPUT}"
 }
 
 github_merge() {

@@ -162,7 +162,7 @@ release() {
 
   if [[ -d ${OUTPUT_DIR} ]]; then
     local RESPONSE_URL
-    RESPONSE_URL=$(python -c "import json; data = json.load(open('${HTTP_OUTPUT}')); print(data['upload_url']);" | sed 's|{.*||')
+    RESPONSE_URL="$(jq --raw-output .upload_url "${HTTP_OUTPUT}" | sed 's|{.*||')"
     rm "${HTTP_OUTPUT}"
 
     for asset in "${OUTPUT_DIR}"/*; do

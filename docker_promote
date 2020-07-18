@@ -44,7 +44,7 @@ main() {
     return
   fi
 
-  CLIENT_ARGS+=("-H" "Authorization: Bearer $(python -c "import json; print(json.load(open('${HTTP_OUTPUT}'))['token'])")")
+  CLIENT_ARGS+=("-H" "Authorization: Bearer $(jq --raw-output .token "${HTTP_OUTPUT}")")
   rm "${HTTP_OUTPUT}"
 
   printf "%bTagging image %s from %s to %s...%b\n" "${BLUE}" "${DOCKER_IMAGE}" "${IMAGE_VERSION}" "${VERSION_TARGET}" "${RESET}"
