@@ -53,14 +53,6 @@ git_remote_repository() {
   fi
 }
 
-git_last_tag() {
-  if [[ $(git_is_inside) != "true" ]]; then
-    return
-  fi
-
-  git describe --tag 2> /dev/null | awk -F "-" '{print $1}'
-}
-
 git_is_merge_commit() {
   if [[ ${1} =~ Merge\ (pull\ request|branch) ]]; then
     printf "true"
