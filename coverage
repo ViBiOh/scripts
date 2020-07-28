@@ -16,19 +16,19 @@ main() {
   (
     cd "${SCRIPT_DIR}/../" || return
 
-    printf "%s\n" "${MODE}" > "${COVERAGE_OUTPUT}"
+    printf "%s\n" "${MODE}" >"${COVERAGE_OUTPUT}"
 
     for pkg in $(golang_go list "${PACKAGES:-./...}"); do
       golang_go test -race -covermode="${COVER_MODE}" -coverprofile="${COVER_PROFILE}" "${pkg}"
 
       if [[ -f ${COVER_PROFILE} ]]; then
-        grep -v "${MODE}" "${COVER_PROFILE}" >> "${COVERAGE_OUTPUT}" || true
+        grep -v "${MODE}" "${COVER_PROFILE}" >>"${COVERAGE_OUTPUT}" || true
         rm "${COVER_PROFILE}"
       fi
     done
 
-    if [[ $(wc -l < "${COVERAGE_OUTPUT}") -ne 1 ]]; then
-       golang_go tool cover -func="${COVERAGE_OUTPUT}"
+    if [[ $(wc -l <"${COVERAGE_OUTPUT}") -ne 1 ]]; then
+      golang_go tool cover -func="${COVERAGE_OUTPUT}"
     fi
   )
 }

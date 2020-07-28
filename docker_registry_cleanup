@@ -20,9 +20,10 @@ main() {
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
 
   # Login to registry
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X POST "${DOCKER_REGISTRY}/users/login/" \
-    -H "Content-Type: application/json" \
-    --data "{ \"username\": \"${DOCKER_USER}\", \"password\": \"${DOCKER_PASSWORD}\" }"
+  HTTP_STATUS="$(
+    "${CLIENT_ARGS[@]}" -X POST "${DOCKER_REGISTRY}/users/login/" \
+      -H "Content-Type: application/json" \
+      --data "{ \"username\": \"${DOCKER_USER}\", \"password\": \"${DOCKER_PASSWORD}\" }"
   )"
   unset DOCKER_PASSWORD
 

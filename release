@@ -13,7 +13,7 @@ golang_build() {
   local SOURCE_DIR
 
   if [[ ${BUILD_WITH_DOCKER:-} == "true" ]]; then
-    if ! command -v docker > /dev/null 2>&1; then
+    if ! command -v docker >/dev/null 2>&1; then
       printf "%bdocker not found%b\n" "${RED}" "${RESET}"
       return
     fi
@@ -21,7 +21,7 @@ golang_build() {
     SOURCE_DIR="/go/src/app/..."
     OUTPUT_DIR="/go/src/app/release"
   else
-    if ! command -v go > /dev/null 2>&1; then
+    if ! command -v go >/dev/null 2>&1; then
       printf "%bgo not found%b\n" "${RED}" "${RESET}"
       return
     fi
@@ -42,7 +42,7 @@ golang_build() {
       NAME="$(basename "${main}")"
 
       for OS_ARCH in "${TARGETS[@]}"; do
-        IFS='/' read -r -a context <<< "${OS_ARCH}"
+        IFS='/' read -r -a context <<<"${OS_ARCH}"
 
         (
           export GOOS="${context[0]}"
@@ -57,7 +57,7 @@ golang_build() {
 }
 
 docker_build() {
-  if ! command -v docker > /dev/null 2>&1; then
+  if ! command -v docker >/dev/null 2>&1; then
     printf "%bdocker not found%b\n" "${RED}" "${RESET}"
     return
   fi
@@ -73,7 +73,7 @@ docker_build() {
   export DOCKER_BUILDKIT="1"
 
   for PLATFORM in ${DOCKER_ARCHS[*]}; do
-    IFS='/' read -r -a context <<< "${PLATFORM}"
+    IFS='/' read -r -a context <<<"${PLATFORM}"
     local OS="${context[0]}"
     local ARCH="${context[1]}"
     local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}"
@@ -89,7 +89,7 @@ docker_build() {
   docker manifest create "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_MANIFEST_ARGS[@]}"
 
   for DOCKER_ARCH in ${DOCKER_ARCHS[*]}; do
-    IFS='/' read -r -a context <<< "${DOCKER_ARCH}"
+    IFS='/' read -r -a context <<<"${DOCKER_ARCH}"
     local OS="${context[0]}"
     local ARCH="${context[1]}"
 
@@ -168,11 +168,12 @@ release() {
     for asset in "${OUTPUT_DIR}"/*; do
       printf "%bUploading asset %s%b\n" "${BLUE}" "${asset}" "${RESET}"
 
-      HTTP_STATUS="$("${CLIENT_ARGS[@]}" \
-        -H "Content-Type: application/x-executable" \
-        -X POST \
-        "${RESPONSE_URL}?name=$(basename "${asset}")" \
-        --data-binary "@${asset}"
+      HTTP_STATUS="$(
+        "${CLIENT_ARGS[@]}" \
+          -H "Content-Type: application/x-executable" \
+          -X POST \
+          "${RESPONSE_URL}?name=$(basename "${asset}")" \
+          --data-binary "@${asset}"
       )"
 
       if [[ ${HTTP_STATUS} != "201" ]]; then
@@ -211,29 +212,29 @@ main() {
 
   for arg in "${@}"; do
     case "${arg}" in
-      "build")
-        release_clean
+    "build")
+      release_clean
 
-        if [[ -f "${ROOT_DIR}/go.mod" ]]; then
-          golang_build
-        fi
-        ;;
+      if [[ -f "${ROOT_DIR}/go.mod" ]]; then
+        golang_build
+      fi
+      ;;
 
-      "docker")
-        docker_build
-        ;;
+    "docker")
+      docker_build
+      ;;
 
-      "release")
-        release
-        ;;
+    "release")
+      release
+      ;;
 
-      "clean")
-        release_clean
-        ;;
+    "clean")
+      release_clean
+      ;;
 
-      *)
-        release_usage
-        ;;
+    *)
+      release_usage
+      ;;
     esac
   done
 }

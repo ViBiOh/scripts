@@ -65,11 +65,11 @@ terraform_check() {
   TERRAFORM_FILES=$(get_files "*.tf")
 
   if [[ -n ${TERRAFORM_FILES} ]]; then
-      printf "%bFormating terraform files%b\n" "${BLUE}" "${RESET}"
+    printf "%bFormating terraform files%b\n" "${BLUE}" "${RESET}"
 
-      for file in ${TERRAFORM_FILES}; do
-        run_command terraform fmt "$(dirname "${file}")"
-      done
+    for file in ${TERRAFORM_FILES}; do
+      run_command terraform fmt "$(dirname "${file}")"
+    done
   fi
 }
 

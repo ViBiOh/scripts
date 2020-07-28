@@ -35,7 +35,7 @@ git_root() {
 git_browse() {
   shopt -s nullglob
   for dir in "$(pwd)"/*; do
-    (cd "${dir}" && [[ $(git_is_inside) = "true" ]] && echo "${dir}" && eval "${@}")
+    (cd "${dir}" && [[ $(git_is_inside) == "true" ]] && echo "${dir}" && eval "${@}")
   done
   shopt -u nullglob
 }
@@ -67,7 +67,7 @@ git_is_commit_wip() {
     return
   fi
 
-  local WIP_REGEX="\\bwip\\b"
+  local WIP_REGEX='\bwip\b'
   if [[ ${OSTYPE} =~ ^darwin ]]; then
     WIP_REGEX="[[:<:]]wip[[:>:]]"
   fi
@@ -83,7 +83,10 @@ git_is_conventional_commit() {
   git_conventionnal_commits
 
   shopt -s nocasematch
-  if [[ ${1} =~ ^(revert:\ )?($(IFS='|'; echo "${!CONVENTIONAL_COMMIT_SCOPES[*]}"))(\(.+\))?\!?:\ [a-zA-Z0-9\[\(]+ ]]; then
+  if [[ ${1} =~ ^(revert:\ )?($(
+    IFS='|'
+    echo "${!CONVENTIONAL_COMMIT_SCOPES[*]}"
+  ))(\(.+\))?\!?:\ [a-zA-Z0-9\[\(]+ ]]; then
     printf "true"
   else
     printf "false"
@@ -128,7 +131,7 @@ git_changelog() {
   var_color
   git_conventionnal_commits
 
-  if [[ "${#}" -ne 2 ]]; then
+  if [[ ${#} -ne 2 ]]; then
     printf "%bUsage: git_changelog [END_REF] [START_REF]%b\n" "${RED}" "${RESET}"
     return 1
   fi
@@ -152,8 +155,11 @@ git_changelog() {
     local TYPE=""
     local BREAK=""
 
-     for line in $(git show -s --format='%h %B' "${hash}" | grep -v '^\s*$'); do
-      if [[ -z ${VERSION_MESSAGE} ]] && [[ ${line} =~ ^([0-9a-f]{1,16})\ (revert )?($(IFS='|'; echo "${!CONVENTIONAL_COMMIT_SCOPES[*]}"))(\(.+\))?(\!)?:\ (.*)$ ]]; then
+    for line in $(git show -s --format='%h %B' "${hash}" | grep -v '^\s*$'); do
+      if [[ -z ${VERSION_MESSAGE} ]] && [[ ${line} =~ ^([0-9a-f]{1,16})\ (revert )?($(
+        IFS='|'
+        echo "${!CONVENTIONAL_COMMIT_SCOPES[*]}"
+      ))(\(.+\))?(\!)?:\ (.*)$ ]]; then
 
         HASH="${BASH_REMATCH[1]}"
         local REVERT="${BASH_REMATCH[2]}"
@@ -284,26 +290,27 @@ git_sync() {
     local trimmedPrefix="${prefix#[[:space:]]}"
 
     case "${trimmedPrefix:0:1}" in
-      "M" | "A" | "?")
-        toSync+=("${gitFile:3}")
-        ;;
+    "M" | "A" | "?")
+      toSync+=("${gitFile:3}")
+      ;;
 
-      "D")
-        toDelete+=("${REMOTE_PATH_PREFIX}/${gitFile:3}")
-        ;;
+    "D")
+      toDelete+=("${REMOTE_PATH_PREFIX}/${gitFile:3}")
+      ;;
 
-      "R")
-        local originFile
-        originFile="$(echo "${gitFile}" | awk '{print $2}')"
-        local destinationFile
-        destinationFile="$(echo "${gitFile}" | awk '{print $4}')"
+    "R")
+      local originFile
+      originFile="$(echo "${gitFile}" | awk '{print $2}')"
+      local destinationFile
+      destinationFile="$(echo "${gitFile}" | awk '{print $4}')"
 
-        toDelete+=("${REMOTE_PATH_PREFIX}/${originFile}")
-        toSync+=("${destinationFile}")
-        ;;
+      toDelete+=("${REMOTE_PATH_PREFIX}/${originFile}")
+      toSync+=("${destinationFile}")
+      ;;
 
-      *)
-        printf "%b¯\_(ツ)_/¯ Don't know how to handle ${gitFile}%b\n" "${BLUE}" "${RESET}"
+    *)
+      printf "%b¯\_(ツ)_/¯ Don't know how to handle ${gitFile}%b\n" "${BLUE}" "${RESET}"
+      ;;
     esac
   done
 
@@ -332,8 +339,7 @@ watch_sync() {
 
   git_sync "${@}"
 
-  fswatch -0 -o --exclude=.git/ . | while read -r -d ""
-  do
+  fswatch -0 -o --exclude=.git/ . | while read -r -d ""; do
     git_sync "${@}"
   done
 }

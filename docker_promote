@@ -32,8 +32,9 @@ main() {
   printf "%bGetting token from %s for pulling and pushing to %s...%b\n" "${BLUE}" "${DOCKER_AUTH_TOKEN}" "${DOCKER_IMAGE}" "${RESET}"
 
   # Getting token
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_AUTH_TOKEN}&scope=repository:${DOCKER_IMAGE}:pull,push" \
-    -u "${DOCKER_USER}:${DOCKER_PASS}"
+  HTTP_STATUS="$(
+    "${CLIENT_ARGS[@]}" -X GET "${DOCKER_AUTH_TOKEN}&scope=repository:${DOCKER_IMAGE}:pull,push" \
+      -u "${DOCKER_USER}:${DOCKER_PASS}"
   )"
   unset DOCKER_PASS
 
@@ -54,8 +55,9 @@ main() {
     printf "%bTrying with manifest %s%b\n" "${YELLOW}" "${manifest}" "${RESET}"
 
     # Getting manifest
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" \
-      -H "Accept: ${manifest}"
+    HTTP_STATUS="$(
+      "${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" \
+        -H "Accept: ${manifest}"
     )"
 
     if [[ ${HTTP_STATUS} != "200" ]]; then
@@ -70,9 +72,10 @@ main() {
     rm "${HTTP_OUTPUT}"
 
     # Promoting image
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
-      -H "Content-Type: ${manifest}" \
-      -d "${MANIFEST_PAYLOAD}"
+    HTTP_STATUS="$(
+      "${CLIENT_ARGS[@]}" -X PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
+        -H "Content-Type: ${manifest}" \
+        -d "${MANIFEST_PAYLOAD}"
     )"
 
     if [[ ${HTTP_STATUS} != "201" ]]; then

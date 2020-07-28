@@ -24,7 +24,7 @@ github_clone_user() {
   rm "${HTTP_OUTPUT}"
 
   for REPO in "${REPOSITORIES[@]}"; do
-    IFS=',' read -r -a details <<< "${REPO}"
+    IFS=',' read -r -a details <<<"${REPO}"
 
     if [[ -d ${details[0]} ]]; then
       printf "%b%s already cloned%b\n" "${GREEN}" "${details[0]}" "${RESET}"
@@ -39,7 +39,7 @@ github_compare_version() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ "${#}" -lt 2 ]]; then
+  if [[ ${#} -lt 2 ]]; then
     printf "%bUsage: github_compare_version owner/repo latest_version [current_version] [release_api_output_file]%b\n" "${RED}" "${RESET}"
     return 1
   fi

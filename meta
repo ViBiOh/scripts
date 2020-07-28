@@ -3,7 +3,7 @@
 META_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 meta_download_script() {
-  1>&2 printf "Download %s\n" "${dep}"
+  printf 1>&2 "Download %s\n" "${dep}"
 
   mkdir -p "$(dirname "${1}")"
   curl -q -sSL --max-time 10 -o "${1}" "${REMOTE_DEPENDENCIES_URL}/${1}"
@@ -29,5 +29,5 @@ meta_init() {
     fi
   done
 
-  cd - > /dev/null || return 1
+  cd - >/dev/null || return 1
 }

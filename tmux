@@ -3,7 +3,7 @@
 TMUX_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 tmux_is_inside() {
-  if [[ -z "${TMUX:-}" ]]; then
+  if [[ -z ${TMUX:-} ]]; then
     printf "false"
   fi
   printf "true"
