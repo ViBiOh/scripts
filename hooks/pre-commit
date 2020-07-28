@@ -78,8 +78,21 @@ yaml_check() {
   YAML_FILES=$(get_files \*.y{,a}ml)
 
   if [[ -n ${YAML_FILES} ]]; then
-      printf "%bLinting yaml files%b\n" "${BLUE}" "${RESET}"
-      run_command yamllint -d "{rules: {line-length: disable}}" ${YAML_FILES[@]}
+    printf "%bFormatting yaml files%b\n" "${BLUE}" "${RESET}"
+    run_command prettier --write ${YAML_FILES[@]}
+
+    printf "%bLinting yaml files%b\n" "${BLUE}" "${RESET}"
+    run_command yamllint -d "{rules: {line-length: disable}}" ${YAML_FILES[@]}
+  fi
+}
+
+markdown_check() {
+  local MARKDOWN_FILES
+  MARKDOWN_FILES=$(get_files "*.md")
+
+  if [[ -n ${MARKDOWN_FILES} ]]; then
+    printf "%bFormatting markdown files%b\n" "${BLUE}" "${RESET}"
+    run_command prettier --write ${MARKDOWN_FILES[@]}
   fi
 }
 
@@ -115,6 +128,7 @@ main() {
   npm_check
   terraform_check
   yaml_check
+  markdown_check
 
   diff_check "${INITIAL_DIFF}"
   tag_check
