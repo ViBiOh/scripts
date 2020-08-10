@@ -35,7 +35,7 @@ git_root() {
 git_browse() {
   shopt -s nullglob
   for dir in "$(pwd)"/*; do
-    (cd "${dir}" && [[ $(git_is_inside) == "true" ]] && echo "${dir}" && eval "${@}")
+    (cd "${dir}" && [[ $(git_is_inside) == "true" ]] && printf "%bRunning command in %s%b\n" "${BLUE}" "${dir}" "${RESET}" && eval "${@}")
   done
   shopt -u nullglob
 }
@@ -271,7 +271,7 @@ git_sync() {
   fi
 
   local dry=false
-  if [[ $(echo "${3}" | tr "[:upper:]" "[:lower:]") == "dry" ]]; then
+  if [[ $(printf "%s" "${3:-}" | tr "[:upper:]" "[:lower:]") == "dry" ]]; then
     dry=true
   fi
 
