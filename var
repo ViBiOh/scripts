@@ -14,12 +14,12 @@ var_read() {
     eval "${1}=${READ_VALUE:-${2}}"
 
     if [[ ${SECRET_ARG} == "-s" ]]; then
-      printf "\n"
+      printf "\n" 1>&2
     fi
   elif [[ ${SECRET_ARG} != "-s" ]]; then
-    printf "%s=%s\n" "${1}" "${!1}"
+    printf "%s=%s\n" "${1}" "${!1}" 1>&2
   else
-    printf "Using secret %s\n" "${1}"
+    printf "Using secret %s\n" "${1}" 1>&2
   fi
 }
 

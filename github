@@ -2,6 +2,101 @@
 
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+github_repo_stats() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ ${#} -ne 2 ]]; then
+    printf "%bUsage: github_repo_stats owner/repo user%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  local GITHUB_REPOSITORY=${1:-}
+  local GITHUB_USER=${2:-}
+  var_read GITHUB_OAUTH_TOKEN "" "secret"
+
+  local HTTP_OUTPUT="http_output.txt"
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local HTTP_STATUS
+
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors")"
+  if [[ ${HTTP_STATUS} == "202" ]]; then
+    printf "%bContributions are being compiled for %b%s%b, come back in a few moments%b\n" "${YELLOW}" "${GREEN}" "${GITHUB_REPOSITORY}" "${YELLOW}" "${RESET}" 1>&2
+    rm "${HTTP_OUTPUT}"
+    return
+  elif [[ ${HTTP_STATUS} != "200" ]]; then
+    printf "%bUnable to get contributors' stats for %s%b\n" "${RED}" "${GITHUB_REPOSITORY}" "${RESET}"
+    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  jq -c -r --arg user "${GITHUB_USER}" --arg repo "${GITHUB_REPOSITORY}" \
+    '.[] | select(.author.login == $user) | {repo: $repo, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))}' \
+    "${HTTP_OUTPUT}"
+  rm "${HTTP_OUTPUT}"
+}
+
+github_org_stats() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ ${#} -ne 2 ]]; then
+    printf "%bUsage: github_org_stats organization_name user%b\n" "${RED}" "${RESET}"
+    return 1
+  fi
+
+  local GITHUB_ORGANIZATION="${1:-}"
+  local GITHUB_USER="${2:-}"
+  var_read GITHUB_OAUTH_TOKEN "" "secret"
+
+  local HTTP_OUTPUT="http_output.txt"
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local HTTP_STATUS
+
+  local page=0
+  local page_size=100
+  local count="${page_size}"
+
+  local stat
+  local output=""
+
+  while [[ count -eq ${page_size} ]]; do
+    page=$((page + 1))
+
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${page_size}&page=${page}")"
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      printf "%bUnable to list organizations repos of %s for page %s%b\n" "${RED}" "${GITHUB_ORGANIZATION}" "${page}" "${RESET}"
+      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+      return
+    fi
+
+    local REPOSITORIES
+    mapfile -t REPOSITORIES < <(jq --raw-output '.[] | .full_name' "${HTTP_OUTPUT}")
+    rm "${HTTP_OUTPUT}"
+
+    count=0
+    for REPO in "${REPOSITORIES[@]}"; do
+      count=$((count + 1))
+
+      printf "%bGenerating stats for %b%s%b\n" "${BLUE}" "${GREEN}" "${REPO}" "${RESET}"
+      stat="$(github_repo_stats "${REPO}" "${GITHUB_USER}")"
+
+      if [[ -n ${stat:-} ]]; then
+        if [[ -n ${output} ]]; then
+          output+=","
+        fi
+
+        output+="${stat}"
+      fi
+    done
+  done
+
+  output="[${output}]"
+  printf "%s\n" "${output}"
+
+  printf "%s" "${output}" | jq '{added: (reduce .[] as $repo (0; . + $repo.added)), deleted: (reduce .[] as $repo (0; . + $repo.deleted)), commits: (reduce .[] as $repo (0; . + $repo.commits))}'
+}
+
 github_clone_user() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
