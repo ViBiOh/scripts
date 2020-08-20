@@ -6,13 +6,12 @@ github_repo_stats() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: github_repo_stats owner/repo user%b\n" "${RED}" "${RESET}" 1>&2
+  if [[ ${#} -ne 1 ]]; then
+    printf "%bUsage: github_repo_stats owner/repo%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
   local GITHUB_REPOSITORY=${1:-}
-  local GITHUB_USER=${2:-}
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
@@ -30,8 +29,8 @@ github_repo_stats() {
     return
   fi
 
-  jq -c -r --arg user "${GITHUB_USER}" --arg repo "${GITHUB_REPOSITORY}" \
-    '.[] | select(.author.login == $user) | {repo: $repo, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))}' \
+  jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
+    '[.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))}] | {repository: $repo, contributors: .}' \
     "${HTTP_OUTPUT}"
   rm "${HTTP_OUTPUT}"
 }
@@ -40,13 +39,12 @@ github_org_stats() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: github_org_stats organization_name user%b\n" "${RED}" "${RESET}" 1>&2
+  if [[ ${#} -ne 1 ]]; then
+    printf "%bUsage: github_org_stats organization_name%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
   local GITHUB_ORGANIZATION="${1:-}"
-  local GITHUB_USER="${2:-}"
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
@@ -71,15 +69,15 @@ github_org_stats() {
     fi
 
     local REPOSITORIES
-    mapfile -t REPOSITORIES < <(jq --raw-output '.[] | .full_name' "${HTTP_OUTPUT}")
+    mapfile -t REPOSITORIES < <(jq -r '.[] | .full_name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     count=0
     for REPO in "${REPOSITORIES[@]}"; do
       count=$((count + 1))
 
-      printf "%bGenerating stats for %b%s%b\n" "${BLUE}" "${GREEN}" "${REPO}" "${RESET}"
-      stat="$(github_repo_stats "${REPO}" "${GITHUB_USER}")"
+      printf "%bGenerating stats for %b%s%b\n" "${BLUE}" "${GREEN}" "${REPO}" "${RESET}" 1>&2
+      stat="$(github_repo_stats "${REPO}")"
 
       if [[ -n ${stat:-} ]]; then
         if [[ -n ${output} ]]; then
@@ -93,8 +91,23 @@ github_org_stats() {
 
   output="[${output}]"
   printf "%s\n" "${output}"
+}
 
-  printf "%s" "${output}" | jq '{added: (reduce .[] as $repo (0; . + $repo.added)), deleted: (reduce .[] as $repo (0; . + $repo.deleted)), commits: (reduce .[] as $repo (0; . + $repo.commits))} | {added: .added, deleted: .deleted, commits: .commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
+github_org_stats_user() {
+  if [[ ${#} -ne 2 ]]; then
+    printf "%bUsage: github_org_stats_user github_org_stats.json user%b\n" "${RED}" "${RESET}" 1>&2
+    return 1
+  fi
+
+  local FILENAME="${1:-}"
+  local GITHUB_USER="${2:-}"
+
+  local GITHUB_USER_STATS
+  GITHUB_USER_STATS="$(jq -c -r --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.commits)' "${FILENAME}")"
+
+  printf "%s\n" "${GITHUB_USER_STATS}"
+
+  printf "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits))} | {added: .added, deleted: .deleted, commits: .commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
 }
 
 github_clone_user() {
@@ -115,7 +128,7 @@ github_clone_user() {
   fi
 
   local REPOSITORIES
-  mapfile -t REPOSITORIES < <(jq --raw-output '.[] | select (.archived | not) | .name + "," + .ssh_url' "${HTTP_OUTPUT}")
+  mapfile -t REPOSITORIES < <(jq -r '.[] | select (.archived | not) | .name + "," + .ssh_url' "${HTTP_OUTPUT}")
   rm "${HTTP_OUTPUT}"
 
   for REPO in "${REPOSITORIES[@]}"; do
@@ -152,7 +165,7 @@ github_compare_version() {
   fi
 
   local RELEASE_NOTES
-  RELEASE_NOTES="$(jq --raw-output .body "${4}")"
+  RELEASE_NOTES="$(jq -r .body "${4}")"
   rm "${4}"
 
   printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${1}" "${BLUE}" "${RED}" "${3}" "${BLUE}" "${YELLOW}" "${2}" "${GREEN}" "https://github.com/${1}/releases/tag/${2}" "${RESET}"
@@ -182,7 +195,7 @@ github_last_release() {
     return
   fi
 
-  github_compare_version "${1}" "$(jq --raw-output .tag_name "${HTTP_OUTPUT}")" "${2:-}" "${HTTP_OUTPUT}"
+  github_compare_version "${1}" "$(jq -r .tag_name "${HTTP_OUTPUT}")" "${2:-}" "${HTTP_OUTPUT}"
 }
 
 github_configure() {

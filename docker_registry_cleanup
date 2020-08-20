@@ -34,7 +34,7 @@ main() {
     return
   fi
 
-  CLIENT_ARGS+=("-H" "Authorization: JWT $(jq --raw-output '.token' "${HTTP_OUTPUT}")")
+  CLIENT_ARGS+=("-H" "Authorization: JWT $(jq -r '.token' "${HTTP_OUTPUT}")")
   rm "${HTTP_OUTPUT}"
 
   # Listing repositories
@@ -49,7 +49,7 @@ main() {
   fi
 
   local REPOSITORIES
-  mapfile -t REPOSITORIES < <(jq --raw-output '.[] | .name' "${HTTP_OUTPUT}")
+  mapfile -t REPOSITORIES < <(jq -r '.[] | .name' "${HTTP_OUTPUT}")
   rm "${HTTP_OUTPUT}"
 
   for repository in "${REPOSITORIES[@]}"; do
@@ -64,7 +64,7 @@ main() {
     fi
 
     local TAGS
-    mapfile -t TAGS < <(jq --raw-output '.results[] | .name' "${HTTP_OUTPUT}")
+    mapfile -t TAGS < <(jq -r '.results[] | .name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for tag in "${TAGS[@]}"; do
