@@ -7,7 +7,7 @@ github_repo_stats() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: github_repo_stats owner/repo user%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: github_repo_stats owner/repo user%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -25,7 +25,7 @@ github_repo_stats() {
     rm "${HTTP_OUTPUT}"
     return
   elif [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to get contributors' stats for %s%b\n" "${RED}" "${GITHUB_REPOSITORY}" "${RESET}"
+    printf "%bUnable to get contributors' stats for %s%b\n" "${RED}" "${GITHUB_REPOSITORY}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
@@ -41,7 +41,7 @@ github_org_stats() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: github_org_stats organization_name user%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: github_org_stats organization_name user%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -65,7 +65,7 @@ github_org_stats() {
 
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${page_size}&page=${page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      printf "%bUnable to list organizations repos of %s for page %s%b\n" "${RED}" "${GITHUB_ORGANIZATION}" "${page}" "${RESET}"
+      printf "%bUnable to list organizations repos of %s for page %s%b\n" "${RED}" "${GITHUB_ORGANIZATION}" "${page}" "${RESET}" 1>&2
       cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
       return
     fi
@@ -94,7 +94,7 @@ github_org_stats() {
   output="[${output}]"
   printf "%s\n" "${output}"
 
-  printf "%s" "${output}" | jq '{added: (reduce .[] as $repo (0; . + $repo.added)), deleted: (reduce .[] as $repo (0; . + $repo.deleted)), commits: (reduce .[] as $repo (0; . + $repo.commits))}'
+  printf "%s" "${output}" | jq '{added: (reduce .[] as $repo (0; . + $repo.added)), deleted: (reduce .[] as $repo (0; . + $repo.deleted)), commits: (reduce .[] as $repo (0; . + $repo.commits))} | {added: .added, deleted: .deleted, commits: .commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
 }
 
 github_clone_user() {
@@ -109,7 +109,7 @@ github_clone_user() {
   local HTTP_STATUS
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=100")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to list user repos%b\n" "${RED}" "${RESET}"
+    printf "%bUnable to list user repos%b\n" "${RED}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
@@ -135,7 +135,7 @@ github_compare_version() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    printf "%bUsage: github_compare_version owner/repo latest_version [current_version] [release_api_output_file]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: github_compare_version owner/repo latest_version [current_version] [release_api_output_file]%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -164,7 +164,7 @@ github_last_release() {
   var_color
 
   if [[ ${#} -lt 1 ]]; then
-    printf "%bUsage: github_last_release owner/repo [previous_version] %b\n" "${RED}" "${RESET}"
+    printf "%bUsage: github_last_release owner/repo [previous_version] %b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -177,7 +177,7 @@ github_last_release() {
   local HTTP_STATUS
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${1}/releases/latest")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to list latest release for %s%b\n" "${RED}" "${1}" "${RESET}"
+    printf "%bUnable to list latest release for %s%b\n" "${RED}" "${1}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
@@ -190,7 +190,7 @@ github_configure() {
   var_color
 
   if [[ ${#} -ne 1 ]]; then
-    printf "%bUsage: configure_repository owner/repo%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: configure_repository owner/repo%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -208,21 +208,21 @@ github_configure() {
     "has_projects": false
   }')"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to edit ${1}%b\n" "${RED}" "${RESET}"
+    printf "%bUnable to edit ${1}%b\n" "${RED}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.dorian-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/vulnerability-alerts")"
   if [[ ${HTTP_STATUS} != "204" ]]; then
-    printf "%bUnable to enable vulnerability alerts for ${1}%b\n" "${RED}" "${RESET}"
+    printf "%bUnable to enable vulnerability alerts for ${1}%b\n" "${RED}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.london-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/automated-security-fixes")"
   if [[ ${HTTP_STATUS} != "204" ]]; then
-    printf "%bUnable to enable automated security fixes for ${1}%b\n" "${RED}" "${RESET}"
+    printf "%bUnable to enable automated security fixes for ${1}%b\n" "${RED}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
@@ -242,14 +242,14 @@ github_configure() {
     "restrictions": null
   }')"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to update branch protection ${1}%b\n" "${RED}" "${RESET}"
+    printf "%bUnable to update branch protection ${1}%b\n" "${RED}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.zzzax-preview+json" "-X" "POST" "https://api.github.com/repos/${1}/branches/master/protection/required_signatures")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to enable required signed commits for ${1}%b\n" "${RED}" "${RESET}"
+    printf "%bUnable to enable required signed commits for ${1}%b\n" "${RED}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi

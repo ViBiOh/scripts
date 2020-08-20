@@ -14,7 +14,7 @@ golang_build() {
 
   if [[ ${BUILD_WITH_DOCKER:-} == "true" ]]; then
     if ! command -v docker >/dev/null 2>&1; then
-      printf "%bdocker not found%b\n" "${RED}" "${RESET}"
+      printf "%bdocker not found%b\n" "${RED}" "${RESET}" 1>&2
       return
     fi
 
@@ -22,7 +22,7 @@ golang_build() {
     OUTPUT_DIR="/go/src/app/release"
   else
     if ! command -v go >/dev/null 2>&1; then
-      printf "%bgo not found%b\n" "${RED}" "${RESET}"
+      printf "%bgo not found%b\n" "${RED}" "${RESET}" 1>&2
       return
     fi
 
@@ -58,7 +58,7 @@ golang_build() {
 
 docker_build() {
   if ! command -v docker >/dev/null 2>&1; then
-    printf "%bdocker not found%b\n" "${RED}" "${RESET}"
+    printf "%bdocker not found%b\n" "${RED}" "${RESET}" 1>&2
     return
   fi
 
@@ -154,8 +154,8 @@ release() {
     }")"
 
   if [[ ${HTTP_STATUS} != "201" ]]; then
-    printf "%bFailed to create release%b\n" "${RED}" "${RESET}"
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+    printf "%bUnable to create release%b\n" "${RED}" "${RESET}" 1>&2
+    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     exit 1
   fi
@@ -177,8 +177,8 @@ release() {
       )"
 
       if [[ ${HTTP_STATUS} != "201" ]]; then
-        printf "%bFailed to upload asset %s%b\n" "${RED}" "${asset}" "${RESET}"
-        printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+        printf "%bUnable to upload asset %s%b\n" "${RED}" "${asset}" "${RESET}" 1>&2
+        printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
         cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
         exit 1
       fi

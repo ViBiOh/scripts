@@ -13,7 +13,7 @@ main() {
   local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
 
   if [[ ${#} -lt 2 ]]; then
-    printf "%bUsage: ${0} [IMAGE_NAME] [IMAGE_VERSION] [VERSION_TARGET]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: ${0} [IMAGE_NAME] [IMAGE_VERSION] [VERSION_TARGET]%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -39,8 +39,8 @@ main() {
   unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to retrieve token for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+    printf "%bUnable to retrieve token for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}" 1>&2
+    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
@@ -61,8 +61,8 @@ main() {
     )"
 
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      printf "%bUnable to retrieve manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
-      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+      printf "%bUnable to retrieve manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}" 1>&2
+      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
       cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
       return
     fi
@@ -79,8 +79,8 @@ main() {
     )"
 
     if [[ ${HTTP_STATUS} != "201" ]]; then
-      printf "%bUnable to promote manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}"
-      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+      printf "%bUnable to promote manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}" 1>&2
+      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
       cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
       continue
     fi

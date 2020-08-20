@@ -10,7 +10,7 @@ main() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: ${0} [APP_NAME] [COMPOSE_FILE]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: ${0} [APP_NAME] [COMPOSE_FILE]%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -24,7 +24,7 @@ main() {
 
   cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
     exit 1
   fi
 }

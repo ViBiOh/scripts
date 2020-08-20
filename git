@@ -132,7 +132,7 @@ git_changelog() {
   git_conventionnal_commits
 
   if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: git_changelog [END_REF] [START_REF]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: git_changelog [END_REF] [START_REF]%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -241,7 +241,7 @@ head_sync() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: head_sync [REMOTE_SERVER] [REMOTE_PATH]%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: head_sync [REMOTE_SERVER] [REMOTE_PATH]%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -255,7 +255,7 @@ git_sync() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    printf "%bUsage: git_sync [REMOTE_SERVER] [REMOTE_PATH] [DRY]?%b\n" "${RED}" "${RESET}"
+    printf "%bUsage: git_sync [REMOTE_SERVER] [REMOTE_PATH] [DRY]?%b\n" "${RED}" "${RESET}" 1>&2
     return 1
   fi
 
@@ -321,7 +321,7 @@ git_sync() {
 
   if [[ ${#toDelete[@]} -ne 0 ]]; then
     ! ${dry} && ssh "${1}" "rm -rf ${toDelete[*]}"
-    printf "%b- Deleted\n%s%b\n" "${RED}" "${toDelete[*]}" "${RESET}"
+    printf "%b- Deleted\n%s%b\n" "${RED}" "${toDelete[*]}" "${RESET}" 1>&2
   fi
 
   if [[ ${#toSync[@]} -ne 0 ]]; then

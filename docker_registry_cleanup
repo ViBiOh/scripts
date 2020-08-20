@@ -28,8 +28,8 @@ main() {
   unset DOCKER_PASSWORD
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to login to registry %s%b\n" "${RED}" "${DOCKER_REGISTRY}" "${RESET}"
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+    printf "%bUnable to login to registry %s%b\n" "${RED}" "${DOCKER_REGISTRY}" "${RESET}" 1>&2
+    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
@@ -42,8 +42,8 @@ main() {
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/users/${DOCKER_OWNER}/repositories/?page_size=100")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to list images for %s%b\n" "${RED}" "${DOCKER_OWNER}" "${RESET}"
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+    printf "%bUnable to list images for %s%b\n" "${RED}" "${DOCKER_OWNER}" "${RESET}" 1>&2
+    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
     cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
     return
   fi
@@ -57,8 +57,8 @@ main() {
 
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/?page_size=100")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      printf "%bUnable to list tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}" "${RESET}"
-      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+      printf "%bUnable to list tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}" "${RESET}" 1>&2
+      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
       cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
       continue
     fi
@@ -71,8 +71,8 @@ main() {
       if [[ ${tag} =~ ^[0-9A-Fa-f]{6,} ]]; then
         HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/")"
         if [[ ${HTTP_STATUS} != "204" ]]; then
-          printf "%bUnable to delete tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}:${tag}" "${RESET}"
-          printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}"
+          printf "%bUnable to delete tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}:${tag}" "${RESET}" 1>&2
+          printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
           cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
           continue
         fi

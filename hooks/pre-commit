@@ -4,8 +4,8 @@ set -o nounset -o pipefail
 
 run_command() {
   if ! "${@}"; then
-    printf "%bCommit Failed%b\n" "${RED}" "${RESET}"
-    printf "%bPlease fix errors and try committing again.%b\n" "${RED}" "${RESET}"
+    printf "%bCommit Failed%b\n" "${RED}" "${RESET}" 1>&2
+    printf "%bPlease fix errors and try committing again.%b\n" "${RED}" "${RESET}" 1>&2
 
     exit 1
   fi
@@ -21,8 +21,8 @@ get_diff() {
 
 diff_check() {
   if [[ ${1} != $(get_diff) ]]; then
-    printf "%bPre-commit has changed files%b\n" "${RED}" "${RESET}"
-    printf "%bConsider adding updated file with %bgit add -i && git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}"
+    printf "%bPre-commit has changed files%b\n" "${RED}" "${RESET}" 1>&2
+    printf "%bConsider adding updated file with %bgit add -i && git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}" 1>&2
   fi
 }
 
