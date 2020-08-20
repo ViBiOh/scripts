@@ -30,7 +30,7 @@ github_repo_stats() {
   fi
 
   jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
-    '[.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))}] | {repository: $repo, contributors: .}' \
+    '{repository: $repo, contributors: [.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))} | {author, added, deleted, commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor }] | sort_by(.ratio) }' \
     "${HTTP_OUTPUT}"
   rm "${HTTP_OUTPUT}"
 }
@@ -103,7 +103,7 @@ github_org_stats_user() {
   local GITHUB_USER="${2:-}"
 
   local GITHUB_USER_STATS
-  GITHUB_USER_STATS="$(jq -c -r --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.commits)' "${FILENAME}")"
+  GITHUB_USER_STATS="$(jq -c -r --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.ratio)' "${FILENAME}")"
 
   printf "%s\n" "${GITHUB_USER_STATS}"
 
