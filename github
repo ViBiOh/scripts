@@ -2,6 +2,73 @@
 
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+github_repo_pr_stats() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ ${#} -ne 1 ]]; then
+    var_error "Usage: github_repo_pr_stats owner/repo"
+    return 1
+  fi
+
+  local GITHUB_REPOSITORY="${1:-}"
+  var_read GITHUB_OAUTH_TOKEN "" "secret"
+
+  local HTTP_OUTPUT="http_output.txt"
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local HTTP_STATUS
+
+  local page=0
+  local page_size=100
+  local count="${page_size}"
+
+  local pr
+  local output=""
+
+  while [[ count -eq ${page_size} ]]; do
+    page=$((page + 1))
+
+    var_info "Fetching page ${page} of ${GITHUB_REPOSITORY} pull-requests"
+
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=all&per_page=${page_size}&page=${page}")"
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      var_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${page}"
+      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      break
+    fi
+
+    local PULL_REQUESTS
+    mapfile -t PULL_REQUESTS < <(jq -r '. [] | select(.merged_at != null) | (.number | tostring) + "," + .user.login' "${HTTP_OUTPUT}")
+    count="$(jq -r 'length' "${HTTP_OUTPUT}")"
+    rm "${HTTP_OUTPUT}"
+
+    for PR in "${PULL_REQUESTS[@]}"; do
+      IFS=',' read -r -a details <<<"${PR}"
+
+      HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${details[0]}/reviews")"
+      if [[ ${HTTP_STATUS} != "200" ]]; then
+        var_error "Unable to list ${GITHUB_REPOSITORY}/pulls/${details[0]} reviews"
+        cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+        return 1
+      fi
+
+      pr="$(jq -c -r --arg author "${details[1]}" '[.[].user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
+      if [[ -n ${pr:-} ]]; then
+        if [[ -n ${output} ]]; then
+          output+=","
+        fi
+
+        output+="${pr}"
+      fi
+    done
+  done
+
+  printf "[%s]" "${output}" | jq -r '{
+    openers: ([group_by(.author) | .[] | { key: .[0].author, value: length}] | sort_by(.value) | from_entries),
+    reviewers: ([[.[].reviewers] | flatten | group_by(.) | .[] | { key: .[0], value: length}] | sort_by(.value) | from_entries)
+  }'
+}
+
 github_repo_stats() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
@@ -67,7 +134,7 @@ github_org_stats() {
     if [[ ${HTTP_STATUS} != "200" ]]; then
       var_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${page}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
-      return 1
+      break
     fi
 
     local REPOSITORIES
@@ -132,7 +199,7 @@ github_clone_user() {
     if [[ ${HTTP_STATUS} != "200" ]]; then
       var_error "Unable to list user repositories on page ${page}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
-      return 1
+      break
     fi
 
     local REPOSITORIES
