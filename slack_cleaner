@@ -23,7 +23,7 @@ main() {
 
   for target in ${TARGETS[@]}; do
     for type in ${TYPES[@]}; do
-      printf "%bCleanning %s in %s until %s%b\n" "${BLUE}" "${type}" "${target}" "${UNTIL_DATE}" "${RESET}"
+      var_info "Cleanning ${type} in ${target} until ${UNTIL_DATE}"
       ${CLEANER_ARGS[@]} "slack-cleaner --token ${SLACK_LEGACY_TOKEN} --user ${SLACK_USER} --rate 1 --perform --${type} --regex --${target} '.*' --before ${UNTIL_DATE}"
     done
   done

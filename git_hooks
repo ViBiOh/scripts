@@ -10,8 +10,8 @@ install() {
     cd "${GIT_HOOKS_SCRIPT_DIR}" || return 1
 
     if [[ $(git_is_inside) != "true" ]]; then
-      printf "%bnot inside a git tree%b\n" "${YELLOW}" "${RESET}"
-      return
+      var_warning "not inside a git tree"
+      return 1
     fi
 
     local HOOKS_SOURCE_DIR="${GIT_HOOKS_SCRIPT_DIR}/hooks"
@@ -27,7 +27,7 @@ install() {
 
       for file in *; do
         ln -s -f "${HOOKS_SOURCE_DIR}/${file}" "${HOOKS_TARGET_DIR}/${file}"
-        printf "%b✔ %s hook installed %b\n" "${GREEN}" "${file}" "${RESET}"
+        var_success "✔ ${file} hook installed"
       done
     )
   )

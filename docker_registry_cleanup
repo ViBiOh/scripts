@@ -15,9 +15,8 @@ main() {
   var_read DOCKER_PASSWORD "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
-  local HTTP_STATUS
-
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
+  local HTTP_STATUS
 
   # Login to registry
   HTTP_STATUS="$(
@@ -28,8 +27,8 @@ main() {
   unset DOCKER_PASSWORD
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to login to registry %s%b\n" "${RED}" "${DOCKER_REGISTRY}" "${RESET}" 1>&2
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
+    var_error "Unable to login to registry ${DOCKER_REGISTRY}"
+    var_error "HTTP/${HTTP_STATUS}"
     cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
     return 1
   fi
@@ -38,12 +37,12 @@ main() {
   rm "${HTTP_OUTPUT}"
 
   # Listing repositories
-  printf "%bListing repositories for %s...%b\n" "${BLUE}" "${DOCKER_OWNER}" "${RESET}"
+  var_info "Listing repositories for ${DOCKER_OWNER}..."
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/users/${DOCKER_OWNER}/repositories/?page_size=100")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to list images for %s%b\n" "${RED}" "${DOCKER_OWNER}" "${RESET}" 1>&2
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
+    var_error "Unable to list images for ${DOCKER_OWNER}"
+    var_error "HTTP/${HTTP_STATUS}"
     cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
     return 1
   fi
@@ -53,12 +52,12 @@ main() {
   rm "${HTTP_OUTPUT}"
 
   for repository in "${REPOSITORIES[@]}"; do
-    printf "%bListing tags for %s...%b\n" "${BLUE}" "${DOCKER_OWNER}/${repository}" "${RESET}"
+    var_info "Listing tags for ${DOCKER_OWNER}/${repository}..."
 
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/?page_size=100")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      printf "%bUnable to list tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}" "${RESET}" 1>&2
-      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
+      var_error "Unable to list tags for ${DOCKER_OWNER}/${repository}"
+      var_error "HTTP/${HTTP_STATUS}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
       continue
     fi
@@ -71,14 +70,14 @@ main() {
       if [[ ${tag} =~ ^[0-9A-Fa-f]{6,} ]]; then
         HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/")"
         if [[ ${HTTP_STATUS} != "204" ]]; then
-          printf "%bUnable to delete tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}:${tag}" "${RESET}" 1>&2
-          printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
+          var_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
+          var_error "HTTP/${HTTP_STATUS}"
           cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
           continue
         fi
 
         rm "${HTTP_OUTPUT}"
-        printf "%b%s deleted!%b\n" "${GREEN}" "${DOCKER_OWNER}/${repository}:${tag}" "${RESET}"
+        var_success "${DOCKER_OWNER}/${repository}:${tag} deleted!"
       fi
     done
 

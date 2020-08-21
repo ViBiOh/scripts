@@ -14,7 +14,7 @@ tmux_split_cmd() (
   var_color
 
   if [[ $(tmux_is_inside) == "false" ]]; then
-    var_error "not inside a tmux"
+    var_warning "not inside a tmux"
     return 1
   fi
 

@@ -19,12 +19,12 @@ main() {
     printf "%bAnalyzing %b%s%b\n" "${BLUE}" "${YELLOW}" "${commit}" "${RESET}"
 
     if [[ $(git_is_merge_commit "${commit}") == "true" ]]; then
-      printf "\t%bmerge commit, ignoring%b\n" "${YELLOW}" "${RESET}"
+      var_warning "\tmerge commit, ignoring"
       continue
     fi
 
     if [[ $(git_is_commit_wip "${commit}") == "true" ]]; then
-      printf "\t%bwip commit, please rebase%b\n" "${RED}" "${RESET}" 1>&2
+      var_error "\twip commit, please rebase"
       UNCLEAR="true"
       continue
     fi
@@ -44,7 +44,7 @@ main() {
     exit 1
   fi
 
-  printf "%b✔ Everything looks fine%b\n" "${GREEN}" "${RESET}"
+  var_success "✔ Everything looks fine"
   exit 0
 }
 

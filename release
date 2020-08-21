@@ -3,7 +3,7 @@
 set -o nounset -o pipefail -o errexit
 
 release_clean() {
-  printf "%bCleaning %s%b\n" "${BLUE}" "${OUTPUT_DIR}" "${RESET}"
+  var_info "Cleaning ${OUTPUT_DIR}"
 
   rm -rf "${OUTPUT_DIR}"
   mkdir "${OUTPUT_DIR}"
@@ -48,7 +48,7 @@ golang_build() {
           export GOOS="${context[0]}"
           export GOARCH="${context[1]}"
           export CGO_ENABLED="0"
-          printf "%bBuilding binary %s to %s%b\n" "${BLUE}" "${NAME}_${GOOS}_${GOARCH}" "${OUTPUT_DIR}" "${RESET}"
+          var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
           golang_go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
         )
       done
@@ -78,14 +78,14 @@ docker_build() {
     local ARCH="${context[1]}"
     local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}"
 
-    printf "%bBuilding and pushing image for %s%b\n" "${BLUE}" "${PLATFORM}" "${RESET}"
+    var_info "Building and pushing image for ${PLATFORM}"
     docker build -f "${DOCKERFILE}" -t "${BUILT_IMAGE}" --build-arg "VERSION=${IMAGE_VERSION}" --platform "${PLATFORM}" "."
     docker push "${BUILT_IMAGE}"
 
     DOCKER_MANIFEST_ARGS+=("${BUILT_IMAGE}")
   done
 
-  printf "%bCreating docker manifest for %s%b\n" "${BLUE}" "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${RESET}"
+  var_info "Creating docker manifest for ${DOCKER_IMAGE}:${IMAGE_VERSION}"
   docker manifest create "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_MANIFEST_ARGS[@]}"
 
   for DOCKER_ARCH in ${DOCKER_ARCHS[*]}; do
@@ -166,7 +166,7 @@ release() {
     rm "${HTTP_OUTPUT}"
 
     for asset in "${OUTPUT_DIR}"/*; do
-      printf "%bUploading asset %s%b\n" "${BLUE}" "${asset}" "${RESET}"
+      var_info "Uploading asset ${asset}"
 
       HTTP_STATUS="$(
         "${CLIENT_ARGS[@]}" \
@@ -187,7 +187,7 @@ release() {
     done
   fi
 
-  printf "%b✔ Done!%b\n" "${GREEN}" "${RESET}"
+  var_success "✔ Done!"
 }
 
 release_usage() {

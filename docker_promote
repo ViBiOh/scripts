@@ -13,7 +13,7 @@ main() {
   local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
 
   if [[ ${#} -lt 2 ]]; then
-    printf "%bUsage: ${0} [IMAGE_NAME] [IMAGE_VERSION] [VERSION_TARGET]%b\n" "${RED}" "${RESET}" 1>&2
+    ver_error "Usage: ${0} DOCKER_IMAGE IMAGE_VERSION [VERSION_TARGET]"
     return 1
   fi
 
@@ -25,11 +25,10 @@ main() {
   local VERSION_TARGET="${3:-latest}"
 
   local HTTP_OUTPUT="http_output.txt"
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
   local HTTP_STATUS
 
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
-
-  printf "%bGetting token from %s for pulling and pushing to %s...%b\n" "${BLUE}" "${DOCKER_AUTH_TOKEN}" "${DOCKER_IMAGE}" "${RESET}"
+  var_info "Getting token from ${DOCKER_AUTH_TOKEN} for pulling and pushing to ${DOCKER_IMAGE}..."
 
   # Getting token
   HTTP_STATUS="$(
@@ -39,8 +38,8 @@ main() {
   unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to retrieve token for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}" 1>&2
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
+    var_error "Unable to retrieve token for ${DOCKER_IMAGE}"
+    var_error "HTTP/${HTTP_STATUS}"
     cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
     return 1
   fi
@@ -48,11 +47,11 @@ main() {
   CLIENT_ARGS+=("-H" "Authorization: Bearer $(jq -r .token "${HTTP_OUTPUT}")")
   rm "${HTTP_OUTPUT}"
 
-  printf "%bTagging image %s from %s to %s...%b\n" "${BLUE}" "${DOCKER_IMAGE}" "${IMAGE_VERSION}" "${VERSION_TARGET}" "${RESET}"
+  var_info "Tagging image ${DOCKER_IMAGE} from ${IMAGE_VERSION} to ${VERSION_TARGET}..."
 
   local MANIFEST_ACCEPT=("application/vnd.docker.distribution.manifest.list.v2+json" "application/vnd.docker.distribution.manifest.v2+json")
   for manifest in "${MANIFEST_ACCEPT[@]}"; do
-    printf "%bTrying with manifest %s%b\n" "${YELLOW}" "${manifest}" "${RESET}"
+    var_warning "Trying with manifest ${manifest}"
 
     # Getting manifest
     HTTP_STATUS="$(
@@ -61,8 +60,8 @@ main() {
     )"
 
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      printf "%bUnable to retrieve manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}" 1>&2
-      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
+      var_error "Unable to retrieve manifest for ${DOCKER_IMAGE}"
+      var_error "HTTP/${HTTP_STATUS}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
       return 1
     fi
@@ -79,13 +78,13 @@ main() {
     )"
 
     if [[ ${HTTP_STATUS} != "201" ]]; then
-      printf "%bUnable to promote manifest for %s%b\n" "${RED}" "${DOCKER_IMAGE}" "${RESET}" 1>&2
-      printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
+      var_error "Unable to promote manifest for ${DOCKER_IMAGE}"
+      var_error "HTTP/${HTTP_STATUS}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
       continue
     fi
 
-    printf "%b✔ Image promoted to latest%b\n" "${GREEN}" "${RESET}"
+    var_success "✔ Image promoted to latest"
     rm "${HTTP_OUTPUT}"
     return
   done
