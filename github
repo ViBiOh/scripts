@@ -121,7 +121,7 @@ github_clone_user() {
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
-  local count=0
+  local page=0
   local page_size=100
   local count="${page_size}"
 
