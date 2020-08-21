@@ -14,16 +14,16 @@ golang_build() {
 
   if [[ ${BUILD_WITH_DOCKER:-} == "true" ]]; then
     if ! command -v docker >/dev/null 2>&1; then
-      printf "%bdocker not found%b\n" "${RED}" "${RESET}" 1>&2
-      return
+      var_error "docker not found"
+      return 1
     fi
 
     SOURCE_DIR="/go/src/app/..."
     OUTPUT_DIR="/go/src/app/release"
   else
     if ! command -v go >/dev/null 2>&1; then
-      printf "%bgo not found%b\n" "${RED}" "${RESET}" 1>&2
-      return
+      var_error "go not found"
+      return 1
     fi
 
     SOURCE_DIR="${ROOT_DIR}/..."
@@ -58,8 +58,8 @@ golang_build() {
 
 docker_build() {
   if ! command -v docker >/dev/null 2>&1; then
-    printf "%bdocker not found%b\n" "${RED}" "${RESET}" 1>&2
-    return
+    var_error "docker not found"
+    return 1
   fi
 
   local DOCKER_ARCHS=('linux/amd64' 'linux/arm' 'linux/arm64')
@@ -101,11 +101,11 @@ docker_build() {
 
 release() {
   if [[ $(git_is_inside) != "true" ]]; then
-    printf "%bnot inside a git tree%b\n" "${YELLOW}" "${RESET}"
+    var_warning "not inside a git tree"
     return 1
   fi
 
-  printf "%bIdentifying semver%b\n" "${BLUE}" "${RESET}"
+  var_info "Identifying semver"
   var_read VERSION_REF "HEAD"
   var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep -v "${VERSION_REF}" | head -1)"
 
@@ -121,7 +121,7 @@ release() {
   fi
 
   printf "%bRelease seems to be a %b%s%b\n" "${BLUE}" "${YELLOW}" "${VERSION_TYPE}" "${RESET}"
-  printf "%bSpecify explicit git tag or major|minor|patch for semver increment%b\n" "${BLUE}" "${RESET}"
+  var_info "Specify explicit git tag or major|minor|patch for semver increment"
   var_read VERSION "${VERSION_TYPE}" ""
 
   local GIT_TAG
@@ -135,7 +135,7 @@ release() {
   var_read GITHUB_REPOSITORY "$(git_remote_repository)"
   var_read RELEASE_NAME "${GIT_TAG}"
 
-  printf "%bCreating release %s for %s...%b\n" "${BLUE}" "${GIT_TAG}" "${GITHUB_REPOSITORY}" "${RESET}"
+  var_info "Creating release ${GIT_TAG} for ${GITHUB_REPOSITORY}..."
 
   local HTTP_OUTPUT="http_output.txt"
   local HTTP_STATUS
@@ -154,10 +154,10 @@ release() {
     }")"
 
   if [[ ${HTTP_STATUS} != "201" ]]; then
-    printf "%bUnable to create release%b\n" "${RED}" "${RESET}" 1>&2
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    exit 1
+    var_error "Unable to create release"
+    var_error "HTTP/${HTTP_STATUS}"
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
   if [[ -d ${OUTPUT_DIR} ]]; then
@@ -177,10 +177,10 @@ release() {
       )"
 
       if [[ ${HTTP_STATUS} != "201" ]]; then
-        printf "%bUnable to upload asset %s%b\n" "${RED}" "${asset}" "${RESET}" 1>&2
-        printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
-        cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-        exit 1
+        var_error "Unable to upload asset ${asset}"
+        var_error "HTTP/${HTTP_STATUS}"
+        cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+        return 1
       fi
 
       rm "${HTTP_OUTPUT}"

@@ -30,8 +30,8 @@ main() {
   if [[ ${HTTP_STATUS} != "200" ]]; then
     printf "%bUnable to login to registry %s%b\n" "${RED}" "${DOCKER_REGISTRY}" "${RESET}" 1>&2
     printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
   CLIENT_ARGS+=("-H" "Authorization: JWT $(jq -r '.token' "${HTTP_OUTPUT}")")
@@ -44,8 +44,8 @@ main() {
   if [[ ${HTTP_STATUS} != "200" ]]; then
     printf "%bUnable to list images for %s%b\n" "${RED}" "${DOCKER_OWNER}" "${RESET}" 1>&2
     printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
   local REPOSITORIES
@@ -59,7 +59,7 @@ main() {
     if [[ ${HTTP_STATUS} != "200" ]]; then
       printf "%bUnable to list tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}" "${RESET}" 1>&2
       printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
-      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
       continue
     fi
 
@@ -73,7 +73,7 @@ main() {
         if [[ ${HTTP_STATUS} != "204" ]]; then
           printf "%bUnable to delete tags for %s%b\n" "${RED}" "${DOCKER_OWNER}/${repository}:${tag}" "${RESET}" 1>&2
           printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
-          cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+          cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
           continue
         fi
 

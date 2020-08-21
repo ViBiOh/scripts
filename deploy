@@ -10,7 +10,7 @@ main() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: ${0} [APP_NAME] [COMPOSE_FILE]%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Usage: ${0} APP_NAME COMPOSE_FILE"
     return 1
   fi
 
@@ -22,10 +22,10 @@ main() {
 
   HTTP_STATUS=$(curl -q -sSL --max-time 90 -X POST -u "${DEPLOY_CREDENTIALS}" -o "${HTTP_OUTPUT}" -w "%{http_code}" "${DEPLOY_URL}/${1}/" --data-binary "${2}")
 
-  cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
+  cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bHTTP/%s%b\n" "${RED}" "${HTTP_STATUS}" "${RESET}" 1>&2
-    exit 1
+    var_error "HTTP/${HTTP_STATUS}"
+    return 1
   fi
 }
 
