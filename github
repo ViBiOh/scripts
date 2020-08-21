@@ -63,7 +63,7 @@ github_repo_pr_stats() {
     done
   done
 
-  printf "[%s]" "${output}" | jq -r '{
+  printf "[%s]" "${output}" | jq -c -r '{
     openers: ([group_by(.author) | .[] | { key: .[0].author, value: length}] | sort_by(.value) | from_entries),
     reviewers: ([[.[].reviewers] | flatten | group_by(.) | .[] | { key: .[0], value: length}] | sort_by(.value) | from_entries)
   }'
@@ -98,10 +98,19 @@ github_repo_stats() {
     return 1
   fi
 
-  jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
-    '{repository: $repo, contributors: [.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))} | {author, added, deleted, commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor }] | sort_by(.ratio) }' \
-    "${HTTP_OUTPUT}"
+  local stats
+  stats="$(jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
+    '{
+      repository: $repo,
+      contributors: [.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))} | {author, added, deleted, commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor }] | sort_by(.ratio)
+    }' \
+    "${HTTP_OUTPUT}")"
   rm "${HTTP_OUTPUT}"
+
+  local prs
+  prs="$(github_repo_pr_stats "${GITHUB_REPOSITORY}")"
+
+  printf "%s%s" "${stats}" "${prs}" | jq -c -r -s 'add'
 }
 
 github_org_stats() {
