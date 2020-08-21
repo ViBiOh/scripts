@@ -4,8 +4,8 @@ set -o nounset -o pipefail
 
 run_command() {
   if ! "${@}"; then
-    printf "%bCommit Failed%b\n" "${RED}" "${RESET}" 1>&2
-    printf "%bPlease fix errors and try committing again.%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Commit Failed!"
+    var_error "Please fix errors and try committing again."
 
     exit 1
   fi
@@ -21,7 +21,7 @@ get_diff() {
 
 diff_check() {
   if [[ ${1} != $(get_diff) ]]; then
-    printf "%bPre-commit has changed files%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Pre-commit has changed files"
     printf "%bConsider adding updated file with %bgit add -i && git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}" 1>&2
   fi
 }
@@ -31,10 +31,10 @@ golang_check() {
   GO_FILES=$(get_files "*.go")
 
   if [[ -n ${GO_FILES:-} ]]; then
-    printf "%bFormating golang files%b\n" "${BLUE}" "${RESET}"
+    var_info "Formating golang files"
     GO_FILES="${GO_FILES}" run_command make --silent format
 
-    printf "%bLinting golang packages%b\n" "${BLUE}" "${RESET}"
+    var_info "Linting golang packages"
     run_command make --silent style
   fi
 }
@@ -47,15 +47,15 @@ npm_check() {
   JS_FILES=$(get_files \*.js{,x})
 
   if [[ -n ${PACKAGE_JSON:-} ]] || [[ -n ${JS_FILES:-} ]]; then
-    printf "%bChecking node_modules installation%b\n" "${BLUE}" "${RESET}"
+    var_info "Checking node_modules installation"
     run_command npm --silent install --no-audit --ignore-scripts
   fi
 
   if [[ -n ${JS_FILES:-} ]]; then
-    printf "%bFormating javascript files%b\n" "${BLUE}" "${RESET}"
+    var_info "Formating javascript files"
     run_command npm --silent run format ${JS_FILES[@]}
 
-    printf "%bLinting javascript files%b\n" "${BLUE}" "${RESET}"
+    var_info "Linting javascript files"
     run_command npm --silent run style ${JS_FILES[@]}
   fi
 }
@@ -65,7 +65,7 @@ terraform_check() {
   TERRAFORM_FILES=$(get_files "*.tf")
 
   if [[ -n ${TERRAFORM_FILES} ]]; then
-    printf "%bFormating terraform files%b\n" "${BLUE}" "${RESET}"
+    var_info "Formating terraform files"
 
     for file in ${TERRAFORM_FILES}; do
       run_command terraform fmt "$(dirname "${file}")"
@@ -78,10 +78,10 @@ yaml_check() {
   YAML_FILES=$(get_files \*.y{,a}ml)
 
   if [[ -n ${YAML_FILES} ]]; then
-    printf "%bFormatting yaml files%b\n" "${BLUE}" "${RESET}"
+    var_info "Formating yaml files"
     run_command prettier --write ${YAML_FILES[@]}
 
-    printf "%bLinting yaml files%b\n" "${BLUE}" "${RESET}"
+    var_info "Linting yaml files"
     run_command yamllint -d "{rules: {line-length: disable}}" ${YAML_FILES[@]}
   fi
 }
@@ -91,7 +91,7 @@ markdown_check() {
   MARKDOWN_FILES=$(get_files "*.md")
 
   if [[ -n ${MARKDOWN_FILES} ]]; then
-    printf "%bFormatting markdown files%b\n" "${BLUE}" "${RESET}"
+    var_info "Formating markdown files"
     run_command prettier --write ${MARKDOWN_FILES[@]}
   fi
 }
@@ -108,7 +108,7 @@ tag_check() {
   COMMITS_SINCE_LAST_TAG="$(git rev-list --count "${PREVIOUS_TAG}..HEAD")"
 
   if [[ ${COMMITS_SINCE_LAST_TAG} -ne 0 ]]; then
-    printf "%b%d commits since last tag%b\n" "${YELLOW}" "${COMMITS_SINCE_LAST_TAG}" "${RESET}"
+    var_warning "${COMMITS_SINCE_LAST_TAG} commits since last tag"
   fi
 }
 

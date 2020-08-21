@@ -10,7 +10,7 @@ main() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    printf "%bUsage: ${0} [FILENAME] [ENV_VARS...]%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Usage: ${0} FILENAME ENV_VARS..."
     return 1
   fi
 

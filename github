@@ -7,7 +7,7 @@ github_repo_stats() {
   var_color
 
   if [[ ${#} -ne 1 ]]; then
-    printf "%bUsage: github_repo_stats owner/repo%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Usage: github_repo_stats owner/repo"
     return 1
   fi
 
@@ -20,13 +20,15 @@ github_repo_stats() {
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors")"
   if [[ ${HTTP_STATUS} == "202" ]]; then
-    printf "%bContributions are being compiled for %b%s%b, come back in a few moments%b\n" "${YELLOW}" "${GREEN}" "${GITHUB_REPOSITORY}" "${YELLOW}" "${RESET}" 1>&2
+    var_warning "Contributions are being compiled for ${GITHUB_REPOSITORY}, come back in a few moments"
     rm "${HTTP_OUTPUT}"
     return
-  elif [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to get contributors' stats for %s%b\n" "${RED}" "${GITHUB_REPOSITORY}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+  fi
+
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    var_error "Unable to get contributors' stats for ${GITHUB_REPOSITORY}"
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
   jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
@@ -40,7 +42,7 @@ github_org_stats() {
   var_color
 
   if [[ ${#} -ne 1 ]]; then
-    printf "%bUsage: github_org_stats organization_name%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Usage: github_org_stats organization_name"
     return 1
   fi
 
@@ -63,9 +65,9 @@ github_org_stats() {
 
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${page_size}&page=${page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      printf "%bUnable to list organizations repos of %s for page %s%b\n" "${RED}" "${GITHUB_ORGANIZATION}" "${page}" "${RESET}" 1>&2
-      cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-      return
+      var_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${page}"
+      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      return 1
     fi
 
     local REPOSITORIES
@@ -95,7 +97,7 @@ github_org_stats() {
 
 github_org_stats_user() {
   if [[ ${#} -ne 2 ]]; then
-    printf "%bUsage: github_org_stats_user github_org_stats.json user%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Usage: github_org_stats_user github_org_stats.json user"
     return 1
   fi
 
@@ -106,7 +108,6 @@ github_org_stats_user() {
   GITHUB_USER_STATS="$(jq -c -r --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.ratio)' "${FILENAME}")"
 
   printf "%s\n" "${GITHUB_USER_STATS}"
-
   printf "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits))} | {added: .added, deleted: .deleted, commits: .commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
 }
 
@@ -118,28 +119,39 @@ github_clone_user() {
 
   local HTTP_OUTPUT="http_output.txt"
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-
   local HTTP_STATUS
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=100")"
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to list user repos%b\n" "${RED}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
-  fi
 
-  local REPOSITORIES
-  mapfile -t REPOSITORIES < <(jq -r '.[] | select (.archived | not) | .name + "," + .ssh_url' "${HTTP_OUTPUT}")
-  rm "${HTTP_OUTPUT}"
+  local count=0
+  local page_size=100
+  local count="${page_size}"
 
-  for REPO in "${REPOSITORIES[@]}"; do
-    IFS=',' read -r -a details <<<"${REPO}"
+  while [[ count -eq ${page_size} ]]; do
+    page=$((page + 1))
 
-    if [[ -d ${details[0]} ]]; then
-      printf "%b%s already cloned%b\n" "${GREEN}" "${details[0]}" "${RESET}"
-    else
-      printf "%bCloning %s%b\n" "${BLUE}" "${details[0]}" "${RESET}"
-      git clone "${details[1]}" "${details[0]}"
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=${page_size}&page=${page}")"
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      var_error "Unable to list user repositories on page ${page}"
+      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      return 1
     fi
+
+    local REPOSITORIES
+    mapfile -t REPOSITORIES < <(jq -r '.[] | select (.archived | not) | .name + "," + .ssh_url' "${HTTP_OUTPUT}")
+    rm "${HTTP_OUTPUT}"
+
+    count=0
+    for REPO in "${REPOSITORIES[@]}"; do
+      count=$((count + 1))
+
+      IFS=',' read -r -a details <<<"${REPO}"
+
+      if [[ -d ${details[0]} ]]; then
+        var_success "${details[0]} already cloned"
+      else
+        var_info "Cloning ${details[0]}"
+        git clone "${details[1]}" "${details[0]}"
+      fi
+    done
   done
 }
 
@@ -148,7 +160,7 @@ github_compare_version() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    printf "%bUsage: github_compare_version owner/repo latest_version [current_version] [release_api_output_file]%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Usage: github_compare_version owner/repo latest_version [current_version] [release_api_output_file]"
     return 1
   fi
 
@@ -159,7 +171,7 @@ github_compare_version() {
   fi
 
   if [[ ${3} == "${2}" ]]; then
-    printf "%b✔ %s is up to date %s%b\n" "${GREEN}" "${1}" "${2}" "${RESET}"
+    var_success "✔ ${1} is up to date ${2}"
     rm "${4}"
     return
   fi
@@ -177,25 +189,28 @@ github_last_release() {
   var_color
 
   if [[ ${#} -lt 1 ]]; then
-    printf "%bUsage: github_last_release owner/repo [previous_version] %b\n" "${RED}" "${RESET}" 1>&2
+    var_error "Usage: github_last_release owner/repo [previous_version]"
     return 1
   fi
 
+  local GITHUB_REPOSITORY=${1:-}
+
   local HTTP_OUTPUT="http_output.txt"
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
+  local HTTP_STATUS
+
   if [[ -n ${GITHUB_OAUTH_TOKEN:-} ]]; then
     CLIENT_ARGS+=("-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   fi
 
-  local HTTP_STATUS
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${1}/releases/latest")"
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to list latest release for %s%b\n" "${RED}" "${1}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+    var_error "bUnable to list latest release for ${GITHUB_REPOSITORY}"
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
-  github_compare_version "${1}" "$(jq -r .tag_name "${HTTP_OUTPUT}")" "${2:-}" "${HTTP_OUTPUT}"
+  github_compare_version "${GITHUB_REPOSITORY}" "$(jq -r '.tag_name' "${HTTP_OUTPUT}")" "${2:-}" "${HTTP_OUTPUT}"
 }
 
 github_configure() {
@@ -203,15 +218,16 @@ github_configure() {
   var_color
 
   if [[ ${#} -ne 1 ]]; then
-    printf "%bUsage: configure_repository owner/repo%b\n" "${RED}" "${RESET}" 1>&2
-    return 1
+    var_error "Usage: github_configure owner/repo"
   fi
+
+  local GITHUB_REPOSITORY=${1:-}
 
   local HTTP_OUTPUT="http_output.txt"
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-
   local HTTP_STATUS
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "-X" "PATCH" "https://api.github.com/repos/${1}" "-d" '{
+
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "-X" "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" "-d" '{
     "default_branch": "master",
     "allow_merge_commit": false,
     "allow_squash_merge": false,
@@ -221,26 +237,26 @@ github_configure() {
     "has_projects": false
   }')"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to edit ${1}%b\n" "${RED}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+    var_error "Unable to edit ${GITHUB_REPOSITORY}"
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.dorian-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/vulnerability-alerts")"
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.dorian-preview+json" "-X" "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/vulnerability-alerts")"
   if [[ ${HTTP_STATUS} != "204" ]]; then
-    printf "%bUnable to enable vulnerability alerts for ${1}%b\n" "${RED}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+    var_error "Unable to enable vulnerability alerts for ${GITHUB_REPOSITORY}"
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.london-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/automated-security-fixes")"
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.london-preview+json" "-X" "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/automated-security-fixes")"
   if [[ ${HTTP_STATUS} != "204" ]]; then
-    printf "%bUnable to enable automated security fixes for ${1}%b\n" "${RED}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+    var_error "Unable to enable automated security fixes for ${GITHUB_REPOSITORY}"
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.luke-cage-preview+json" "-X" "PUT" "https://api.github.com/repos/${1}/branches/master/protection" "-d" '{
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.luke-cage-preview+json" "-X" "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection" "-d" '{
     "allow_force_pushes": false,
     "allow_deletions": false,
     "enforce_admins": false,
@@ -255,16 +271,16 @@ github_configure() {
     "restrictions": null
   }')"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to update branch protection ${1}%b\n" "${RED}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+    var_error "Unable to update branch protection for ${GITHUB_REPOSITORY}"
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.zzzax-preview+json" "-X" "POST" "https://api.github.com/repos/${1}/branches/master/protection/required_signatures")"
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.zzzax-preview+json" "-X" "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection/required_signatures")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    printf "%bUnable to enable required signed commits for ${1}%b\n" "${RED}" "${RESET}" 1>&2
-    cat "${HTTP_OUTPUT}" && rm "${HTTP_OUTPUT}"
-    return
+    var_error "Unable to enable required signed commits for ${GITHUB_REPOSITORY}"
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    return 1
   fi
 
   rm "${HTTP_OUTPUT}"

@@ -14,7 +14,7 @@ tmux_split_cmd() (
   var_color
 
   if [[ $(tmux_is_inside) == "false" ]]; then
-    printf "%bnot inside a tmux%b\n" "${RED}" "${RESET}" 1>&2
+    var_error "not inside a tmux"
     return 1
   fi
 
