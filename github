@@ -18,28 +18,32 @@ github_repo_pr_stats() {
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
-  local page=0
-  local page_size=100
-  local count="${page_size}"
+  local pr_page=0
+  local pr_page_size=100
+  local pr_count="${pr_page_size}"
 
   local pr
   local prstats=""
 
-  while [[ count -eq ${page_size} ]]; do
-    page=$((page + 1))
+  while [[ pr_count -eq ${pr_page_size} ]]; do
+    pr_page=$((pr_page + 1))
 
-    var_info "Fetching page ${page} of ${GITHUB_REPOSITORY} pull-requests"
+    var_info "Fetching page ${pr_page} of ${GITHUB_REPOSITORY} pull-requests"
 
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=all&per_page=${page_size}&page=${page}")"
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=closed&per_page=${pr_page_size}&page=${pr_page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${page}"
+      var_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${pr_page}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      break
+    fi
+
+    pr_count="$(jq -r 'length' "${HTTP_OUTPUT}")"
+    if [[ ${pr_count} -eq 0 ]]; then
       break
     fi
 
     local PULL_REQUESTS
     mapfile -t PULL_REQUESTS < <(jq -r '. [] | select(.merged_at != null) | select(.user.login != null) | (.number | tostring) + "," + .user.login' "${HTTP_OUTPUT}")
-    count="$(jq -r 'length' "${HTTP_OUTPUT}")"
     rm "${HTTP_OUTPUT}"
 
     for PR in "${PULL_REQUESTS[@]}"; do
@@ -108,7 +112,7 @@ github_repo_stats() {
     stats="$(jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
       '{
         repository: $repo,
-        contributors: [.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))} | {author, added, deleted, commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor }] | sort_by(.ratio)
+        contributors: [.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))} | {author, added, deleted, commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor }] | sort_by(.author)
       }' \
       "${HTTP_OUTPUT}")"
     rm "${HTTP_OUTPUT}"
@@ -116,9 +120,9 @@ github_repo_stats() {
     local prs
     prs="$(github_repo_pr_stats "${GITHUB_REPOSITORY}")"
 
-    printf "%s%s" "${stats}" "${prs}" | jq -c -r -s '{
+    printf "%s\n%s" "${stats}" "${prs}" | jq -c -r -s '{
       repository: .[0].repository,
-      contributors: ((.[0] | .contributors) + .[1] | [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]] | sort_by(.ratio))
+      contributors: ((.[0] | .contributors) + .[1] | [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]] | sort_by(.author))
     }'
   done
 }
@@ -139,19 +143,19 @@ github_org_stats() {
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
-  local page=0
-  local page_size=100
-  local count="${page_size}"
+  local repo_page=0
+  local repo_page_size=100
+  local repo_count="${repo_page_size}"
 
   local stat
   local orgstats=""
 
-  while [[ count -eq ${page_size} ]]; do
-    page=$((page + 1))
+  while [[ repo_count -eq ${repo_page_size} ]]; do
+    repo_page=$((repo_page + 1))
 
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${page_size}&page=${page}")"
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${repo_page_size}&page=${repo_page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${page}"
+      var_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${repo_page}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
       break
     fi
@@ -160,9 +164,9 @@ github_org_stats() {
     mapfile -t REPOSITORIES < <(jq -r '.[] | .full_name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
-    count=0
+    repo_count=0
     for REPO in "${REPOSITORIES[@]}"; do
-      count=$((count + 1))
+      repo_count=$((repo_count + 1))
 
       printf "%bGenerating stats for %b%s%b\n" "${BLUE}" "${GREEN}" "${REPO}" "${RESET}" 1>&2
       stat="$(github_repo_stats "${REPO}")"
