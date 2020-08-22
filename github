@@ -66,7 +66,7 @@ github_repo_pr_stats() {
   printf "[%s]" "${output}" | jq -c -r '
     [group_by(.author) | .[] | { author: (.[0].author), opened: length }] +
     [ [.[].reviewers] | flatten | group_by(.) | .[] | { author: .[0], reviewed: length}] |
-    [reduce .[] as $o ({}; .[$o["author"]] += $o ) | .[]]'
+    [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]]'
 }
 
 github_repo_stats() {
@@ -118,7 +118,7 @@ github_repo_stats() {
 
     printf "%s%s" "${stats}" "${prs}" | jq -c -r -s '{
       repository: .[0].repository,
-      contributors: ((.[0] | .contributors) + .[1] | [reduce .[] as $o ({}; .[$o["author"]] += $o ) | .[]] | sort_by(.ratio))
+      contributors: ((.[0] | .contributors) + .[1] | [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]] | sort_by(.ratio))
     }'
   done
 }
@@ -194,7 +194,7 @@ github_org_stats_user() {
   GITHUB_USER_STATS="$(jq -c -r --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.ratio)' "${FILENAME}")"
 
   printf "%s\n" "${GITHUB_USER_STATS}"
-  printf "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits))} | {added: .added, deleted: .deleted, commits: .commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
+  printf "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits)), opened: (reduce .[].contribution as $contrib (0; . + $contrib.opened)), reviewed: (reduce .[].contribution as $contrib (0; . + $contrib.reviewed))} | {added: .added, deleted: .deleted, commits: .commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
 }
 
 github_clone_user() {
