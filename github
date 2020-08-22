@@ -63,10 +63,10 @@ github_repo_pr_stats() {
     done
   done
 
-  printf "[%s]" "${output}" | jq -c -r '{
-    openers: ([group_by(.author) | .[] | { key: .[0].author, value: length}] | sort_by(.value) | from_entries),
-    reviewers: ([[.[].reviewers] | flatten | group_by(.) | .[] | { key: .[0], value: length}] | sort_by(.value) | from_entries)
-  }'
+  printf "[%s]" "${output}" | jq -c -r '
+    [group_by(.author) | .[] | { author: (.[0].author), opened: length }] +
+    [ [.[].reviewers] | flatten | group_by(.) | .[] | { author: .[0], reviewed: length}] |
+    [reduce .[] as $o ({}; .[$o["author"]] += $o ) | .[]]'
 }
 
 github_repo_stats() {
@@ -85,32 +85,42 @@ github_repo_stats() {
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors")"
-  if [[ ${HTTP_STATUS} == "202" ]]; then
-    var_warning "Contributions are being compiled for ${GITHUB_REPOSITORY}, come back in a few moments"
+  local retry="true"
+
+  while [[ ${retry} == "true" ]]; do
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors")"
+    if [[ ${HTTP_STATUS} == "202" ]]; then
+      var_warning "Contributions are being compiled for ${GITHUB_REPOSITORY}, waiting 30seconds"
+      rm "${HTTP_OUTPUT}"
+      sleep 30
+      continue
+    fi
+
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      var_error "Unable to get contributors' stats for ${GITHUB_REPOSITORY}"
+      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      return 1
+    fi
+
+    retry="false"
+
+    local stats
+    stats="$(jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
+      '{
+        repository: $repo,
+        contributors: [.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))} | {author, added, deleted, commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor }] | sort_by(.ratio)
+      }' \
+      "${HTTP_OUTPUT}")"
     rm "${HTTP_OUTPUT}"
-    return
-  fi
 
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "Unable to get contributors' stats for ${GITHUB_REPOSITORY}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
-    return 1
-  fi
+    local prs
+    prs="$(github_repo_pr_stats "${GITHUB_REPOSITORY}")"
 
-  local stats
-  stats="$(jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
-    '{
-      repository: $repo,
-      contributors: [.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))} | {author, added, deleted, commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor }] | sort_by(.ratio)
-    }' \
-    "${HTTP_OUTPUT}")"
-  rm "${HTTP_OUTPUT}"
-
-  local prs
-  prs="$(github_repo_pr_stats "${GITHUB_REPOSITORY}")"
-
-  printf "%s%s" "${stats}" "${prs}" | jq -c -r -s 'add'
+    printf "%s%s" "${stats}" "${prs}" | jq -c -r -s '{
+      repository: .[0].repository,
+      contributors: ((.[0] | .contributors) + .[1] | [reduce .[] as $o ({}; .[$o["author"]] += $o ) | .[]] | sort_by(.ratio))
+    }'
+  done
 }
 
 github_org_stats() {
