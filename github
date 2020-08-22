@@ -131,12 +131,13 @@ github_org_stats() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ ${#} -ne 1 ]]; then
-    var_error "Usage: github_org_stats organization_name"
+  if [[ ${#} -lt 1 ]]; then
+    var_error "Usage: github_org_stats organization_name [repository_ignore_regex]"
     return 1
   fi
 
   local GITHUB_ORGANIZATION="${1:-}"
+  local REPOSITORY_IGNORE="${2:-\$^}"
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
@@ -160,15 +161,17 @@ github_org_stats() {
       break
     fi
 
+    repo_count="$(jq -r 'length' "${HTTP_OUTPUT}")"
+    if [[ ${repo_count} -eq 0 ]]; then
+      break
+    fi
+
     local REPOSITORIES
-    mapfile -t REPOSITORIES < <(jq -r '.[] | .full_name' "${HTTP_OUTPUT}")
+    mapfile -t REPOSITORIES < <(jq -c -r --arg ignore "${REPOSITORY_IGNORE}" '.[] | select(.full_name | test($ignore) | not) | .full_name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
-    repo_count=0
     for REPO in "${REPOSITORIES[@]}"; do
-      repo_count=$((repo_count + 1))
-
-      printf "%bGenerating stats for %b%s%b\n" "${BLUE}" "${GREEN}" "${REPO}" "${RESET}" 1>&2
+      var_info "Generating stats for ${REPO}"
       stat="$(github_repo_stats "${REPO}")"
 
       if [[ -n ${stat:-} ]]; then
