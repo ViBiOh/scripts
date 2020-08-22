@@ -15,7 +15,7 @@ github_repo_pr_stats() {
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
   local page=0
@@ -23,7 +23,7 @@ github_repo_pr_stats() {
   local count="${page_size}"
 
   local pr
-  local output=""
+  local prstats=""
 
   while [[ count -eq ${page_size} ]]; do
     page=$((page + 1))
@@ -38,7 +38,7 @@ github_repo_pr_stats() {
     fi
 
     local PULL_REQUESTS
-    mapfile -t PULL_REQUESTS < <(jq -r '. [] | select(.merged_at != null) | (.number | tostring) + "," + .user.login' "${HTTP_OUTPUT}")
+    mapfile -t PULL_REQUESTS < <(jq -r '. [] | select(.merged_at != null) | select(.user.login != null) | (.number | tostring) + "," + .user.login' "${HTTP_OUTPUT}")
     count="$(jq -r 'length' "${HTTP_OUTPUT}")"
     rm "${HTTP_OUTPUT}"
 
@@ -52,18 +52,18 @@ github_repo_pr_stats() {
         return 1
       fi
 
-      pr="$(jq -c -r --arg author "${details[1]}" '[.[].user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
+      pr="$(jq -c -r --arg author "${details[1]}" '[.[] | select(.user.login != null) | .user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
       if [[ -n ${pr:-} ]]; then
-        if [[ -n ${output} ]]; then
-          output+=","
+        if [[ -n ${prstats} ]]; then
+          prstats+=","
         fi
 
-        output+="${pr}"
+        prstats+="${pr}"
       fi
     done
   done
 
-  printf "[%s]" "${output}" | jq -c -r '
+  printf "[%s]" "${prstats}" | jq -c -r '
     [group_by(.author) | .[] | { author: (.[0].author), opened: length }] +
     [ [.[].reviewers] | flatten | group_by(.) | .[] | { author: .[0], reviewed: length}] |
     [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]]'
@@ -82,7 +82,7 @@ github_repo_stats() {
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
   local retry="true"
@@ -136,7 +136,7 @@ github_org_stats() {
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
   local page=0
@@ -144,7 +144,7 @@ github_org_stats() {
   local count="${page_size}"
 
   local stat
-  local output=""
+  local orgstats=""
 
   while [[ count -eq ${page_size} ]]; do
     page=$((page + 1))
@@ -168,17 +168,17 @@ github_org_stats() {
       stat="$(github_repo_stats "${REPO}")"
 
       if [[ -n ${stat:-} ]]; then
-        if [[ -n ${output} ]]; then
-          output+=","
+        if [[ -n ${orgstats} ]]; then
+          orgstats+=","
         fi
 
-        output+="${stat}"
+        orgstats+="${stat}"
       fi
     done
   done
 
-  output="[${output}]"
-  printf "%s\n" "${output}"
+  orgstats="[${orgstats}]"
+  printf "%s\n" "${orgstats}"
 }
 
 github_org_stats_user() {
@@ -204,7 +204,7 @@ github_clone_user() {
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
   local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
   local page=0
@@ -282,7 +282,7 @@ github_last_release() {
   local GITHUB_REPOSITORY=${1:-}
 
   local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
   local HTTP_STATUS
 
   if [[ -n ${GITHUB_OAUTH_TOKEN:-} ]]; then
@@ -310,7 +310,7 @@ github_configure() {
   local GITHUB_REPOSITORY=${1:-}
 
   local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   local HTTP_STATUS
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "-X" "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" "-d" '{
