@@ -51,9 +51,9 @@ github_repo_pr_stats() {
 
       HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${details[0]}/reviews")"
       if [[ ${HTTP_STATUS} != "200" ]]; then
-        var_error "Unable to list ${GITHUB_REPOSITORY}/pulls/${details[0]} reviews"
+        var_error "Unable to fetch ${GITHUB_REPOSITORY}/pulls/${details[0]} reviews"
         cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
-        return 1
+        break
       fi
 
       pr="$(jq -c -r --arg author "${details[1]}" '[.[] | select(.user.login != null) | .user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
