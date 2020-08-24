@@ -357,7 +357,8 @@ git_sync() {
     printf "%b+ Copied\n%s%b\n" "${GREEN}" "${toSync[*]}" "${RESET}"
   fi
 
-  var_info "Done at $(date +'%H:%M:%S')!\n"
+  var_info "Done at $(date +'%H:%M:%S')!"
+  var_info ""
 }
 
 watch_sync() {
