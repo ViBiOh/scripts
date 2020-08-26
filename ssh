@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+SSH_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SSH_ENV="${HOME}/.ssh/environment"
+
+ssh_forward_local() {
+  source "${SSH_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ ${#} -lt 3 ]]; then
+    var_error "Usage: ssh_forward_local LOCAL_PORT REMOTE_PORT SSH_PART"
+    return 1
+  fi
+
+  local LOCAL_PORT="${1:-}"
+  shift 1
+  local REMOTE_PORT="${1:-}"
+  shift 1
+
+  ssh -N -L "${LOCAL_PORT}:localhost:${REMOTE_PORT}" "${@:-}"
+}
+
+ssh_forward_remote() {
+  source "${SSH_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  if [[ ${#} -lt 3 ]]; then
+    var_error "Usage: ssh_forward_remote REMOTE_PORT LOCAL_PORT SSH_PARTS..."
+    return 1
+  fi
+
+  local REMOTE_PORT="${1:-}"
+  shift 1
+  local LOCAL_PORT="${1:-}"
+  shift 1
+
+  ssh -R "${REMOTE_PORT}:localhost:${LOCAL_PORT}" "${@:-}"
+}
+
+ssh_agent_stop() {
+  if [[ -n ${SSH_AGENT_PID:-} ]]; then
+    ssh-agent -k
+    rm -rf "${SSH_ENV}"
+  fi
+}
+
+ssh_agent_start() {
+  printf "Initializing new SSH agent...\n"
+
+  touch "${SSH_ENV}"
+  chmod 600 "${SSH_ENV}"
+
+  ssh-agent | grep -v "^echo" >"${SSH_ENV}"
+  source "${SSH_ENV}"
+}
+
+ssh_agent_init() {
+  ssh_agent_stop
+
+  if [[ -d "${HOME}/.ssh/" ]]; then
+    local AGENT_INITIALIZED="false"
+
+    shopt -s nullglob
+
+    for key in "${HOME}/.ssh/"*.pub; do
+      if [[ ${AGENT_INITIALIZED} == "false" ]]; then
+        AGENT_INITIALIZED="true"
+        ssh_agent_start
+      fi
+
+      ssh-add -k "${key%.pub}"
+    done
+
+    shopt -u nullglob
+  fi
+}
