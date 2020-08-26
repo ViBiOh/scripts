@@ -94,11 +94,12 @@ git_is_commit_wip() {
 git_is_conventional_commit() {
   git_conventionnal_commits
 
+  local SCOPES
+  SCOPES="$(printf "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}")"
+  SCOPES="${SCOPES%|}"
+
   shopt -s nocasematch
-  if [[ ${1} =~ ^(revert:\ )?($(
-    IFS='|'
-    echo "${!CONVENTIONAL_COMMIT_SCOPES[*]}"
-  ))(\(.+\))?\!?:\ [a-zA-Z0-9\[\(]+ ]]; then
+  if [[ ${1} =~ ^(revert:\ )?(${SCOPES})(\(.+\))?\!?:\ [a-zA-Z0-9\[\(]+ ]]; then
     printf "true"
   else
     printf "false"
@@ -150,10 +151,11 @@ git_last_tag() {
 git_changelog() {
   source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
+
   git_conventionnal_commits
 
-  if [[ ${#} -ne 2 ]]; then
-    var_error "Usage: git_changelog [END_REF] START_REF"
+  if [[ ${*} =~ ^-?help$ ]]; then
+    var_error "Usage: git_changelog [END_REF=HEAD] [START_REF=git_last_tag]"
     return 1
   fi
 
@@ -169,6 +171,10 @@ git_changelog() {
 
   IFS=$'\n'
 
+  local SCOPES
+  SCOPES="$(printf "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}")"
+  SCOPES="${SCOPES%|}"
+
   shopt -s nocasematch
   for hash in $(git log --no-merges --pretty=format:'%h' "${1:-HEAD}...${2:-$(git_last_tag)}"); do
     local VERSION_MESSAGE=""
@@ -177,11 +183,7 @@ git_changelog() {
     local BREAK=""
 
     for line in $(git show -s --format='%h %B' "${hash}" | grep -v '^\s*$'); do
-      if [[ -z ${VERSION_MESSAGE} ]] && [[ ${line} =~ ^([0-9a-f]{1,16})\ (revert )?($(
-        IFS='|'
-        echo "${!CONVENTIONAL_COMMIT_SCOPES[*]}"
-      ))(\(.+\))?(\!)?:\ (.*)$ ]]; then
-
+      if [[ -z ${VERSION_MESSAGE} ]] && [[ ${line} =~ ^([0-9a-f]{1,16})\ (revert )?(${SCOPES})(\(.+\))?(\!)?:\ (.*)$ ]]; then
         HASH="${BASH_REMATCH[1]}"
         local REVERT="${BASH_REMATCH[2]}"
         TYPE="${BASH_REMATCH[3]}"
