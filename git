@@ -34,6 +34,7 @@ git_root() {
 
 git_browse() {
   shopt -s nullglob
+
   for dir in "$(pwd)"/*; do
     if [[ ! -d ${dir} ]]; then
       continue
@@ -49,6 +50,7 @@ git_browse() {
       eval "${@}"
     )
   done
+
   shopt -u nullglob
 }
 
