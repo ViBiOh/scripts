@@ -34,7 +34,7 @@ ssh_forward_remote() {
   local LOCAL_PORT="${1:-}"
   shift 1
 
-  ssh -R "${REMOTE_PORT}:localhost:${LOCAL_PORT}" "${@:-}"
+  ssh -N -R "${REMOTE_PORT}:localhost:${LOCAL_PORT}" "${@:-}"
 }
 
 ssh_agent_stop() {
