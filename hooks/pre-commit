@@ -75,7 +75,7 @@ terraform_check() {
 
 yaml_check() {
   local YAML_FILES
-  YAML_FILES=$(get_files \*.y{,a}ml)
+  YAML_FILES=$(get_files \*.yml)
 
   if [[ -n ${YAML_FILES} ]]; then
     var_info "Formating yaml files"
