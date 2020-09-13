@@ -312,6 +312,7 @@ github_configure() {
 
   if [[ ${#} -ne 1 ]]; then
     var_error "Usage: github_configure owner/repo"
+    return 1
   fi
 
   local GITHUB_REPOSITORY=${1:-}
