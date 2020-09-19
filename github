@@ -23,8 +23,8 @@ github_rate_limit_wait() {
       return
     fi
 
-    var_warning "Waiting 5 minutes for rate limit, need %d requests" "${WANTED_CALLS}"
-    pause 300
+    var_warning "Waiting 5 minutes for rate limit, need ${WANTED_CALLS} requests"
+    sleep 300
   done
 }
 
@@ -73,7 +73,7 @@ github_repo_pr_stats() {
     mapfile -t PULL_REQUESTS < <(jq -r '. [] | select(.merged_at != null) | select(.user.login != null) | (.number | tostring) + "," + .user.login' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
-    github_rate_limit_wait "${page_size}"
+    github_rate_limit_wait "${pr_page_size}"
 
     for PR in "${PULL_REQUESTS[@]}"; do
       IFS=',' read -r -a details <<<"${PR}"
