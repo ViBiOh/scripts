@@ -97,7 +97,7 @@ git_is_conventional_commit() {
   git_conventionnal_commits
 
   local SCOPES
-  SCOPES="$(printf "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}")"
+  printf -v SCOPES "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"
   SCOPES="${SCOPES%|}"
 
   shopt -s nocasematch
@@ -174,7 +174,7 @@ git_changelog() {
   IFS=$'\n'
 
   local SCOPES
-  SCOPES="$(printf "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}")"
+  printf -v SCOPES "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"
   SCOPES="${SCOPES%|}"
 
   shopt -s nocasematch
@@ -332,9 +332,9 @@ git_sync() {
 
     "R")
       local originFile
-      originFile="$(echo "${gitFile}" | awk '{print $2}')"
+      originFile="$(printf "%s" "${gitFile}" | awk '{print $2}')"
       local destinationFile
-      destinationFile="$(echo "${gitFile}" | awk '{print $4}')"
+      destinationFile="$(printf "%s" "${gitFile}" | awk '{print $4}')"
 
       toDelete+=("${REMOTE_PATH_PREFIX}/${originFile}")
       toSync+=("${destinationFile}")

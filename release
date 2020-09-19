@@ -142,17 +142,15 @@ release() {
 
   local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "300" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" \
-    -H "Content-Type: application/json" \
-    -X POST \
-    "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" \
-    -d "{
-      \"tag_name\": \"${GIT_TAG}\",
-      \"target_commitish\": \"$(git rev-parse "${VERSION_REF}")\",
-      \"name\": \"${RELEASE_NAME}\",
-      \"body\": \"$(echo "${CHANGELOG}" | sed 's|"|'"'"'|g' | awk '{printf "%s\\n", $0}')\"
-    }")"
+  local PAYLOAD
+  PAYLOAD="$(jq -n \
+    --arg tag "${GIT_TAG}" \
+    --arg target "$(git rev-parse "${VERSION_REF}")" \
+    --arg name "${RELEASE_NAME}" \
+    --arg body "${CHANGELOG}" \
+    '{tag_name: $tag, target_commitish: $target, name: $name, body: $body}')"
 
+  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -H "Content-Type: application/json" -X POST "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" -d "${PAYLOAD}")"
   if [[ ${HTTP_STATUS} != "201" ]]; then
     var_error "Unable to create release"
     var_error "HTTP/${HTTP_STATUS}"
