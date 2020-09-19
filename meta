@@ -20,7 +20,10 @@ meta_init() {
       continue
     fi
 
-    meta_download_script "${dep}"
+    if ! [[ -e "./${dep}" ]]; then
+      meta_download_script "${dep}"
+    fi
+
     if [[ $(grep -c "main()" "./${dep}") -eq 0 ]]; then
       source "./${dep}"
     fi
