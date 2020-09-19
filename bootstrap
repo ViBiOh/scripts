@@ -4,12 +4,14 @@ set -o nounset -o pipefail -o errexit
 
 main() {
   local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/master/"
+  local SCRIPTS_PATH="./scripts"
 
-  printf "Bootstrapping to scripts\n"
-  mkdir -p "./scripts"
+  printf "Bootstrapping to %s\n" "{SCRIPTS_PATH}"
+  rm -rf "${SCRIPTS_PATH}"
+  mkdir -p "${SCRIPTS_PATH}"
 
   (
-    cd "./scripts"
+    cd "${SCRIPTS_PATH}"
 
     curl -q -sSL --max-time 30 -o "./meta" "${REMOTE_DEPENDENCIES_URL}/meta"
     chmod +x "./meta"
