@@ -23,6 +23,20 @@ var_read() {
   fi
 }
 
+var_confirm() {
+  read -r -p "${1:-Are you sure}? [Y/n] " input
+
+  case "${input}" in
+  [yY][eE][sS] | [yY])
+    printf "true"
+    ;;
+
+  *)
+    printf "false"
+    ;;
+  esac
+}
+
 var_color() {
   export RED='\033[0;31m'
   export GREEN='\033[0;32m'
