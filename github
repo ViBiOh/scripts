@@ -2,6 +2,32 @@
 
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+github_rate_limit_wait() {
+  local WANTED_CALLS="${1:-10}"
+
+  local HTTP_OUTPUT="http_output.txt"
+  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  local HTTP_STATUS
+
+  while true; do
+    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.v3+json" "https://api.github.com/rate_limit")"
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      var_error "Unable to get rate limit"
+      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      return
+    fi
+
+    remaining="$(jq -r '.resources.core.remaining' "${HTTP_OUTPUT}")"
+    rm "${HTTP_OUTPUT}"
+    if [[ ${remaining} -gt ${WANTED_CALLS} ]]; then
+      return
+    fi
+
+    var_warning "Waiting 5 minutes for rate limit, need %d requests" "${WANTED_CALLS}"
+    pause 300
+  done
+}
+
 github_repo_pr_stats() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
@@ -30,6 +56,7 @@ github_repo_pr_stats() {
 
     var_info "Fetching page ${pr_page} of ${GITHUB_REPOSITORY} pull-requests"
 
+    github_rate_limit_wait
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=closed&per_page=${pr_page_size}&page=${pr_page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       var_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${pr_page}"
@@ -45,6 +72,8 @@ github_repo_pr_stats() {
     local PULL_REQUESTS
     mapfile -t PULL_REQUESTS < <(jq -r '. [] | select(.merged_at != null) | select(.user.login != null) | (.number | tostring) + "," + .user.login' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
+
+    github_rate_limit_wait "${page_size}"
 
     for PR in "${PULL_REQUESTS[@]}"; do
       IFS=',' read -r -a details <<<"${PR}"
@@ -92,6 +121,7 @@ github_repo_stats() {
   local retry="true"
 
   while [[ ${retry} == "true" ]]; do
+    github_rate_limit_wait
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors")"
     if [[ ${HTTP_STATUS} == "202" ]]; then
       var_warning "Contributions are being compiled for ${GITHUB_REPOSITORY}, waiting 30seconds"
@@ -154,6 +184,7 @@ github_org_stats() {
   while [[ repo_count -eq ${repo_page_size} ]]; do
     repo_page=$((repo_page + 1))
 
+    github_rate_limit_wait
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${repo_page_size}&page=${repo_page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       var_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${repo_page}"
