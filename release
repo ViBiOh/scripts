@@ -137,10 +137,7 @@ release() {
 
   var_info "Creating release ${GIT_TAG} for ${GITHUB_REPOSITORY}..."
 
-  local HTTP_OUTPUT="http_output.txt"
-  local HTTP_STATUS
-
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "300" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+  http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
 
   local PAYLOAD
   PAYLOAD="$(jq -n \
@@ -150,7 +147,7 @@ release() {
     --arg body "${CHANGELOG}" \
     '{tag_name: $tag, target_commitish: $target, name: $name, body: $body}')"
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" -H "Content-Type: application/json" -X POST "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" -d "${PAYLOAD}")"
+  http_request -H "Content-Type: application/json" -X "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" -d "${PAYLOAD}"
   if [[ ${HTTP_STATUS} != "201" ]]; then
     http_handle_error "Unable to create release"
     return 1
@@ -164,14 +161,7 @@ release() {
     for asset in "${OUTPUT_DIR}"/*; do
       var_info "Uploading asset ${asset}"
 
-      HTTP_STATUS="$(
-        "${CLIENT_ARGS[@]}" \
-          -H "Content-Type: application/x-executable" \
-          -X POST \
-          "${RESPONSE_URL}?name=$(basename "${asset}")" \
-          --data-binary "@${asset}"
-      )"
-
+      http_request -H "Content-Type: application/x-executable" -X POST "${RESPONSE_URL}?name=$(basename "${asset}")" --data-binary "@${asset}"
       if [[ ${HTTP_STATUS} != "201" ]]; then
         http_handle_error "Unable to upload asset ${asset}"
         return 1

@@ -8,12 +8,10 @@ github_rate_limit_wait() {
 
   local WANTED_CALLS="${1:-10}"
 
-  local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-  local HTTP_STATUS
+  http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
 
   while true; do
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.v3+json" "https://api.github.com/rate_limit")"
+    http_request -H "Accept: application/vnd.github.v3+json" "https://api.github.com/rate_limit"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to get rate limit"
       return
@@ -42,9 +40,7 @@ github_repo_pr_stats() {
   local GITHUB_REPOSITORY="${1:-}"
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
-  local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-  local HTTP_STATUS
+  http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
 
   local pr_page=0
   local pr_page_size=100
@@ -59,7 +55,7 @@ github_repo_pr_stats() {
     var_info "Fetching page ${pr_page} of ${GITHUB_REPOSITORY} pull-requests"
 
     github_rate_limit_wait
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=closed&per_page=${pr_page_size}&page=${pr_page}")"
+    http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=closed&per_page=${pr_page_size}&page=${pr_page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${pr_page}"
       break
@@ -79,7 +75,7 @@ github_repo_pr_stats() {
     for PR in "${PULL_REQUESTS[@]}"; do
       IFS=',' read -r -a details <<<"${PR}"
 
-      HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${details[0]}/reviews")"
+      http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${details[0]}/reviews"
       if [[ ${HTTP_STATUS} != "200" ]]; then
         http_handle_error "Unable to fetch ${GITHUB_REPOSITORY}/pulls/${details[0]} reviews"
         break
@@ -114,15 +110,13 @@ github_repo_stats() {
   local GITHUB_REPOSITORY=${1:-}
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
-  local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-  local HTTP_STATUS
+  http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
 
   local retry="true"
 
   while [[ ${retry} == "true" ]]; do
     github_rate_limit_wait
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors")"
+    http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors"
     if [[ ${HTTP_STATUS} == "202" ]]; then
       var_warning "Contributions are being compiled for ${GITHUB_REPOSITORY}, waiting 30seconds"
       rm "${HTTP_OUTPUT}"
@@ -169,9 +163,7 @@ github_org_stats() {
   local REPOSITORY_IGNORE="${2:-\$^}"
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
-  local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-  local HTTP_STATUS
+  http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
 
   local repo_page=0
   local repo_page_size=100
@@ -184,7 +176,7 @@ github_org_stats() {
     repo_page=$((repo_page + 1))
 
     github_rate_limit_wait
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${repo_page_size}&page=${repo_page}")"
+    http_request "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${repo_page_size}&page=${repo_page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${repo_page}"
       break
@@ -242,9 +234,7 @@ github_clone_user() {
 
   var_read GITHUB_OAUTH_TOKEN "" "secret"
 
-  local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-  local HTTP_STATUS
+  http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
 
   local page=0
   local page_size=100
@@ -253,7 +243,7 @@ github_clone_user() {
   while [[ count -eq ${page_size} ]]; do
     page=$((page + 1))
 
-    HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=${page_size}&page=${page}")"
+    http_request -H "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=${page_size}&page=${page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list user repositories on page ${page}"
       break
@@ -319,15 +309,12 @@ github_last_release() {
 
   local GITHUB_REPOSITORY=${1:-}
 
-  local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
-  local HTTP_STATUS
-
+  http_init_client
   if [[ -n ${GITHUB_OAUTH_TOKEN:-} ]]; then
-    CLIENT_ARGS+=("-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
+    HTTP_CLIENT_ARGS+=("-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest")"
+  http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to list latest release for ${GITHUB_REPOSITORY}"
     return 1
@@ -347,11 +334,8 @@ github_configure() {
 
   local GITHUB_REPOSITORY=${1:-}
 
-  local HTTP_OUTPUT="http_output.txt"
-  local CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "30" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "-H" "Authorization: token ${GITHUB_OAUTH_TOKEN}")
-  local HTTP_STATUS
-
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "-X" "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" "-d" '{
+  http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
+  http_request -H "Content-Type: application/json" -X "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" -d '{
     "default_branch": "master",
     "allow_merge_commit": false,
     "allow_squash_merge": false,
@@ -359,25 +343,25 @@ github_configure() {
     "delete_branch_on_merge": true,
     "has_wiki": false,
     "has_projects": false
-  }')"
+  }'
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to edit ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.dorian-preview+json" "-X" "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/vulnerability-alerts")"
+  http_request -H "Accept: application/vnd.github.dorian-preview+json" -X "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/vulnerability-alerts"
   if [[ ${HTTP_STATUS} != "204" ]]; then
     http_handle_error "Unable to enable vulnerability alerts for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.london-preview+json" "-X" "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/automated-security-fixes")"
+  http_request -H "Accept: application/vnd.github.london-preview+json" -X "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/automated-security-fixes"
   if [[ ${HTTP_STATUS} != "204" ]]; then
     http_handle_error "Unable to enable automated security fixes for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.luke-cage-preview+json" "-X" "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection" "-d" '{
+  http_request -H "Accept: application/vnd.github.luke-cage-preview+json" -X "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection" -d '{
     "allow_force_pushes": false,
     "allow_deletions": false,
     "enforce_admins": false,
@@ -390,13 +374,13 @@ github_configure() {
       ]
     },
     "restrictions": null
-  }')"
+  }'
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to update branch protection for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.zzzax-preview+json" "-X" "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection/required_signatures")"
+  http_request -H "Accept: application/vnd.github.zzzax-preview+json" -X "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection/required_signatures"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to enable required signed commits for ${GITHUB_REPOSITORY}"
     return 1

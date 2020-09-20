@@ -9,3 +9,13 @@ http_handle_error() {
   var_error "HTTP/${HTTP_STATUS}: ${1:-}"
   cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
 }
+
+http_init_client() {
+  export HTTP_OUTPUT="http_output.txt"
+  export HTTP_CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}" "${@:-}")
+  export HTTP_STATUS
+}
+
+http_request() {
+  HTTP_STATUS="$("${HTTP_CLIENT_ARGS[@]}" "${@:-}")"
+}
