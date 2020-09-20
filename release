@@ -152,8 +152,7 @@ release() {
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" -H "Content-Type: application/json" -X POST "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" -d "${PAYLOAD}")"
   if [[ ${HTTP_STATUS} != "201" ]]; then
-    var_error "Unable to create release"
-    var_error "HTTP/${HTTP_STATUS}"
+    var_error "HTTP/${HTTP_STATUS}: Unable to create release"
     cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
     return 1
   fi
@@ -175,8 +174,7 @@ release() {
       )"
 
       if [[ ${HTTP_STATUS} != "201" ]]; then
-        var_error "Unable to upload asset ${asset}"
-        var_error "HTTP/${HTTP_STATUS}"
+        var_error "HTTP/${HTTP_STATUS}: Unable to upload asset ${asset}"
         cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
         return 1
       fi

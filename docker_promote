@@ -38,8 +38,7 @@ main() {
   unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "Unable to retrieve token for ${DOCKER_IMAGE}"
-    var_error "HTTP/${HTTP_STATUS}"
+    var_error "HTTP/${HTTP_STATUS}: Unable to retrieve token for ${DOCKER_IMAGE}"
     cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
     return 1
   fi
@@ -60,8 +59,7 @@ main() {
     )"
 
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "Unable to retrieve manifest for ${DOCKER_IMAGE}"
-      var_error "HTTP/${HTTP_STATUS}"
+      var_error "HTTP/${HTTP_STATUS}: Unable to retrieve manifest for ${DOCKER_IMAGE}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
       return 1
     fi
@@ -78,8 +76,7 @@ main() {
     )"
 
     if [[ ${HTTP_STATUS} != "201" ]]; then
-      var_error "Unable to promote manifest for ${DOCKER_IMAGE}"
-      var_error "HTTP/${HTTP_STATUS}"
+      var_error "HTTP/${HTTP_STATUS}: Unable to promote manifest for ${DOCKER_IMAGE}"
       cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
       continue
     fi
