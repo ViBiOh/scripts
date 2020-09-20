@@ -45,18 +45,22 @@ var_color() {
   export RESET='\033[0m'
 }
 
+var_log() {
+  printf "%b%b%b\n" "${1}" "${2:-}" "${RESET}" 1>&2
+}
+
 var_error() {
-  printf "%b%b%b\n" "${RED}" "${1:-}" "${RESET}" 1>&2
+  var_log "${RED}" "${1:-}"
 }
 
 var_warning() {
-  printf "%b%b%b\n" "${YELLOW}" "${1:-}" "${RESET}" 1>&2
+  var_log "${YELLOW}" "${1:-}"
 }
 
 var_success() {
-  printf "%b%b%b\n" "${GREEN}" "${1:-}" "${RESET}" 1>&2
+  var_log "${GREEN}" "${1:-}"
 }
 
 var_info() {
-  printf "%b%b%b\n" "${BLUE}" "${1:-}" "${RESET}" 1>&2
+  var_log "${BLUE}" "${1:-}"
 }
