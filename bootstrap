@@ -6,7 +6,7 @@ main() {
   local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/master/"
   local SCRIPTS_PATH="./scripts"
 
-  printf "Bootstrapping to %s\n" "{SCRIPTS_PATH}"
+  printf "Bootstrapping to %s\n" "${SCRIPTS_PATH}"
   rm -rf "${SCRIPTS_PATH}"
   mkdir -p "${SCRIPTS_PATH}"
 
