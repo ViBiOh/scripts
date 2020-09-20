@@ -46,17 +46,17 @@ var_color() {
 }
 
 var_error() {
-  printf "%b%s%b\n" "${RED}" "${1:-}" "${RESET}" 1>&2
+  printf "%b%b%b\n" "${RED}" "${1:-}" "${RESET}" 1>&2
 }
 
 var_warning() {
-  printf "%b%s%b\n" "${YELLOW}" "${1:-}" "${RESET}" 1>&2
+  printf "%b%b%b\n" "${YELLOW}" "${1:-}" "${RESET}" 1>&2
 }
 
 var_success() {
-  printf "%b%s%b\n" "${GREEN}" "${1:-}" "${RESET}" 1>&2
+  printf "%b%b%b\n" "${GREEN}" "${1:-}" "${RESET}" 1>&2
 }
 
 var_info() {
-  printf "%b%s%b\n" "${BLUE}" "${1:-}" "${RESET}" 1>&2
+  printf "%b%b%b\n" "${BLUE}" "${1:-}" "${RESET}" 1>&2
 }

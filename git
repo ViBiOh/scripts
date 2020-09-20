@@ -138,7 +138,7 @@ git_valid_description_guideline() {
   source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  printf "\n%bYou have to use a short commit description (max %d characters)%b\n\n" "${YELLOW}" "${COMMIT_MAX_LENGTH:-70}" "${RESET}"
+  var_warning "\nYou have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters)"
 }
 
 git_last_tag() {
@@ -289,7 +289,7 @@ git_sync() {
 
   local REMOTE_SERVER="${1}"
   local REMOTE_PATH="${2}"
-  local DRY="${3:-}"
+  local DRY="${3:-false}"
 
   git_root
   isGit=$?
@@ -302,12 +302,11 @@ git_sync() {
     REMOTE_PATH_PREFIX="${REMOTE_PATH}"
   fi
 
-  local dry=false
   if [[ $(printf "%s" "${DRY:-}" | tr "[:upper:]" "[:lower:]") == "dry" ]]; then
-    dry=true
+    DRY=true
   fi
 
-  if [[ ${dry} == true ]]; then
+  if [[ ${DRY} == true ]]; then
     var_info "Dry run of syncing files..."
   else
     var_info "Syncing files at $(date +'%H:%M:%S')..."
@@ -346,19 +345,21 @@ git_sync() {
     esac
   done
 
-  if ! ${dry}; then
+  if ! ${DRY}; then
     var_warning "Cleaning remote"
     ssh "${REMOTE_SERVER}" "cd ${REMOTE_PATH_PREFIX} && git clean -f && git checkout -- ."
   fi
 
   if [[ ${#toDelete[@]} -ne 0 ]]; then
-    ! ${dry} && ssh "${REMOTE_SERVER}" "rm -rf ${toDelete[*]}"
-    printf "%b- Deleted\n%s%b\n" "${RED}" "${toDelete[*]}" "${RESET}" 1>&2
+    ! ${DRY} && ssh "${REMOTE_SERVER}" "rm -rf ${toDelete[*]}"
+    var_error "- Deleted"
+    var_error "${toDelete[*]}\n"
   fi
 
   if [[ ${#toSync[@]} -ne 0 ]]; then
-    ! ${dry} && rsync -raR "${toSync[@]}" "${REMOTE_SERVER}:${REMOTE_PATH_PREFIX}/"
-    printf "%b+ Copied\n%s%b\n" "${GREEN}" "${toSync[*]}" "${RESET}"
+    ! ${DRY} && rsync -raR "${toSync[@]}" "${REMOTE_SERVER}:${REMOTE_PATH_PREFIX}/"
+    var_success "+ Copied"
+    var_success "${toSync[*]}\n"
   fi
 
   var_info "Done at $(date +'%H:%M:%S')!"
