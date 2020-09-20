@@ -140,7 +140,7 @@ release() {
   http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
 
   local PAYLOAD
-  PAYLOAD="$(jq -n \
+  PAYLOAD="$(jq -c -n \
     --arg tag "${GIT_TAG}" \
     --arg target "$(git rev-parse "${VERSION_REF}")" \
     --arg name "${RELEASE_NAME}" \

@@ -17,10 +17,10 @@ main() {
   http_init_client
 
   # Login to registry
-  LOGIN_PAYLOAD="$(jq -n --arg username "${DOCKER_USER}" --arg password "${DOCKER_PASSWORD}" '{username: $username, password: $password}')"
+  LOGIN_PAYLOAD="$(jq -c -n --arg username "${DOCKER_USER}" --arg password "${DOCKER_PASSWORD}" '{username: $username, password: $password}')"
   unset DOCKER_PASSWORD
 
-  http_request -X POST "${DOCKER_REGISTRY}/users/login/" -H "Content-Type: application/json" --data "${LOGIN_PAYLOAD}"
+  http_request -X "POST" -H "Content-Type: application/json" "${DOCKER_REGISTRY}/users/login/" --data "${LOGIN_PAYLOAD}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to login to registry ${DOCKER_REGISTRY}"
     return 1
