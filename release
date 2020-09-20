@@ -152,8 +152,7 @@ release() {
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" -H "Content-Type: application/json" -X POST "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" -d "${PAYLOAD}")"
   if [[ ${HTTP_STATUS} != "201" ]]; then
-    var_error "HTTP/${HTTP_STATUS}: Unable to create release"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to create release"
     return 1
   fi
 
@@ -174,8 +173,7 @@ release() {
       )"
 
       if [[ ${HTTP_STATUS} != "201" ]]; then
-        var_error "HTTP/${HTTP_STATUS}: Unable to upload asset ${asset}"
-        cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+        http_handle_error "Unable to upload asset ${asset}"
         return 1
       fi
 
@@ -198,7 +196,7 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var" "git" "version" "golang"
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "http" "git" "version" "golang"
   var_color
 
   local ROOT_DIR

@@ -6,7 +6,7 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   var_read DOCKER_REGISTRY "https://hub.docker.com/v2"
@@ -27,8 +27,7 @@ main() {
   unset DOCKER_PASSWORD
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "HTTP/${HTTP_STATUS}: Unable to login to registry ${DOCKER_REGISTRY}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to login to registry ${DOCKER_REGISTRY}"
     return 1
   fi
 
@@ -40,8 +39,7 @@ main() {
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/users/${DOCKER_OWNER}/repositories/?page_size=100")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "HTTP/${HTTP_STATUS}: Unable to list images for ${DOCKER_OWNER}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to list images for ${DOCKER_OWNER}"
     return 1
   fi
 
@@ -54,8 +52,7 @@ main() {
 
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X GET "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/?page_size=100")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "HTTP/${HTTP_STATUS}: Unable to list tags for ${DOCKER_OWNER}/${repository}"
-      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      http_handle_error "Unable to list tags for ${DOCKER_OWNER}/${repository}"
       continue
     fi
 
@@ -67,8 +64,7 @@ main() {
       if [[ ${tag} =~ ^[0-9A-Fa-f]{6,} ]]; then
         HTTP_STATUS="$("${CLIENT_ARGS[@]}" -X DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/")"
         if [[ ${HTTP_STATUS} != "204" ]]; then
-          var_error "HTTP/${HTTP_STATUS}: Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
-          cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+          http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
           continue
         fi
 

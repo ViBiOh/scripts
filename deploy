@@ -6,7 +6,7 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   if [[ ${#} -ne 2 ]]; then
@@ -24,7 +24,7 @@ main() {
 
   cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "HTTP/${HTTP_STATUS}"
+    http_handle_error "Unable to deploy"
     return 1
   fi
 }

@@ -3,6 +3,9 @@
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 github_rate_limit_wait() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  var_color
+
   local WANTED_CALLS="${1:-10}"
 
   local HTTP_OUTPUT="http_output.txt"
@@ -12,8 +15,7 @@ github_rate_limit_wait() {
   while true; do
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.v3+json" "https://api.github.com/rate_limit")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "Unable to get rate limit"
-      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      http_handle_error "Unable to get rate limit"
       return
     fi
 
@@ -29,7 +31,7 @@ github_rate_limit_wait() {
 }
 
 github_repo_pr_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -59,8 +61,7 @@ github_repo_pr_stats() {
     github_rate_limit_wait
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=closed&per_page=${pr_page_size}&page=${pr_page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${pr_page}"
-      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      http_handle_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${pr_page}"
       break
     fi
 
@@ -80,8 +81,7 @@ github_repo_pr_stats() {
 
       HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${details[0]}/reviews")"
       if [[ ${HTTP_STATUS} != "200" ]]; then
-        var_error "Unable to fetch ${GITHUB_REPOSITORY}/pulls/${details[0]} reviews"
-        cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+        http_handle_error "Unable to fetch ${GITHUB_REPOSITORY}/pulls/${details[0]} reviews"
         break
       fi
 
@@ -103,7 +103,7 @@ github_repo_pr_stats() {
 }
 
 github_repo_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -131,8 +131,7 @@ github_repo_stats() {
     fi
 
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "Unable to get contributors' stats for ${GITHUB_REPOSITORY}"
-      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      http_handle_error "Unable to get contributors' stats for ${GITHUB_REPOSITORY}"
       return 1
     fi
 
@@ -158,7 +157,7 @@ github_repo_stats() {
 }
 
 github_org_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   if [[ ${#} -lt 1 ]]; then
@@ -187,8 +186,7 @@ github_org_stats() {
     github_rate_limit_wait
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${repo_page_size}&page=${repo_page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${repo_page}"
-      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      http_handle_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${repo_page}"
       break
     fi
 
@@ -220,6 +218,9 @@ github_org_stats() {
 }
 
 github_org_stats_user() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
   if [[ ${#} -ne 2 ]]; then
     var_error "Usage: github_org_stats_user github_org_stats.json user"
     return 1
@@ -236,7 +237,7 @@ github_org_stats_user() {
 }
 
 github_clone_user() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   var_read GITHUB_OAUTH_TOKEN "" "secret"
@@ -254,8 +255,7 @@ github_clone_user() {
 
     HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=${page_size}&page=${page}")"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "Unable to list user repositories on page ${page}"
-      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      http_handle_error "Unable to list user repositories on page ${page}"
       break
     fi
 
@@ -309,7 +309,7 @@ github_compare_version() {
 }
 
 github_last_release() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   if [[ ${#} -lt 1 ]]; then
@@ -329,8 +329,7 @@ github_last_release() {
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "bUnable to list latest release for ${GITHUB_REPOSITORY}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to list latest release for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
@@ -338,7 +337,7 @@ github_last_release() {
 }
 
 github_configure() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -362,22 +361,19 @@ github_configure() {
     "has_projects": false
   }')"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "Unable to edit ${GITHUB_REPOSITORY}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to edit ${GITHUB_REPOSITORY}"
     return 1
   fi
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.dorian-preview+json" "-X" "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/vulnerability-alerts")"
   if [[ ${HTTP_STATUS} != "204" ]]; then
-    var_error "Unable to enable vulnerability alerts for ${GITHUB_REPOSITORY}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to enable vulnerability alerts for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.london-preview+json" "-X" "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/automated-security-fixes")"
   if [[ ${HTTP_STATUS} != "204" ]]; then
-    var_error "Unable to enable automated security fixes for ${GITHUB_REPOSITORY}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to enable automated security fixes for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
@@ -396,15 +392,13 @@ github_configure() {
     "restrictions": null
   }')"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "Unable to update branch protection for ${GITHUB_REPOSITORY}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to update branch protection for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
   HTTP_STATUS="$("${CLIENT_ARGS[@]}" "-H" "Accept: application/vnd.github.zzzax-preview+json" "-X" "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection/required_signatures")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "Unable to enable required signed commits for ${GITHUB_REPOSITORY}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to enable required signed commits for ${GITHUB_REPOSITORY}"
     return 1
   fi
 

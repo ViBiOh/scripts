@@ -6,7 +6,7 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
   local DOCKER_REGISTRY="https://registry-1.docker.io/v2"
@@ -38,8 +38,7 @@ main() {
   unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    var_error "HTTP/${HTTP_STATUS}: Unable to retrieve token for ${DOCKER_IMAGE}"
-    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+    http_handle_error "Unable to retrieve token for ${DOCKER_IMAGE}"
     return 1
   fi
 
@@ -59,8 +58,7 @@ main() {
     )"
 
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      var_error "HTTP/${HTTP_STATUS}: Unable to retrieve manifest for ${DOCKER_IMAGE}"
-      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      http_handle_error "Unable to retrieve manifest for ${DOCKER_IMAGE}"
       return 1
     fi
 
@@ -76,8 +74,7 @@ main() {
     )"
 
     if [[ ${HTTP_STATUS} != "201" ]]; then
-      var_error "HTTP/${HTTP_STATUS}: Unable to promote manifest for ${DOCKER_IMAGE}"
-      cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+      http_handle_error "Unable to promote manifest for ${DOCKER_IMAGE}"
       continue
     fi
 

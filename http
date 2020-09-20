@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+HTTP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+http_handle_error() {
+  source "${HTTP_SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  var_error "HTTP/${HTTP_STATUS}: ${1:-}"
+  cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+}
