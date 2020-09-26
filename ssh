@@ -41,9 +41,9 @@ ssh_agent_stop() {
   if [[ -n ${SSH_AGENT_PID:-} ]]; then
     ssh-agent -k
     rm -rf "${SSH_ENV}"
-
-    ps -fax | grep 'ssh-agent' | grep -v 'grep' | awk '{print $2}' | xargs -n 1 kill -9
   fi
+
+  pgrep 'ssh-agent' | xargs -n 1 kill -9
 }
 
 ssh_agent_start() {
@@ -76,3 +76,11 @@ ssh_agent_init() {
     shopt -u nullglob
   fi
 }
+
+if [[ -f ${SSH_ENV:-} ]]; then
+  source "${SSH_ENV}"
+fi
+
+if ! ps -p "${SSH_AGENT_PID:-}" >/dev/null 2>&1 && [[ $(type -t ssh_agent_init) == "function" ]]; then
+  ssh_agent_init
+fi
