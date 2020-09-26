@@ -41,6 +41,8 @@ ssh_agent_stop() {
   if [[ -n ${SSH_AGENT_PID:-} ]]; then
     ssh-agent -k
     rm -rf "${SSH_ENV}"
+
+    ps -fax | grep 'ssh-agent' | grep -v 'grep' | awk '{print $2}' | xargs -n 1 kill -9
   fi
 }
 
