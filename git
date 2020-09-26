@@ -33,25 +33,21 @@ git_root() {
 }
 
 git_browse() {
-  shopt -s nullglob
-
-  for dir in "$(pwd)"/*; do
-    if [[ ! -d ${dir} ]]; then
-      continue
-    fi
-
-    if [[ $(git_is_inside) == "true" ]]; then
-      continue
-    fi
-
+  while IFS= read -r -d '' dir; do
     (
       cd "${dir}" || return
+      if [[ $(git_is_inside) != "true" ]] || [[ $(pwd) != $(git_root) ]]; then
+        return
+      fi
+
       var_info "Running command in ${dir}"
       eval "${@}"
     )
-  done
+  done < <(find . -type d -maxdepth 1 -print0)
+}
 
-  shopt -u nullglob
+git_pull_all() {
+  git_browse 'git checkout master && git pull && git sweep'
 }
 
 git_remote_repository() {
