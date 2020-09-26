@@ -77,10 +77,12 @@ ssh_agent_init() {
   fi
 }
 
-if [[ -f ${SSH_ENV:-} ]]; then
-  source "${SSH_ENV}"
-fi
+ssh_init() {
+  if [[ -f ${SSH_ENV:-} ]]; then
+    source "${SSH_ENV}"
+  fi
 
-if ! ps -p "${SSH_AGENT_PID:-}" >/dev/null 2>&1 && [[ $(type -t ssh_agent_init) == "function" ]]; then
-  ssh_agent_init
-fi
+  if ! ps -p "${SSH_AGENT_PID:-}" >/dev/null 2>&1 && [[ $(type -t ssh_agent_init) == "function" ]]; then
+    ssh_agent_init
+  fi
+}
