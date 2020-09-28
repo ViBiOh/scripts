@@ -62,18 +62,14 @@ ssh_agent_init() {
   if [[ -d "${HOME}/.ssh/" ]]; then
     local AGENT_INITIALIZED="false"
 
-    shopt -s nullglob
-
-    for key in "${HOME}/.ssh/"*.pub; do
+    while IFS= read -r -d '' key; do
       if [[ ${AGENT_INITIALIZED} == "false" ]]; then
         AGENT_INITIALIZED="true"
         ssh_agent_start
       fi
 
       ssh-add -k "${key%.pub}"
-    done
-
-    shopt -u nullglob
+    done < <(find "${HOME}/.ssh" -type f -name '*.pub' -print0)
   fi
 }
 
