@@ -271,7 +271,7 @@ head_sync() {
 
   local branch
   branch="$(git symbolic-ref -q HEAD | sed -e 's|^refs/heads/||')"
-  ssh -A "${REMOTE_SERVER}" "cd '${REMOTE_PATH}' && git reset HEAD . && git clean -f && git status -u -s | awk '{print \$2}' | xargs rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
+  ssh -A "${REMOTE_SERVER}" "cd '${REMOTE_PATH}' && git reset HEAD . && git clean -f && git status -u -s | awk '{print \$2}' | xargs -r rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
 }
 
 git_sync() {

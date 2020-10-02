@@ -43,7 +43,7 @@ ssh_agent_stop() {
     rm -rf "${SSH_ENV}"
   fi
 
-  pgrep 'ssh-agent' | xargs -n 1 kill -9
+  pgrep 'ssh-agent' | xargs -r -n 1 kill -9
 }
 
 ssh_agent_start() {
