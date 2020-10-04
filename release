@@ -5,7 +5,7 @@ set -o nounset -o pipefail -o errexit
 release_clean() {
   var_info "Cleaning ${OUTPUT_DIR}"
 
-  rm -rf "${OUTPUT_DIR}"
+  rm -rf "${OUTPUT_DIR:?}"
   mkdir "${OUTPUT_DIR}"
 }
 

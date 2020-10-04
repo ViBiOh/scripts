@@ -7,7 +7,7 @@ main() {
   local SCRIPTS_PATH="./scripts"
 
   printf "Bootstrapping to %s\n" "${SCRIPTS_PATH}"
-  rm -rf "${SCRIPTS_PATH}"
+  rm -rf "${SCRIPTS_PATH:?}"
   mkdir -p "${SCRIPTS_PATH}"
 
   (

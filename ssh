@@ -40,7 +40,7 @@ ssh_forward_remote() {
 ssh_agent_stop() {
   if [[ -n ${SSH_AGENT_PID:-} ]]; then
     ssh-agent -k
-    rm -rf "${SSH_ENV}"
+    rm -rf "${SSH_ENV:?}"
   fi
 
   pgrep 'ssh-agent' | xargs -r -n 1 kill -9
