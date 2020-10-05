@@ -37,13 +37,25 @@ ssh_forward_remote() {
   ssh -N -R "${REMOTE_PORT}:localhost:${LOCAL_PORT}" "${@:-}"
 }
 
+ssh_agent_running() {
+  if ps -p "${SSH_AGENT_PID:-}" >/dev/null 2>&1; then
+    printf "true"
+  else
+    printf "false"
+  fi
+}
+
 ssh_agent_stop() {
-  if [[ -n ${SSH_AGENT_PID:-} ]]; then
+  if [[ $(ssh_agent_running) == "true" ]]; then
     ssh-agent -k
+
+    source <(sed 's|export|unset|' "${SSH_ENV}")
     rm -rf "${SSH_ENV:?}"
   fi
 
-  pgrep 'ssh-agent' | xargs -r -n 1 kill -9
+  for pid in $(pgrep 'ssh-agent'); do
+    kill -9 "${pid}"
+  done
 }
 
 ssh_agent_start() {
@@ -78,7 +90,7 @@ ssh_init() {
     source "${SSH_ENV}"
   fi
 
-  if ! ps -p "${SSH_AGENT_PID:-}" >/dev/null 2>&1 && [[ $(type -t ssh_agent_init) == "function" ]]; then
+  if [[ $(ssh_agent_running) == "false" ]] && [[ $(type -t ssh_agent_init) == "function" ]]; then
     ssh_agent_init
   fi
 }
