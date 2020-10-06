@@ -128,6 +128,9 @@ git_conventionnal_commit_guidelines() {
 
   var_warning "\n\nYou can add '!' before ':', for indicating breaking change"
   printf "\n\t%bfeat%b(api)%b!%b:%b Adding mandatory parameter on signup\n\n" "${GREEN}" "${BLUE}" "${RED}" "${GREEN}" "${RESET}"
+
+  var_warning "\nYou can prefix with 'revert:' for indicating revert change"
+  printf "\n\t%brevert: %bfeat%b(api)%b:%b Adding mandatory parameter on signup\n\n" "${RED}" "${GREEN}" "${BLUE}" "${GREEN}" "${RESET}"
 }
 
 git_valid_description_guideline() {
