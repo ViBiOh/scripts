@@ -131,13 +131,13 @@ release() {
     GIT_TAG="${VERSION}"
   fi
 
-  var_read GITHUB_OAUTH_TOKEN "" "secret"
+  var_read GITHUB_TOKEN "" "secret"
   var_read GITHUB_REPOSITORY "$(git_remote_repository)"
   var_read RELEASE_NAME "${GIT_TAG}"
 
   var_info "Creating release ${GIT_TAG} for ${GITHUB_REPOSITORY}..."
 
-  http_init_client -H "Authorization: token ${GITHUB_OAUTH_TOKEN}"
+  http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
 
   local PAYLOAD
   PAYLOAD="$(jq -c -n \
