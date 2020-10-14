@@ -252,14 +252,17 @@ github_clone_user() {
       break
     fi
 
+    count="$(jq -r 'length' "${HTTP_OUTPUT}")"
+    if [[ ${count} -eq 0 ]]; then
+      rm "${HTTP_OUTPUT}"
+      break
+    fi
+
     local REPOSITORIES
     mapfile -t REPOSITORIES < <(jq -r '.[] | select (.archived | not) | .name + "," + .ssh_url' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
-    count=0
     for REPO in "${REPOSITORIES[@]}"; do
-      count=$((count + 1))
-
       IFS=',' read -r -a details <<<"${REPO}"
 
       if [[ -d ${details[0]} ]]; then
