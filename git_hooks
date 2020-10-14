@@ -25,10 +25,14 @@ install() {
     (
       cd "${HOOKS_SOURCE_DIR}" || return 1
 
-      for file in *; do
-        ln -s -f "${HOOKS_SOURCE_DIR}/${file}" "${HOOKS_TARGET_DIR}/${file}"
-        var_success "✔ ${file} hook installed"
-      done
+      while IFS= read -r -d '' file; do
+        local BASENAME
+        BASENAME="$(basename "${file}")"
+
+        ln -s -f "${HOOKS_SOURCE_DIR}/${BASENAME}" "${HOOKS_TARGET_DIR}/${BASENAME}"
+        var_success "✔ ${BASENAME} hook installed"
+      done < <(find . -type f -print0)
+
     )
   )
 }
