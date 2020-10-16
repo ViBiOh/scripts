@@ -112,11 +112,21 @@ tag_check() {
   fi
 }
 
+script_dir() {
+  if [[ -L ${BASH_SOURCE[0]} ]]; then
+    dirname "$(readlink "${BASH_SOURCE[0]}")"
+  else
+    (
+      cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+    )
+  fi
+}
+
 main() {
-  local SCRIPT_REAL_PATH
-  SCRIPT_REAL_PATH="$(python -c 'import sys; import os.path; print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"
   local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_REAL_PATH}")" && pwd)"
+  SCRIPT_DIR="$(script_dir)"
+
+  echo $SCRIPT_DIR
 
   source "${SCRIPT_DIR}/../meta" && meta_init "var" "git"
   var_color
