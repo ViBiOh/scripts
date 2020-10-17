@@ -126,8 +126,6 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(script_dir)"
 
-  echo $SCRIPT_DIR
-
   source "${SCRIPT_DIR}/../meta" && meta_init "var" "git"
   var_color
 
