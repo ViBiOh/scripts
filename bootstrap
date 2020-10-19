@@ -13,7 +13,7 @@ main() {
   (
     cd "${SCRIPTS_PATH}"
 
-    curl -q -sSL --max-time 30 -o "./meta" "${REMOTE_DEPENDENCIES_URL}/meta"
+    curl -q -sSL --max-time 30 -o "./meta" -- "${REMOTE_DEPENDENCIES_URL}/meta"
     chmod +x "./meta"
     source "./meta" && meta_init "${@}"
   )
