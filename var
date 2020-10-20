@@ -2,11 +2,11 @@
 
 var_read() {
   local VAR_NAME="${1}"
-  shifit
+  shift
   local VAR_DEFAULT="${1:-}"
-  shifit
+  shift
   local VAR_SECRET="${1:-}"
-  shifit
+  shift
 
   local SECRET_ARG=""
   if [[ ${VAR_SECRET:-} == "secret" ]]; then
