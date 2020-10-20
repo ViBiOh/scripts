@@ -165,6 +165,11 @@ git_changelog() {
     return 2
   fi
 
+  local GIT_TO="${1:-HEAD}"
+  shift
+  local GIT_FROM="${1:-$(git_last_tag)}"
+  shift
+
   local FEATURES=()
   local FIXES=()
   local MISC=()
@@ -177,7 +182,7 @@ git_changelog() {
   SCOPES="${SCOPES%|}"
 
   shopt -s nocasematch
-  for hash in $(git log --no-merges --pretty=format:'%h' "${1:-HEAD}...${2:-$(git_last_tag)}"); do
+  for hash in $(git log --no-merges --pretty=format:'%h' "${GIT_TO}...${GIT_FROM}"); do
     local VERSION_MESSAGE=""
     local HASH=""
     local TYPE=""
@@ -270,7 +275,9 @@ head_sync() {
   fi
 
   local REMOTE_SERVER="${1}"
-  local REMOTE_PATH="${2}"
+  shift
+  local REMOTE_PATH="${1}"
+  shift
 
   local branch
   branch="$(git symbolic-ref -q HEAD | sed -e 's|^refs/heads/||')"
@@ -287,8 +294,11 @@ git_sync() {
   fi
 
   local REMOTE_SERVER="${1}"
-  local REMOTE_PATH="${2}"
-  local DRY="${3:-false}"
+  shift
+  local REMOTE_PATH="${1}"
+  shift
+  local DRY="${1:-false}"
+  shift
 
   git_root
   isGit=$?

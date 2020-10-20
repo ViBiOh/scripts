@@ -10,7 +10,9 @@ main() {
   var_color
 
   local BASE="${1:-master}"
-  local HEAD="${2:-$(git rev-parse --abbrev-ref HEAD)}"
+  shift
+  local HEAD="${1:-$(git rev-parse --abbrev-ref HEAD)}"
+  shift
 
   local UNCLEAR="false"
   IFS=$'\n'

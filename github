@@ -7,6 +7,7 @@ github_rate_limit_wait() {
   var_color
 
   local WANTED_CALLS="${1:-10}"
+  shift
 
   http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
 
@@ -38,6 +39,8 @@ github_repo_pr_stats() {
   fi
 
   local GITHUB_REPOSITORY="${1:-}"
+  shift
+
   var_read GITHUB_TOKEN "" "secret"
 
   http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
@@ -110,6 +113,8 @@ github_repo_stats() {
   fi
 
   local GITHUB_REPOSITORY=${1:-}
+  shift
+
   var_read GITHUB_TOKEN "" "secret"
 
   http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
@@ -162,7 +167,10 @@ github_org_stats() {
   fi
 
   local GITHUB_ORGANIZATION="${1:-}"
-  local REPOSITORY_IGNORE="${2:-\$^}"
+  shift
+  local REPOSITORY_IGNORE="${1:-\$^}"
+  shift
+
   var_read GITHUB_TOKEN "" "secret"
 
   http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
@@ -222,7 +230,9 @@ github_org_stats_user() {
   fi
 
   local FILENAME="${1:-}"
-  local GITHUB_USER="${2:-}"
+  shift
+  local GITHUB_USER="${1:-}"
+  shift
 
   local GITHUB_USER_STATS
   GITHUB_USER_STATS="$(jq -c -r --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.ratio)' "${FILENAME}")"
@@ -284,23 +294,32 @@ github_compare_version() {
     return 1
   fi
 
-  if [[ -z ${3} ]]; then
-    printf "%s" "${2}"
-    rm "${4}"
+  local GITHUB_REPO="${1}"
+  shift
+  local LATEST_VERSION="${1}"
+  shift
+  local CURRENT_VERSION="${1:-}"
+  shift
+  local RELEASE_API_FILE="${1:-}"
+  shift
+
+  if [[ -z ${CURRENT_VERSION} ]]; then
+    printf "%s" "${LATEST_VERSION}"
+    rm "${RELEASE_API_FILE}"
     return
   fi
 
-  if [[ ${3} == "${2}" ]]; then
-    var_success "✔ ${1} is up to date ${2}"
-    rm "${4}"
+  if [[ ${CURRENT_VERSION} == "${LATEST_VERSION}" ]]; then
+    var_success "✔ ${GITHUB_REPO} is up to date ${LATEST_VERSION}"
+    rm "${RELEASE_API_FILE}"
     return
   fi
 
   local RELEASE_NOTES
-  RELEASE_NOTES="$(jq -r .body "${4}")"
-  rm "${4}"
+  RELEASE_NOTES="$(jq -r .body "${RELEASE_API_FILE}")"
+  rm "${RELEASE_API_FILE}"
 
-  printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${1}" "${BLUE}" "${RED}" "${3}" "${BLUE}" "${YELLOW}" "${2}" "${GREEN}" "https://github.com/${1}/releases/tag/${2}" "${RESET}"
+  printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${GITHUB_REPO}" "${BLUE}" "${RED}" "${CURRENT_VERSION}" "${BLUE}" "${YELLOW}" "${LATEST_VERSION}" "${GREEN}" "https://github.com/${GITHUB_REPO}/releases/tag/${LATEST_VERSION}" "${RESET}"
   printf "%s\n" "${RELEASE_NOTES}"
 }
 
@@ -313,7 +332,10 @@ github_last_release() {
     return 1
   fi
 
-  local GITHUB_REPOSITORY=${1:-}
+  local GITHUB_REPOSITORY=${1}
+  shift
+  local PREVIOUS_VERSION=${1:-}
+  shift
 
   http_init_client
   if [[ -n ${GITHUB_TOKEN:-} ]]; then
@@ -326,7 +348,7 @@ github_last_release() {
     return 1
   fi
 
-  github_compare_version "${GITHUB_REPOSITORY}" "$(jq -r '.tag_name' "${HTTP_OUTPUT}")" "${2:-}" "${HTTP_OUTPUT}"
+  github_compare_version "${GITHUB_REPOSITORY}" "$(jq -r '.tag_name' "${HTTP_OUTPUT}")" "${PREVIOUS_VERSION}" "${HTTP_OUTPUT}"
   rm "${HTTP_OUTPUT}"
 }
 

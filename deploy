@@ -14,11 +14,16 @@ main() {
     return 1
   fi
 
+  local APP_NAME="${1}"
+  shift
+  local COMPOSE_FILE="${1}"
+  shift
+
   var_read DEPLOY_URL
   var_read DEPLOY_CREDENTIALS
 
   http_init_client
-  http_request --max-time 90 -X POST -u "${DEPLOY_CREDENTIALS}" "${DEPLOY_URL}/${1}/" --data-binary "${2}"
+  http_request --max-time 90 -X POST -u "${DEPLOY_CREDENTIALS}" "${DEPLOY_URL}/${APP_NAME}/" --data-binary "${COMPOSE_FILE}"
 
   cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
   if [[ ${HTTP_STATUS} != "200" ]]; then

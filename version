@@ -66,11 +66,16 @@ version_semver() {
 
   if [[ ${#} -lt 1 ]]; then
     var_info "Current version is: ${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
-    var_error "Usage: version_semver [major|minor|patch] [git_ref] [quiet]"
+    var_error "Usage: version_semver [major|minor|patch] [git_ref (default HEAD)] [quiet]"
     return 3
   fi
 
-  case "${1}" in
+  local VERSION_TYPE="${1}"
+  shift
+  local GIT_REF="${1:-HEAD}"
+  shift
+
+  case "${VERSION_TYPE}" in
   "major")
     MAJOR="$((MAJOR + 1))"
     MINOR="0"
@@ -87,15 +92,15 @@ version_semver() {
     ;;
 
   *)
-    var_error "unknown version name: ${1}"
+    var_error "unknown version name: ${VERSION_TYPE}"
     return 4
     ;;
   esac
 
   local NEW_VERSION="${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
 
-  if [[ ${#} -lt 3 ]]; then
-    git tag -a "${NEW_VERSION}" -m "${NEW_VERSION}" "${2:-HEAD}"
+  if [[ ${#} -lt 1 ]]; then
+    git tag -a "${NEW_VERSION}" -m "${NEW_VERSION}" "${GIT_REF}"
     var_success "New version is: ${NEW_VERSION}"
   else
     printf "%s" "${NEW_VERSION}"

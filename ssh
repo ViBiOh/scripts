@@ -8,16 +8,16 @@ ssh_forward_local() {
   var_color
 
   if [[ ${#} -lt 3 ]]; then
-    var_error "Usage: ssh_forward_local LOCAL_PORT REMOTE_PORT SSH_PART"
+    var_error "Usage: ssh_forward_local LOCAL_PORT REMOTE_PORT SSH_PARTS..."
     return 1
   fi
 
-  local LOCAL_PORT="${1:-}"
+  local LOCAL_PORT="${1}"
   shift 1
-  local REMOTE_PORT="${1:-}"
+  local REMOTE_PORT="${1}"
   shift 1
 
-  ssh -N -L "${LOCAL_PORT}:localhost:${REMOTE_PORT}" "${@:-}"
+  ssh -N -L "${LOCAL_PORT}:localhost:${REMOTE_PORT}" "${@}"
 }
 
 ssh_forward_remote() {
@@ -29,12 +29,12 @@ ssh_forward_remote() {
     return 1
   fi
 
-  local REMOTE_PORT="${1:-}"
+  local REMOTE_PORT="${1}"
   shift 1
-  local LOCAL_PORT="${1:-}"
+  local LOCAL_PORT="${1}"
   shift 1
 
-  ssh -N -R "${REMOTE_PORT}:localhost:${LOCAL_PORT}" "${@:-}"
+  ssh -N -R "${REMOTE_PORT}:localhost:${LOCAL_PORT}" "${@}"
 }
 
 ssh_agent_running() {

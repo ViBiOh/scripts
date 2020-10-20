@@ -1,30 +1,39 @@
 #!/usr/bin/env bash
 
 var_read() {
+  local VAR_NAME="${1}"
+  shifit
+  local VAR_DEFAULT="${1:-}"
+  shifit
+  local VAR_SECRET="${1:-}"
+  shifit
+
   local SECRET_ARG=""
-  if [[ ${3:-} == "secret" ]]; then
+  if [[ ${VAR_SECRET:-} == "secret" ]]; then
     SECRET_ARG="-s"
   fi
 
-  if [[ -z ${!1:-} ]]; then
+  if [[ -z ${!VAR_NAME:-} ]]; then
     if [[ -z ${SCRIPTS_NO_INTERACTIVE:-} ]]; then
-      read ${SECRET_ARG?} -r -p "${1}${2:+ [${2}]}=" READ_VALUE
+      read ${SECRET_ARG?} -r -p "${VAR_NAME}${VAR_DEFAULT:+ [${VAR_DEFAULT}]}=" READ_VALUE
     fi
 
-    eval "${1}=${READ_VALUE:-${2}}"
+    eval "${VAR_NAME}=${READ_VALUE:-${VAR_DEFAULT}}"
 
     if [[ ${SECRET_ARG} == "-s" ]]; then
       printf "\n" 1>&2
     fi
   elif [[ ${SECRET_ARG} != "-s" ]]; then
-    printf "%s=%s\n" "${1}" "${!1}" 1>&2
+    printf "%s=%s\n" "${VAR_NAME}" "${!VAR_NAME}" 1>&2
   else
-    printf "Using secret %s\n" "${1}" 1>&2
+    printf "Using secret %s\n" "${VAR_NAME}" 1>&2
   fi
 }
 
 var_confirm() {
-  read -r -p "${1:-Are you sure}? [Y/n] " input
+  local VAR_CONFIRM_MESSAGE="${1:-Are you sure}"
+
+  read -r -p "${VAR_CONFIRM_MESSAGE}? [Y/n] " input
 
   case "${input}" in
   [yY][eE][sS] | [yY])

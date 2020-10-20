@@ -21,8 +21,11 @@ main() {
   var_read DOCKER_PASS "" "secret"
 
   local DOCKER_IMAGE="${1}"
-  local IMAGE_VERSION="${2}"
-  local VERSION_TARGET="${3:-latest}"
+  shift
+  local IMAGE_VERSION="${1}"
+  shift
+  local VERSION_TARGET="${1:-latest}"
+  shift
 
   http_init_client
 
