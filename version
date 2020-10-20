@@ -66,7 +66,7 @@ version_semver() {
 
   if [[ ${#} -lt 1 ]]; then
     var_info "Current version is: ${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
-    var_error "Usage: version_semver [major|minor|patch] [git_ref (default HEAD)] [quiet]"
+    var_error "Usage: version_semver major|minor|patch [GIT_REF=HEAD] [quiet]"
     return 3
   fi
 
