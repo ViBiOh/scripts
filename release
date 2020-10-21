@@ -107,7 +107,7 @@ release() {
 
   var_info "Identifying semver"
   var_read VERSION_REF "HEAD"
-  var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep -v "${VERSION_REF}" | head -1)"
+  var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep --invert-match "${VERSION_REF}" | head -1)"
 
   local CHANGELOG
   CHANGELOG=$(git_changelog "${VERSION_REF}" "${PREVIOUS_REF}")

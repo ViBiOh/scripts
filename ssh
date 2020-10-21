@@ -64,7 +64,7 @@ ssh_agent_start() {
   touch "${SSH_ENV}"
   chmod 600 "${SSH_ENV}"
 
-  ssh-agent | grep -v "^echo" >"${SSH_ENV}"
+  ssh-agent | grep --invert-match "^echo" >"${SSH_ENV}"
   source "${SSH_ENV}"
 }
 
