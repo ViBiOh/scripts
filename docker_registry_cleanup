@@ -15,6 +15,7 @@ main() {
   var_read DOCKER_PASSWORD "" "secret"
 
   http_init_client
+  HTTP_CLIENT_ARGS+=("--max-time" "60")
 
   # Login to registry
   LOGIN_PAYLOAD="$(jq -c -n --arg username "${DOCKER_USER}" --arg password "${DOCKER_PASSWORD}" '{username: $username, password: $password}')"
