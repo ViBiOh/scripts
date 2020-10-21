@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
 var_read() {
+  if [[ ${#} -lt 1 ]]; then
+    var_error "Usage: var_read VAR_NAME [VAR_DEFAULT] [VAR_SECRET]"
+    return 1
+  fi
+
   local VAR_NAME="${1}"
-  shift || true
+  shift
   local VAR_DEFAULT="${1:-}"
   shift || true
   local VAR_SECRET="${1:-}"

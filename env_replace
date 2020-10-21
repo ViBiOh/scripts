@@ -15,7 +15,7 @@ main() {
   fi
 
   local FILENAME="${1}"
-  shift || true
+  shift
 
   local SED_COMMAND=("sed")
   for name in "${@}"; do

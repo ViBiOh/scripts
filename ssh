@@ -13,9 +13,9 @@ ssh_forward_local() {
   fi
 
   local LOCAL_PORT="${1}"
-  shift || true
+  shift
   local REMOTE_PORT="${1}"
-  shift || true
+  shift
 
   ssh -N -L "${LOCAL_PORT}:localhost:${REMOTE_PORT}" "${@}"
 }
@@ -30,9 +30,9 @@ ssh_forward_remote() {
   fi
 
   local REMOTE_PORT="${1}"
-  shift || true
+  shift
   local LOCAL_PORT="${1}"
-  shift || true
+  shift
 
   ssh -N -R "${REMOTE_PORT}:localhost:${LOCAL_PORT}" "${@}"
 }

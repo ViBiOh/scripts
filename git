@@ -275,9 +275,9 @@ head_sync() {
   fi
 
   local REMOTE_SERVER="${1}"
-  shift || true
+  shift
   local REMOTE_PATH="${1}"
-  shift || true
+  shift
 
   local branch
   branch="$(git symbolic-ref -q HEAD | sed -e 's|^refs/heads/||')"
@@ -294,9 +294,9 @@ git_sync() {
   fi
 
   local REMOTE_SERVER="${1}"
-  shift || true
+  shift
   local REMOTE_PATH="${1}"
-  shift || true
+  shift
   local DRY="${1:-false}"
   shift || true
 

@@ -295,9 +295,9 @@ github_compare_version() {
   fi
 
   local GITHUB_REPO="${1}"
-  shift || true
+  shift
   local LATEST_VERSION="${1}"
-  shift || true
+  shift
   local CURRENT_VERSION="${1:-}"
   shift || true
   local RELEASE_API_FILE="${1:-}"
@@ -333,7 +333,7 @@ github_last_release() {
   fi
 
   local GITHUB_REPOSITORY=${1}
-  shift || true
+  shift
   local PREVIOUS_VERSION=${1:-}
   shift || true
 

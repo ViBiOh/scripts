@@ -12,7 +12,7 @@ version_value() {
   fi
 
   local REGEX="${1}"
-  shift || true
+  shift
 
   pcregrep --recursive --multiline --no-filename -o1 "${REGEX}" "${@}"
 }
@@ -71,7 +71,7 @@ version_semver() {
   fi
 
   local VERSION_TYPE="${1}"
-  shift || true
+  shift
   local GIT_REF="${1:-HEAD}"
   shift || true
 

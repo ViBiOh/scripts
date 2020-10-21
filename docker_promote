@@ -21,9 +21,9 @@ main() {
   var_read DOCKER_PASS "" "secret"
 
   local DOCKER_IMAGE="${1}"
-  shift || true
+  shift
   local IMAGE_VERSION="${1}"
-  shift || true
+  shift
   local VERSION_TARGET="${1:-latest}"
   shift || true
 
