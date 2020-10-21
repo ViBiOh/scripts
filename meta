@@ -9,7 +9,7 @@ meta_download_script() {
   fi
 
   local DEPENDENCIE_FILENAME="${1}"
-  shift
+  shift || true
 
   printf 1>&2 "Downloading script %s...\n" "${DEPENDENCIE_FILENAME}"
 

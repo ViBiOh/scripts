@@ -7,7 +7,7 @@ github_rate_limit_wait() {
   var_color
 
   local WANTED_CALLS="${1:-10}"
-  shift
+  shift || true
 
   http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
 
@@ -39,7 +39,7 @@ github_repo_pr_stats() {
   fi
 
   local GITHUB_REPOSITORY="${1:-}"
-  shift
+  shift || true
 
   var_read GITHUB_TOKEN "" "secret"
 
@@ -113,7 +113,7 @@ github_repo_stats() {
   fi
 
   local GITHUB_REPOSITORY=${1:-}
-  shift
+  shift || true
 
   var_read GITHUB_TOKEN "" "secret"
 
@@ -167,9 +167,9 @@ github_org_stats() {
   fi
 
   local GITHUB_ORGANIZATION="${1:-}"
-  shift
+  shift || true
   local REPOSITORY_IGNORE="${1:-\$^}"
-  shift
+  shift || true
 
   var_read GITHUB_TOKEN "" "secret"
 
@@ -230,9 +230,9 @@ github_org_stats_user() {
   fi
 
   local FILENAME="${1:-}"
-  shift
+  shift || true
   local GITHUB_USER="${1:-}"
-  shift
+  shift || true
 
   local GITHUB_USER_STATS
   GITHUB_USER_STATS="$(jq -c -r --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.ratio)' "${FILENAME}")"
@@ -295,13 +295,13 @@ github_compare_version() {
   fi
 
   local GITHUB_REPO="${1}"
-  shift
+  shift || true
   local LATEST_VERSION="${1}"
-  shift
+  shift || true
   local CURRENT_VERSION="${1:-}"
-  shift
+  shift || true
   local RELEASE_API_FILE="${1:-}"
-  shift
+  shift || true
 
   if [[ -z ${CURRENT_VERSION} ]]; then
     printf "%s" "${LATEST_VERSION}"
@@ -333,9 +333,9 @@ github_last_release() {
   fi
 
   local GITHUB_REPOSITORY=${1}
-  shift
+  shift || true
   local PREVIOUS_VERSION=${1:-}
-  shift
+  shift || true
 
   http_init_client
   if [[ -n ${GITHUB_TOKEN:-} ]]; then

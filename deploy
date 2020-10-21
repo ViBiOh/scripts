@@ -15,9 +15,9 @@ main() {
   fi
 
   local APP_NAME="${1}"
-  shift
+  shift || true
   local COMPOSE_FILE="${1}"
-  shift
+  shift || true
 
   var_read DEPLOY_URL
   var_read DEPLOY_CREDENTIALS

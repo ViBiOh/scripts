@@ -2,11 +2,11 @@
 
 var_read() {
   local VAR_NAME="${1}"
-  shift
+  shift || true
   local VAR_DEFAULT="${1:-}"
-  shift
+  shift || true
   local VAR_SECRET="${1:-}"
-  shift
+  shift || true
 
   local SECRET_ARG=""
   if [[ ${VAR_SECRET:-} == "secret" ]]; then

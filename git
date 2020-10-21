@@ -166,9 +166,9 @@ git_changelog() {
   fi
 
   local GIT_TO="${1:-HEAD}"
-  shift
+  shift || true
   local GIT_FROM="${1:-$(git_last_tag)}"
-  shift
+  shift || true
 
   local FEATURES=()
   local FIXES=()
@@ -275,9 +275,9 @@ head_sync() {
   fi
 
   local REMOTE_SERVER="${1}"
-  shift
+  shift || true
   local REMOTE_PATH="${1}"
-  shift
+  shift || true
 
   local branch
   branch="$(git symbolic-ref -q HEAD | sed -e 's|^refs/heads/||')"
@@ -294,11 +294,11 @@ git_sync() {
   fi
 
   local REMOTE_SERVER="${1}"
-  shift
+  shift || true
   local REMOTE_PATH="${1}"
-  shift
+  shift || true
   local DRY="${1:-false}"
-  shift
+  shift || true
 
   git_root
   isGit=$?
