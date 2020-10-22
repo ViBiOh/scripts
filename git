@@ -165,7 +165,7 @@ git_changelog() {
     return 2
   fi
 
-  local GIT_TO="${1:-HEAD}"
+  local GIT_TO="${1:--headerEAD}"
   shift || true
   local GIT_FROM="${1:-$(git_last_tag)}"
   shift || true

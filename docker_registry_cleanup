@@ -21,19 +21,19 @@ main() {
   LOGIN_PAYLOAD="$(jq -c -n --arg username "${DOCKER_USER}" --arg password "${DOCKER_PASSWORD}" '{username: $username, password: $password}')"
   unset DOCKER_PASSWORD
 
-  http_request -X "POST" -H "Content-Type: application/json" "${DOCKER_REGISTRY}/users/login/" --data "${LOGIN_PAYLOAD}"
+  http_request --request "POST" --header "Content-Type: application/json" "${DOCKER_REGISTRY}/users/login/" --data "${LOGIN_PAYLOAD}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to login to registry ${DOCKER_REGISTRY}"
     return 1
   fi
 
-  HTTP_CLIENT_ARGS+=("-H" "Authorization: JWT $(jq -r '.token' "${HTTP_OUTPUT}")")
+  HTTP_CLIENT_ARGS+=("--header" "Authorization: JWT $(jq -r '.token' "${HTTP_OUTPUT}")")
   rm "${HTTP_OUTPUT}"
 
   # Listing repositories
   var_info "Listing repositories for ${DOCKER_OWNER}..."
 
-  http_request -X GET "${DOCKER_REGISTRY}/users/${DOCKER_OWNER}/repositories/?page_size=100"
+  http_request --request GET "${DOCKER_REGISTRY}/users/${DOCKER_OWNER}/repositories/?page_size=100"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to list images for ${DOCKER_OWNER}"
     return 1
@@ -46,7 +46,7 @@ main() {
   for repository in "${REPOSITORIES[@]}"; do
     var_info "Listing tags for ${DOCKER_OWNER}/${repository}..."
 
-    http_request -X GET "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/?page_size=100"
+    http_request --request GET "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/?page_size=100"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list tags for ${DOCKER_OWNER}/${repository}"
       continue
@@ -58,7 +58,7 @@ main() {
 
     for tag in "${TAGS[@]}"; do
       if [[ ${tag} =~ ^[0-9A-Fa-f]{6,} ]]; then
-        http_request -X DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
+        http_request --request DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
         if [[ ${HTTP_STATUS} != "204" ]]; then
           http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
           continue

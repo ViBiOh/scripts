@@ -14,7 +14,7 @@ meta_download_script() {
   printf 1>&2 "Downloading script %s...\n" "${DEPENDENCIE_FILENAME}"
 
   mkdir -p "$(dirname "${DEPENDENCIE_FILENAME}")"
-  curl -q -sSL --max-time 30 -o "${DEPENDENCIE_FILENAME}" -- "${REMOTE_DEPENDENCIES_URL}/${DEPENDENCIE_FILENAME}"
+  curl --disable --silent --show-error --location --max-time 30 -o "${DEPENDENCIE_FILENAME}" -- "${REMOTE_DEPENDENCIES_URL}/${DEPENDENCIE_FILENAME}"
   chmod +x "${DEPENDENCIE_FILENAME}"
 }
 

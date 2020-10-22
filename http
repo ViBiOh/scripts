@@ -13,7 +13,7 @@ http_handle_error() {
 http_init_client() {
   export HTTP_OUTPUT="http_output.txt"
 
-  HTTP_CLIENT_ARGS=("curl" "-q" "-sSL" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
+  HTTP_CLIENT_ARGS=("curl" "--disable" "--silent" "--show-error" "--location" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
   if [[ ${#} -gt 0 ]]; then
     HTTP_CLIENT_ARGS+=("${@}")
   fi

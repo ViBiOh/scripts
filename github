@@ -9,10 +9,10 @@ github_rate_limit_wait() {
   local WANTED_CALLS="${1:-10}"
   shift || true
 
-  http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
   while true; do
-    http_request -H "Accept: application/vnd.github.v3+json" "https://api.github.com/rate_limit"
+    http_request --header "Accept: application/vnd.github.v3+json" "https://api.github.com/rate_limit"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to get rate limit"
       return
@@ -43,7 +43,7 @@ github_repo_pr_stats() {
 
   var_read GITHUB_TOKEN "" "secret"
 
-  http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
   local pr_page=0
   local pr_page_size=100
@@ -117,7 +117,7 @@ github_repo_stats() {
 
   var_read GITHUB_TOKEN "" "secret"
 
-  http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
   local retry="true"
 
@@ -173,7 +173,7 @@ github_org_stats() {
 
   var_read GITHUB_TOKEN "" "secret"
 
-  http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
   local repo_page=0
   local repo_page_size=100
@@ -247,7 +247,7 @@ github_clone_user() {
 
   var_read GITHUB_TOKEN "" "secret"
 
-  http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
   local page=0
   local page_size=100
@@ -256,7 +256,7 @@ github_clone_user() {
   while [[ count -eq ${page_size} ]]; do
     page=$((page + 1))
 
-    http_request -H "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=${page_size}&page=${page}"
+    http_request --header "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=${page_size}&page=${page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list user repositories on page ${page}"
       break
@@ -339,7 +339,7 @@ github_last_release() {
 
   http_init_client
   if [[ -n ${GITHUB_TOKEN:-} ]]; then
-    HTTP_CLIENT_ARGS+=("-H" "Authorization: token ${GITHUB_TOKEN}")
+    HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
   fi
 
   http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest"
@@ -363,8 +363,8 @@ github_configure() {
 
   local GITHUB_REPOSITORY=${1:-}
 
-  http_init_client -H "Authorization: token ${GITHUB_TOKEN}"
-  http_request -H "Content-Type: application/json" -X "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" -d '{
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+  http_request --header "Content-Type: application/json" --request "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" --data '{
     "default_branch": "master",
     "allow_merge_commit": false,
     "allow_squash_merge": false,
@@ -378,19 +378,19 @@ github_configure() {
     return 1
   fi
 
-  http_request -H "Accept: application/vnd.github.dorian-preview+json" -X "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/vulnerability-alerts"
+  http_request --header "Accept: application/vnd.github.dorian-preview+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/vulnerability-alerts"
   if [[ ${HTTP_STATUS} != "204" ]]; then
     http_handle_error "Unable to enable vulnerability alerts for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  http_request -H "Accept: application/vnd.github.london-preview+json" -X "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/automated-security-fixes"
+  http_request --header "Accept: application/vnd.github.london-preview+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/automated-security-fixes"
   if [[ ${HTTP_STATUS} != "204" ]]; then
     http_handle_error "Unable to enable automated security fixes for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  http_request -H "Accept: application/vnd.github.luke-cage-preview+json" -X "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection" -d '{
+  http_request --header "Accept: application/vnd.github.luke-cage-preview+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection" --data '{
     "allow_force_pushes": false,
     "allow_deletions": false,
     "enforce_admins": false,
@@ -409,7 +409,7 @@ github_configure() {
     return 1
   fi
 
-  http_request -H "Accept: application/vnd.github.zzzax-preview+json" -X "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection/required_signatures"
+  http_request --header "Accept: application/vnd.github.zzzax-preview+json" --request "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection/required_signatures"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to enable required signed commits for ${GITHUB_REPOSITORY}"
     return 1
