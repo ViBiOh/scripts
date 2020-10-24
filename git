@@ -280,8 +280,8 @@ head_sync() {
   shift
 
   local branch
-  branch="$(git symbolic-ref -q HEAD | sed -e 's|^refs/heads/||')"
-  ssh -A "${REMOTE_SERVER}" "cd '${REMOTE_PATH}' && git reset HEAD . && git clean -f && git status -u -s | awk '{print \$2}' | xargs -r rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
+  branch="$(git symbolic-ref --quiet HEAD | sed -e 's|^refs/heads/||')"
+  ssh -A "${REMOTE_SERVER}" "cd '${REMOTE_PATH}' && git reset HEAD . && git clean --force && git status --untracked-files --short | awk '{print \$2}' | xargs -r rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
 }
 
 git_sync() {
@@ -356,7 +356,7 @@ git_sync() {
 
   if ! ${DRY}; then
     var_warning "Cleaning remote"
-    ssh "${REMOTE_SERVER}" "cd ${REMOTE_PATH_PREFIX} && git clean -f && git checkout -- ."
+    ssh "${REMOTE_SERVER}" "cd ${REMOTE_PATH_PREFIX} && git clean --force && git checkout -- ."
   fi
 
   if [[ ${#toDelete[@]} -ne 0 ]]; then
@@ -382,7 +382,7 @@ watch_sync() {
 
   git_sync "${@}"
 
-  fswatch -0 -o --exclude=.git/ . | while read -r -d ""; do
+  fswatch --print0 --one-per-batch --exclude=.git/ . | while read -r -d ""; do
     git_sync "${@}"
   done
 }

@@ -3,11 +3,11 @@
 golang_go() {
   if [[ ${BUILD_WITH_DOCKER:-} == "true" ]]; then
     docker run --rm \
-      -w /go/src/app \
-      -v "$(pwd):/go/src/app" \
-      -e GOOS="${GOOS:-linux}" \
-      -e GOARCH="${GOARCH:-amd64}" \
-      -e CGO_ENABLED="${CGO_ENABLED:-1}" \
+      --workdir /go/src/app \
+      --volume "$(pwd):/go/src/app" \
+      --env GOOS="${GOOS:-linux}" \
+      --env GOARCH="${GOARCH:-amd64}" \
+      --env CGO_ENABLED="${CGO_ENABLED:-1}" \
       golang:1.15 go "${@:-}"
   else
     go "${@:-}"

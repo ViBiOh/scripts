@@ -23,7 +23,7 @@ main() {
   var_read DEPLOY_CREDENTIALS
 
   http_init_client
-  http_request --max-time 90 --request POST -u "${DEPLOY_CREDENTIALS}" "${DEPLOY_URL}/${APP_NAME}/" --data-binary "${COMPOSE_FILE}"
+  http_request --max-time 90 --request POST --user "${DEPLOY_CREDENTIALS}" "${DEPLOY_URL}/${APP_NAME}/" --data-binary "${COMPOSE_FILE}"
 
   cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
   if [[ ${HTTP_STATUS} != "200" ]]; then

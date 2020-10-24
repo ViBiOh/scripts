@@ -79,7 +79,7 @@ docker_build() {
     local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}"
 
     var_info "Building and pushing image for ${PLATFORM}"
-    docker build -f "${DOCKERFILE}" -t "${BUILT_IMAGE}" --build-arg "VERSION=${IMAGE_VERSION}" --platform "${PLATFORM}" "."
+    docker build --file "${DOCKERFILE}" --tag "${BUILT_IMAGE}" --build-arg "VERSION=${IMAGE_VERSION}" --platform "${PLATFORM}" "."
     docker push "${BUILT_IMAGE}"
 
     DOCKER_MANIFEST_ARGS+=("${BUILT_IMAGE}")
