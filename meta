@@ -4,18 +4,18 @@ META_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 meta_download_script() {
   if [[ ${#} -ne 1 ]]; then
-    printf "Usage: meta_download_script DEPENDENCIE_FILENAME\n"
+    printf "Usage: meta_download_script DEPENDENCY_FILENAME\n"
     return 1
   fi
 
-  local DEPENDENCIE_FILENAME="${1}"
+  local DEPENDENCY_FILENAME="${1}"
   shift
 
-  printf 1>&2 "Downloading script %s...\n" "${DEPENDENCIE_FILENAME}"
+  printf 1>&2 "Downloading script %s...\n" "${DEPENDENCY_FILENAME}"
 
-  mkdir -p "$(dirname "${DEPENDENCIE_FILENAME}")"
-  curl --disable --silent --show-error --location --max-time 30 -o "${DEPENDENCIE_FILENAME}" -- "${REMOTE_DEPENDENCIES_URL}/${DEPENDENCIE_FILENAME}"
-  chmod +x "${DEPENDENCIE_FILENAME}"
+  mkdir -p "$(dirname "${DEPENDENCY_FILENAME}")"
+  curl --disable --silent --show-error --location --max-time 30 -o "${DEPENDENCY_FILENAME}" -- "${REMOTE_DEPENDENCIES_URL}/${DEPENDENCY_FILENAME}"
+  chmod +x "${DEPENDENCY_FILENAME}"
 }
 
 meta_init() {
