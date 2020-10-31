@@ -49,7 +49,7 @@ golang_build() {
           export GOARCH="${context[1]}"
           export CGO_ENABLED="0"
           var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
-          golang_go build -tags=timetzdata -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
+          golang_go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
         )
       done
     done
