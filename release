@@ -56,6 +56,10 @@ golang_build() {
   )
 }
 
+docker_dependencies() {
+  docker run -v "$(pwd):/tmp/" -it --rm "alpine:3.8" /bin/sh -c 'apk --update add tzdata ca-certificates zip && cd /usr/share/zoneinfo/ && zip -q -r -0 /tmp/zoneinfo.zip . && cp /etc/ssl/certs/ca-certificates.crt /tmp/ca-certificates.crt'
+}
+
 docker_build() {
   if ! command -v docker >/dev/null 2>&1; then
     var_error "docker not found"
@@ -205,6 +209,7 @@ main() {
       ;;
 
     "docker")
+      docker_dependencies
       docker_build
       ;;
 
