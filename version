@@ -39,7 +39,7 @@ version_semver() {
   source "${VERSION_SCRIPT_DIR}/meta" && meta_init "var" "git"
   var_color
 
-  if [[ $(git_is_inside) != "true" ]]; then
+  if ! git_is_inside; then
     var_warning "not inside a git tree"
     return 1
   fi

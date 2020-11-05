@@ -21,16 +21,16 @@ main() {
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
 
-  if [[ $(git_is_commit_wip "${FIRST_LINE}") == "true" ]]; then
+  if git_is_commit_wip "${FIRST_LINE}"; then
     exit 0
   fi
 
-  if [[ $(git_is_conventional_commit "${FIRST_LINE}") != "true" ]]; then
+  if ! git_is_conventional_commit "${FIRST_LINE}"; then
     git_conventionnal_commit_guidelines
     exit 1
   fi
 
-  if [[ $(git_is_valid_description "${FIRST_LINE}") != "true" ]]; then
+  if ! git_is_valid_description "${FIRST_LINE}"; then
     git_valid_description_guideline
     exit 1
   fi

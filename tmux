@@ -4,16 +4,17 @@ TMUX_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 tmux_is_inside() {
   if [[ -z ${TMUX:-} ]]; then
-    printf "false"
+    return 1
   fi
-  printf "true"
+
+  return 0
 }
 
 tmux_split_cmd() (
   source "${TMUX_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  if [[ $(tmux_is_inside) == "false" ]]; then
+  if ! tmux_is_inside; then
     var_warning "not inside a tmux"
     return 1
   fi

@@ -33,7 +33,7 @@ main() {
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
 
-  if [[ $(git_is_commit_wip "${FIRST_LINE}") == "true" ]]; then
+  if git_is_commit_wip "${FIRST_LINE}"; then
     exit 0
   fi
 
@@ -41,7 +41,7 @@ main() {
     local PREFIX="${BASH_REMATCH[2]}"
 
     if [[ ! ${FIRST_LINE} =~ ${PREFIX} ]]; then
-      if [[ $(git_is_conventional_commit "${FIRST_LINE}") == "true" ]]; then
+      if git_is_conventional_commit "${FIRST_LINE}"; then
         perl -pi'' -e "s|^(revert:\ )?($(printf "%s\|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"))(\(.+\))?(\!?):|\1\2\3\4: ${PREFIX}|" "${1}"
       else
         sed_inplace -e "1s|^|${PREFIX} |" "${1}"

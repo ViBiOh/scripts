@@ -9,7 +9,7 @@ install() {
   (
     cd "${GIT_HOOKS_SCRIPT_DIR}" || return 1
 
-    if [[ $(git_is_inside) != "true" ]]; then
+    if ! git_is_inside; then
       var_warning "not inside a git tree"
       return 1
     fi
