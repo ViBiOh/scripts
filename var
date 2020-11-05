@@ -42,11 +42,11 @@ var_confirm() {
 
   case "${input}" in
   [yY][eE][sS] | [yY])
-    printf "true"
+    return 0
     ;;
 
   *)
-    printf "false"
+    return 1
     ;;
   esac
 }

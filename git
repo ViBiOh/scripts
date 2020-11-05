@@ -20,11 +20,15 @@ git_conventionnal_commits() {
 }
 
 git_is_inside() {
-  git rev-parse --is-inside-work-tree 2>&1
+  if [[ $(git rev-parse --is-inside-work-tree 2>&1) == "true" ]]; then
+    return 0
+  fi
+
+  return 1
 }
 
 git_root() {
-  if [[ $(git_is_inside) != "true" ]]; then
+  if ! git_is_inside; then
     pwd
     return
   fi
@@ -36,7 +40,7 @@ git_browse() {
   while IFS= read -r -d '' dir; do
     (
       cd "${dir}" || return
-      if [[ $(git_is_inside) != "true" ]] || [[ $(pwd) != $(git_root) ]]; then
+      if ! git_is_inside || [[ $(pwd) != $(git_root) ]]; then
         return
       fi
 
@@ -51,7 +55,7 @@ git_pull_all() {
 }
 
 git_remote_repository() {
-  if [[ $(git_is_inside) != "true" ]]; then
+  if ! git_is_inside; then
     return
   fi
 
@@ -65,16 +69,15 @@ git_remote_repository() {
 
 git_is_merge_commit() {
   if [[ ${1} =~ Merge\ (pull\ request|branch) ]]; then
-    printf "true"
-  else
-    printf "false"
+    return 0
   fi
+
+  return 1
 }
 
 git_is_commit_wip() {
   if [[ ${1} =~ ^fixup\! ]]; then
-    printf "true"
-    return
+    return 0
   fi
 
   local WIP_REGEX='\bwip\b'
@@ -83,10 +86,10 @@ git_is_commit_wip() {
   fi
 
   if [[ ${1} =~ ${WIP_REGEX} ]]; then
-    printf "true"
-  else
-    printf "false"
+    return 0
   fi
+
+  return 1
 }
 
 git_is_conventional_commit() {
@@ -98,20 +101,20 @@ git_is_conventional_commit() {
 
   shopt -s nocasematch
   if [[ ${1} =~ ^(revert:\ )?(${SCOPES})(\(.+\))?\!?:\ [a-zA-Z0-9\[\(]+ ]]; then
-    printf "true"
-  else
-    printf "false"
+    return 0
   fi
+
+  return 1
 }
 
 git_is_valid_description() {
   export COMMIT_MAX_LENGTH="70"
 
   if [[ ${1} =~ ^.{1,${COMMIT_MAX_LENGTH}}$ ]]; then
-    printf "true"
-  else
-    printf "false"
+    return 0
   fi
+
+  return 1
 }
 
 git_conventionnal_commit_guidelines() {
@@ -141,7 +144,7 @@ git_valid_description_guideline() {
 }
 
 git_last_tag() {
-  if [[ $(git_is_inside) != "true" ]]; then
+  if ! git_is_inside; then
     var_warning "not inside a git tree"
     return 1
   fi
@@ -160,7 +163,7 @@ git_changelog() {
     return 1
   fi
 
-  if [[ $(git_is_inside) != "true" ]]; then
+  if ! git_is_inside; then
     var_warning "not inside a git tree"
     return 2
   fi
