@@ -34,12 +34,12 @@ github_repo_pr_stats() {
   var_color
 
   if [[ ${#} -ne 1 ]]; then
-    var_error "Usage: github_repo_pr_stats owner/repo"
+    var_error "Usage: github_repo_pr_stats GITHUB_REPOSITORY"
     return 1
   fi
 
-  local GITHUB_REPOSITORY="${1:-}"
-  shift || true
+  local GITHUB_REPOSITORY="${1}"
+  shift
 
   var_read GITHUB_TOKEN "" "secret"
 
@@ -108,12 +108,12 @@ github_repo_stats() {
   var_color
 
   if [[ ${#} -ne 1 ]]; then
-    var_error "Usage: github_repo_stats owner/repo"
+    var_error "Usage: github_repo_stats GITHUB_REPOSITORY"
     return 1
   fi
 
-  local GITHUB_REPOSITORY=${1:-}
-  shift || true
+  local GITHUB_REPOSITORY="${1}"
+  shift
 
   var_read GITHUB_TOKEN "" "secret"
 
@@ -162,13 +162,13 @@ github_org_stats() {
   var_color
 
   if [[ ${#} -lt 1 ]]; then
-    var_error "Usage: github_org_stats organization_name [repository_ignore_regex]"
+    var_error "Usage: github_org_stats GITHUB_ORGANIZATION [REPOSITORY_IGNORE_REGEX]"
     return 1
   fi
 
   local GITHUB_ORGANIZATION="${1:-}"
-  shift || true
-  local REPOSITORY_IGNORE="${1:-\$^}"
+  shift
+  local REPOSITORY_IGNORE_REGEX="${1:-\$^}"
   shift || true
 
   var_read GITHUB_TOKEN "" "secret"
@@ -199,7 +199,7 @@ github_org_stats() {
     fi
 
     local REPOSITORIES
-    mapfile -t REPOSITORIES < <(jq -c -r --arg ignore "${REPOSITORY_IGNORE}" '.[] | select(.full_name | test($ignore) | not) | .full_name' "${HTTP_OUTPUT}")
+    mapfile -t REPOSITORIES < <(jq -c -r --arg ignore "${REPOSITORY_IGNORE_REGEX}" '.[] | select(.full_name | test($ignore) | not) | .full_name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for REPO in "${REPOSITORIES[@]}"; do
@@ -225,7 +225,7 @@ github_org_stats_user() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    var_error "Usage: github_org_stats_user github_org_stats.json user"
+    var_error "Usage: github_org_stats_user github_org_stats.json GITHUB_USER"
     return 1
   fi
 
@@ -241,9 +241,17 @@ github_org_stats_user() {
   printf "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits)), opened: (reduce .[].contribution as $contrib (0; . + $contrib.opened)), reviewed: (reduce .[].contribution as $contrib (0; . + $contrib.reviewed))} | {added: .added, deleted: .deleted, commits: .commits, opened: .opened, reviewed: .reviewed, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
 }
 
-github_clone_user() {
+github_batch_clone() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
+
+  if [[ ${#} -lt 1 ]]; then
+    var_error "Usage: github_batch_clone [GITHUB_ORGANIZATION]"
+    return 1
+  fi
+
+  local GITHUB_ORGANIZATION="${1}"
+  shift || true
 
   var_read GITHUB_TOKEN "" "secret"
 
@@ -253,10 +261,15 @@ github_clone_user() {
   local page_size=100
   local count="${page_size}"
 
+  local scope="user"
+  if [[ -n ${GITHUB_ORGANIZATION} ]]; then
+    scope="orgs/${GITHUB_ORGANIZATION}"
+  fi
+
   while [[ count -eq ${page_size} ]]; do
     page=$((page + 1))
 
-    http_request --header "Content-Type: application/json" "https://api.github.com/user/repos?type=owner&per_page=${page_size}&page=${page}"
+    http_request --header "Content-Type: application/json" "https://api.github.com/${scope}/repos?type=owner&per_page=${page_size}&page=${page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list user repositories on page ${page}"
       break
@@ -290,11 +303,11 @@ github_compare_version() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    var_error "Usage: github_compare_version owner/repo latest_version [current_version] [release_api_output_file]"
+    var_error "Usage: github_compare_version GITHUB_REPOSITORY LATEST_VERSION [CURRENT_VERSION] [RELEASE_API_FILE]"
     return 1
   fi
 
-  local GITHUB_REPO="${1}"
+  local GITHUB_REPOSITORY="${1}"
   shift
   local LATEST_VERSION="${1}"
   shift
@@ -310,7 +323,7 @@ github_compare_version() {
   fi
 
   if [[ ${CURRENT_VERSION} == "${LATEST_VERSION}" ]]; then
-    var_success "✔ ${GITHUB_REPO} is up to date ${LATEST_VERSION}"
+    var_success "✔ ${GITHUB_REPOSITORY} is up to date ${LATEST_VERSION}"
     rm "${RELEASE_API_FILE}"
     return
   fi
@@ -319,7 +332,7 @@ github_compare_version() {
   RELEASE_NOTES="$(jq -r .body "${RELEASE_API_FILE}")"
   rm "${RELEASE_API_FILE}"
 
-  printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${GITHUB_REPO}" "${BLUE}" "${RED}" "${CURRENT_VERSION}" "${BLUE}" "${YELLOW}" "${LATEST_VERSION}" "${GREEN}" "https://github.com/${GITHUB_REPO}/releases/tag/${LATEST_VERSION}" "${RESET}"
+  printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${GITHUB_REPOSITORY}" "${BLUE}" "${RED}" "${CURRENT_VERSION}" "${BLUE}" "${YELLOW}" "${LATEST_VERSION}" "${GREEN}" "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${LATEST_VERSION}" "${RESET}"
   printf "%s\n" "${RELEASE_NOTES}"
 }
 
@@ -328,13 +341,13 @@ github_last_release() {
   var_color
 
   if [[ ${#} -lt 1 ]]; then
-    var_error "Usage: github_last_release owner/repo [previous_version]"
+    var_error "Usage: github_last_release GITHUB_REPOSITORY [PREVIOUS_VERSION]"
     return 1
   fi
 
-  local GITHUB_REPOSITORY=${1}
+  local GITHUB_REPOSITORY="${1}"
   shift
-  local PREVIOUS_VERSION=${1:-}
+  local PREVIOUS_VERSION="${1:-}"
   shift || true
 
   http_init_client
@@ -357,11 +370,11 @@ github_configure() {
   var_color
 
   if [[ ${#} -ne 1 ]]; then
-    var_error "Usage: github_configure owner/repo"
+    var_error "Usage: github_configure GITHUB_REPOSITORY"
     return 1
   fi
 
-  local GITHUB_REPOSITORY=${1:-}
+  local GITHUB_REPOSITORY="${1:-}"
 
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
   http_request --header "Content-Type: application/json" --request "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" --data '{
