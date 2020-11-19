@@ -50,8 +50,12 @@ git_browse() {
   done < <(find . -type d -maxdepth 1 -print0)
 }
 
+git_default_branch() {
+  git remote show origin | grep 'HEAD branch:' | awk '{print $3}'
+}
+
 git_pull_all() {
-  git_browse 'git checkout master && git pull && git sweep'
+  git_browse 'git checkout $(git_default_branch) && git pull && git sweep'
 }
 
 git_remote_repository() {
