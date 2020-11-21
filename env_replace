@@ -47,4 +47,4 @@ main() {
   "${SED_COMMAND[@]}"
 }
 
-main "${@:-}"
+main "${@}"

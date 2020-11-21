@@ -8,8 +8,8 @@ golang_go() {
       --env GOOS="${GOOS:-linux}" \
       --env GOARCH="${GOARCH:-amd64}" \
       --env CGO_ENABLED="${CGO_ENABLED:-1}" \
-      golang:1.15 go "${@:-}"
+      golang:1.15 go "${@}"
   else
-    go "${@:-}"
+    go "${@}"
   fi
 }

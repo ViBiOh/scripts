@@ -74,4 +74,4 @@ main() {
   done
 }
 
-main "${@:-}"
+main "${@}"
