@@ -9,6 +9,26 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
+  local ROTATE_DRY_RUN=0
+
+  while getopts ":d" option; do
+    case "${option}" in
+    d)
+      ROTATE_DRY_RUN=1
+      ;;
+    :)
+      var_error "option -${OPTARG} requires a value"
+      exit 1
+      ;;
+    \?)
+      var_error "option -${OPTARG} is invalid"
+      exit 2
+      ;;
+    esac
+  done
+
+  shift $((OPTIND - 1))
+
   local CURRENT_NAME=""
   local CURRENT_COUNT=0
   local CURRENT_REGEX='([a-zA-Z0-9]*)_backup_.*'
@@ -23,8 +43,12 @@ main() {
       fi
 
       if [[ ${CURRENT_COUNT} -gt 5 ]]; then
-        rm "${file}"
-        var_success "File ${file} deleted!"
+        if [[ ${ROTATE_DRY_RUN} -eq 1 ]]; then
+          var_warning "File ${file} will be deleted!"
+        else
+          rm "${file}"
+          var_success "File ${file} deleted!"
+        fi
       fi
     fi
   done < <(find . -type f -name '*' -print0 | sort --zero-terminated --reverse)
