@@ -29,6 +29,9 @@ main() {
 
   shift $((OPTIND - 1))
 
+  local ROTATE_DIR="${1:-.}"
+  shift || true
+
   local CURRENT_NAME=""
   local CURRENT_COUNT=0
   local CURRENT_REGEX='([a-zA-Z0-9]*)_backup_.*'
@@ -51,7 +54,7 @@ main() {
         fi
       fi
     fi
-  done < <(find . -type f -name '*' -print0 | sort --zero-terminated --reverse)
+  done < <(find "${ROTATE_DIR}" type f -name '*' -print0 | sort --zero-terminated --reverse)
 }
 
 main "${@}"
