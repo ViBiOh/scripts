@@ -54,7 +54,7 @@ main() {
         fi
       fi
     fi
-  done < <(find "${ROTATE_DIR}" type f -name '*' -print0 | sort --zero-terminated --reverse)
+  done < <(find "${ROTATE_DIR}" -type f -name '*' -print0 | sort --zero-terminated --reverse)
 }
 
 main "${@}"
