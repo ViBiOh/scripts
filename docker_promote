@@ -13,7 +13,7 @@ main() {
   local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
 
   if [[ ${#} -lt 2 ]]; then
-    ver_error "Usage: ${0} DOCKER_IMAGE IMAGE_VERSION [VERSION_TARGET]"
+    var_error "Usage: ${0} DOCKER_IMAGE IMAGE_VERSION [VERSION_TARGET]"
     return 1
   fi
 
