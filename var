@@ -60,21 +60,24 @@ var_color() {
 }
 
 var_log() {
-  printf "%b%b%b\n" "${1}" "${2:-}" "${RESET}" 1>&2
+  local COLOR="${1}"
+  shift
+
+  printf "%b%b%b\n" "${COLOR}" "${@}" "${RESET}" 1>&2
 }
 
 var_error() {
-  var_log "${RED}" "${1:-}"
+  var_log "${RED}" "${@}"
 }
 
 var_warning() {
-  var_log "${YELLOW}" "${1:-}"
+  var_log "${YELLOW}" "${@}"
 }
 
 var_success() {
-  var_log "${GREEN}" "${1:-}"
+  var_log "${GREEN}" "${@}"
 }
 
 var_info() {
-  var_log "${BLUE}" "${1:-}"
+  var_log "${BLUE}" "${@}"
 }
