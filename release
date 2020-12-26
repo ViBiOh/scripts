@@ -142,6 +142,7 @@ release() {
   var_info "Creating release ${GIT_TAG} for ${GITHUB_REPOSITORY}..."
 
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+  HTTP_CLIENT_ARGS+=("--max-time" "120")
 
   local PAYLOAD
   PAYLOAD="$(jq -c -n \
