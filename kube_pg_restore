@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+main() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  var_color
+
+  var_read BACKUP_FILE
+  var_read POSTGRES_DB
+
+  local POD
+  POD="$(kubectl get pods -o name | fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}-db")"
+
+  if [[ -n ${POD} ]]; then
+    kubectl exec -it "${POD}" -- pg_restore --format=c --data-only --user "${POSTGRES_DB}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
+  fi
+}
+
+main "${@}"
