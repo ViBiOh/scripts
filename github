@@ -422,11 +422,5 @@ github_configure() {
     return 1
   fi
 
-  http_request --header "Accept: application/vnd.github.zzzax-preview+json" --request "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection/required_signatures"
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    http_handle_error "Unable to enable required signed commits for ${GITHUB_REPOSITORY}"
-    return 1
-  fi
-
   rm "${HTTP_OUTPUT}"
 }
