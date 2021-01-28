@@ -406,7 +406,7 @@ github_configure() {
   http_request --header "Accept: application/vnd.github.luke-cage-preview+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/master/protection" --data '{
     "allow_force_pushes": false,
     "allow_deletions": false,
-    "enforce_admins": true,
+    "enforce_admins": false,
     "required_linear_history": true,
     "required_pull_request_reviews": null,
     "required_status_checks": {
