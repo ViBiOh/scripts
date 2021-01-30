@@ -2,28 +2,19 @@
 
 set -o nounset -o pipefail -o errexit
 
-main() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-  source "${SCRIPT_DIR}/meta" && meta_init "var" "http"
-  var_color
-
-  var_read DOCKER_REGISTRY "https://hub.docker.com/v2"
-  var_read DOCKER_OWNER
-  var_read DOCKER_USER
-  var_read DOCKER_PASSWORD "" "secret"
+list_repositories() {
+  local DOCKERHUB_URL="https://hub.docker.com/v2"
 
   http_init_client
   HTTP_CLIENT_ARGS+=("--max-time" "60")
 
   # Login to registry
   LOGIN_PAYLOAD="$(jq -c -n --arg username "${DOCKER_USER}" --arg password "${DOCKER_PASSWORD}" '{username: $username, password: $password}')"
-  unset DOCKER_PASSWORD
 
-  http_request --request "POST" --header "Content-Type: application/json" "${DOCKER_REGISTRY}/users/login/" --data "${LOGIN_PAYLOAD}"
+  http_request --request "POST" --header "Content-Type: application/json" "${DOCKERHUB_URL}/users/login/" --data "${LOGIN_PAYLOAD}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    http_handle_error "Unable to login to registry ${DOCKER_REGISTRY}"
+    http_handle_error "Unable to login to DockerHub ${DOCKERHUB_URL}"
+    unset DOCKER_PASSWORD
     return 1
   fi
 
@@ -33,43 +24,83 @@ main() {
   # Listing repositories
   var_info "Listing repositories for ${DOCKER_OWNER}..."
 
-  http_request --request GET "${DOCKER_REGISTRY}/users/${DOCKER_OWNER}/repositories/?page_size=100"
+  http_request --request GET "${DOCKERHUB_URL}/users/${DOCKER_OWNER}/repositories/?page_size=100"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to list images for ${DOCKER_OWNER}"
+    unset DOCKER_PASSWORD
     return 1
   fi
 
-  local REPOSITORIES
-  mapfile -t REPOSITORIES < <(jq -r '.[] | .name' "${HTTP_OUTPUT}")
+  jq -r '.[] | .name' "${HTTP_OUTPUT}"
   rm "${HTTP_OUTPUT}"
+}
+
+main() {
+  local SCRIPT_DIR
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  source "${SCRIPT_DIR}/meta" && meta_init "var" "http"
+  var_color
+
+  local AUTH_URL="https://auth.docker.io/token"
+  local REGISTRY_URL="https://index.docker.io/v2/"
+
+  var_read DOCKER_OWNER
+  var_read DOCKER_USER
+  var_read DOCKER_PASSWORD "" "secret"
+
+  local REPOSITORIES
+  mapfile -t REPOSITORIES < <(list_repositories)
 
   for repository in "${REPOSITORIES[@]}"; do
-    var_info "Listing tags for ${DOCKER_OWNER}/${repository}..."
+    local REPOSITORY_NAME="${DOCKER_OWNER}/${repository}"
+    var_info "Listing tags for ${REPOSITORY_NAME}..."
 
-    http_request --request GET "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/?page_size=100"
+    http_init_client
+    HTTP_CLIENT_ARGS+=("--max-time" "60")
+
+    # Get access token
+    http_request "${AUTH_URL}" \
+      --data "grant_type=password" \
+      --data "service=registry.docker.io" \
+      --data "client_id=docker-registry-cleanup" \
+      --data "scope=repository:${REPOSITORY_NAME}:pull,delete" \
+      --data "username=${DOCKER_USER}" \
+      --data "password=${DOCKER_PASSWORD}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      http_handle_error "Unable to list tags for ${DOCKER_OWNER}/${repository}"
+      http_handle_error "Unable to get access token"
+      unset DOCKER_PASSWORD
+      return 1
+    fi
+
+    HTTP_CLIENT_ARGS+=("--header" "Authorization: Bearer $(jq -r '.access_token' "${HTTP_OUTPUT}")")
+    rm "${HTTP_OUTPUT}"
+
+    http_request --request GET "${REGISTRY_URL}/${REPOSITORY_NAME}/tags/list"
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      http_handle_error "Unable to list tags for ${REPOSITORY_NAME}"
       continue
     fi
 
     local TAGS
-    mapfile -t TAGS < <(jq -r '.results[] | .name' "${HTTP_OUTPUT}")
+    mapfile -t TAGS < <(jq -r '.tags[]' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for tag in "${TAGS[@]}"; do
-      if [[ ${tag} =~ ^[0-9A-Fa-f]{6,} ]]; then
-        http_request --request DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
-        if [[ ${HTTP_STATUS} != "204" ]]; then
-          http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
+      if [[ ${tag} =~ ^[0-9A-Fa-f-]{6,} ]]; then
+        http_request --request DELETE "${REGISTRY_URL}/${REPOSITORY_NAME}/manifests/${tag}"
+        if [[ ${HTTP_STATUS} != "202" ]]; then
+          http_handle_error "Unable to delete tag ${REPOSITORY_NAME}:${tag}"
           continue
         fi
 
         rm "${HTTP_OUTPUT}"
-        var_success "${DOCKER_OWNER}/${repository}:${tag} deleted!"
+        var_success "${REPOSITORY_NAME}:${tag} deleted!"
       fi
     done
-
   done
+
+  unset DOCKER_PASSWORD
 }
 
 main
