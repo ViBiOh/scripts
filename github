@@ -245,12 +245,7 @@ github_batch_clone() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
-  if [[ ${#} -lt 1 ]]; then
-    var_error "Usage: github_batch_clone [GITHUB_ORGANIZATION]"
-    return 1
-  fi
-
-  local GITHUB_ORGANIZATION="${1}"
+  local GITHUB_ORGANIZATION="${1:-}"
   shift || true
 
   var_read GITHUB_TOKEN "" "secret"
