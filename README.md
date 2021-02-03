@@ -4,7 +4,7 @@ Common scripts used accross my repositories.
 
 ```bash
 #  Create `./scripts` dir, and download requirements for installing Git Hooks
-curl --disable --silent --show-error --location "https://raw.githubusercontent.com/ViBiOh/scripts/master/bootstrap" | bash -s "git_hooks"
+curl --disable --silent --show-error --location "https://raw.githubusercontent.com/ViBiOh/scripts/main/bootstrap" | bash -s "git_hooks"
 ```
 
 ## Usage

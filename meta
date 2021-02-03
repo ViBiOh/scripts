@@ -19,7 +19,7 @@ meta_download_script() {
 }
 
 meta_init() {
-  local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/master/"
+  local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/main/"
 
   cd "${META_SCRIPT_DIR}" || return 1
 

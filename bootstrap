@@ -3,7 +3,7 @@
 set -o nounset -o pipefail -o errexit
 
 main() {
-  local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/master/"
+  local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/main/"
   local SCRIPTS_PATH="./scripts"
 
   printf "Bootstrapping to %s\n" "${SCRIPTS_PATH}"
