@@ -9,7 +9,7 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var" "git"
   var_color
 
-  local BASE="${1:-master}"
+  local BASE="${1:-main}"
   shift || true
   local HEAD="${1:-$(git rev-parse --abbrev-ref HEAD)}"
   shift || true
