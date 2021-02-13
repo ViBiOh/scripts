@@ -70,7 +70,6 @@ main() {
 
     var_success "✔ Image promoted to latest"
     rm "${HTTP_OUTPUT}"
-    return
 
     # Tagging image with date
     local TAG_DATE
