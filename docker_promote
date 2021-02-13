@@ -73,7 +73,7 @@ main() {
 
     # Tagging image with date
     local TAG_DATE
-    TAG_DATE="t$(TZ="UTC" date '+%Y%m%d%H%M')"
+    TAG_DATE="$(TZ="UTC" date '+%Y%m%d%H%M')"
     http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${TAG_DATE}" \
       --header "Content-Type: ${manifest}" \
       --data "${MANIFEST_PAYLOAD}"
