@@ -71,6 +71,21 @@ main() {
     var_success "✔ Image promoted to latest"
     rm "${HTTP_OUTPUT}"
     return
+
+    # Tagging image with date
+    local TAG_DATE
+    TAG_DATE="t$(TZ="UTC" date '+%Y%M%d%H%m')"
+    http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${TAG_DATE}" \
+      --header "Content-Type: ${manifest}" \
+      --data "${MANIFEST_PAYLOAD}"
+    if [[ ${HTTP_STATUS} != "201" ]]; then
+      http_handle_error "Unable to tag date manifest for ${DOCKER_IMAGE}"
+      continue
+    fi
+
+    var_success "✔ Image tagged ${TAG_DATE}"
+    rm "${HTTP_OUTPUT}"
+    return
   done
 }
 
