@@ -67,6 +67,17 @@ main() {
         rm "${HTTP_OUTPUT}"
         var_success "${DOCKER_OWNER}/${repository}:${tag} deleted!"
       fi
+
+      if [[ ${tag} =~ ^t[0-9]{12} ]]; then
+        http_request --request DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
+        if [[ ${HTTP_STATUS} != "204" ]]; then
+          http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
+          continue
+        fi
+
+        rm "${HTTP_OUTPUT}"
+        var_success "${DOCKER_OWNER}/${repository}:${tag} deleted!"
+      fi
     done
 
   done
