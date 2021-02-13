@@ -56,19 +56,15 @@ main() {
     mapfile -t TAGS < <(jq -r '.results[] | .name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
-    for tag in "${TAGS[@]}"; do
-      if [[ ${tag} =~ ^[0-9A-Fa-f]{6,} ]]; then
-        http_request --request DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
-        if [[ ${HTTP_STATUS} != "204" ]]; then
-          http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
-          continue
-        fi
+    local TIMESTAMPS=()
 
-        rm "${HTTP_OUTPUT}"
-        var_success "${DOCKER_OWNER}/${repository}:${tag} deleted!"
+    for tag in "${TAGS[@]}"; do
+      if [[ ${tag} =~ ^[0-9]{12} ]]; then
+        TIMESTAMPS+=("${tag}")
+        continue
       fi
 
-      if [[ ${tag} =~ ^t[0-9]{12} ]]; then
+      if [[ ${tag} =~ ^[0-9A-Fa-f]{6,} ]]; then
         http_request --request DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
         if [[ ${HTTP_STATUS} != "204" ]]; then
           http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
@@ -80,6 +76,22 @@ main() {
       fi
     done
 
+    readarray -t SORTED_TIMESTAMP < <(printf '%s\0' "${TIMESTAMPS[@]}" | sort --zero-terminated | xargs -0 -n 1)
+    if [[ ${#SORTED_TIMESTAMP[@]} -eq 0 ]]; then
+      continue
+    fi
+
+    unset "SORTED_TIMESTAMP[-1]"
+    for tag in "${SORTED_TIMESTAMP[@]}"; do
+      http_request --request DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
+      if [[ ${HTTP_STATUS} != "204" ]]; then
+        http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
+        continue
+      fi
+
+      rm "${HTTP_OUTPUT}"
+      var_success "${DOCKER_OWNER}/${repository}:${tag} deleted!"
+    done
   done
 }
 
