@@ -51,7 +51,7 @@ git_browse() {
 }
 
 git_pull_all() {
-  git_browse $'git checkout $(git remote show origin | grep "HEAD branch:" | awk \'{print $3}\') && git pull && git sweep'
+  git_browse 'git default && git pull && git sweep'
 }
 
 git_remote_repository() {
