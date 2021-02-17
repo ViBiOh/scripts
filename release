@@ -35,7 +35,7 @@ golang_build() {
     local OUTPUT_BINARIES
     mapfile -t OUTPUT_BINARIES < <(golang_go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
 
-    local TARGETS=('darwin/amd64' 'linux/amd64' 'linux/arm' 'linux/arm64')
+    local TARGETS=('darwin/amd64' 'darwin/arm64' 'linux/amd64' 'linux/arm' 'linux/arm64')
 
     for main in "${OUTPUT_BINARIES[@]}"; do
       local NAME
