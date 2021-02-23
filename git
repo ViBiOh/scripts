@@ -192,6 +192,10 @@ git_changelog() {
     local BREAK=""
 
     for line in $(git show --no-patch --format='%h %B' "${hash}" | grep --invert-match '^\s*$'); do
+      if [[ ${line} =~ \[skip\ ci\] ]]; then
+        continue
+      fi
+
       if [[ -z ${VERSION_MESSAGE} ]] && [[ ${line} =~ ^([0-9a-f]{1,16})\ (revert )?(${SCOPES})(\(.+\))?(\!)?:\ (.*)$ ]]; then
         HASH="${BASH_REMATCH[1]}"
         local REVERT="${BASH_REMATCH[2]}"
