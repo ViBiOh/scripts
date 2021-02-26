@@ -10,8 +10,8 @@ install() {
     cd "${GIT_HOOKS_SCRIPT_DIR}" || return 1
 
     if ! git_is_inside; then
-      var_warning "not inside a git tree"
-      return 1
+      var_warning "unable to install git hooks: not inside a git tree"
+      return
     fi
 
     local HOOKS_SOURCE_DIR="${GIT_HOOKS_SCRIPT_DIR}/hooks"
