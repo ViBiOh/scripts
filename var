@@ -18,9 +18,18 @@ var_read() {
     SECRET_ARG="-s"
   fi
 
+  local DEFAULT_DISPLAY=""
+  if [[ -n ${VAR_DEFAULT} ]]; then
+    if [[ ${VAR_SECRET:-} == "secret" ]]; then
+      DEFAULT_DISPLAY=" [*****]"
+    else
+      DEFAULT_DISPLAY=" [${VAR_DEFAULT}]"
+    fi
+  fi
+
   if [[ -z ${!VAR_NAME:-} ]]; then
     if [[ -z ${SCRIPTS_NO_INTERACTIVE:-} ]]; then
-      read ${SECRET_ARG?} -r -p "${VAR_NAME}${VAR_DEFAULT:+ [${VAR_DEFAULT}]}=" READ_VALUE
+      read ${SECRET_ARG?} -r -p "${VAR_NAME}${DEFAULT_DISPLAY}=" READ_VALUE
     fi
 
     eval "${VAR_NAME}=${READ_VALUE:-${VAR_DEFAULT}}"
