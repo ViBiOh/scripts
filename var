@@ -32,7 +32,7 @@ var_read() {
       read ${SECRET_ARG?} -r -p "${VAR_NAME}${DEFAULT_DISPLAY}=" READ_VALUE
     fi
 
-    eval "${VAR_NAME}=${READ_VALUE:-${VAR_DEFAULT}}"
+    eval "${VAR_NAME}='${READ_VALUE:-${VAR_DEFAULT}}'"
 
     if [[ ${SECRET_ARG} == "-s" ]]; then
       printf "\n" 1>&2
