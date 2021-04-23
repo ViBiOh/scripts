@@ -15,7 +15,12 @@ main() {
   CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse -1 --query="${1:-}")"
 
   local BACKUP_FILE
-  BACKUP_FILE="$(fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}")"
+  BACKUP_FILE="$(
+    if command -v rg >/dev/null 2>&1; then
+      export FZF_DEFAULT_COMMAND='rg --files --sortr path 2> /dev/null'
+    fi
+    fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
+  )"
 
   local POSTGRES_POD
   POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse -1 --query "^pod/${POSTGRES_DB}-db")"
