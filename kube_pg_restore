@@ -23,7 +23,7 @@ main() {
   )"
 
   local POSTGRES_POD
-  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse -1 --query "^pod/${POSTGRES_DB}-db")"
+  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse -1 --query "^pod/${POSTGRES_DB}")"
 
   if [[ -n ${POSTGRES_POD} ]]; then
     kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --data-only --user "${POSTGRES_DB}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
