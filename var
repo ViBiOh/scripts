@@ -47,7 +47,7 @@ var_read() {
 var_confirm() {
   local VAR_CONFIRM_MESSAGE="${1:-Are you sure}"
 
-  read -r -p "${VAR_CONFIRM_MESSAGE}? [Y/n] " input
+  read -r -p "${VAR_CONFIRM_MESSAGE}? [y/N] " input
 
   case "${input}" in
   [yY][eE][sS] | [yY])

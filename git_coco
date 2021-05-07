@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+script_dir() {
+  if [[ -L ${BASH_SOURCE[0]} ]]; then
+    dirname "$(readlink "${BASH_SOURCE[0]}")"
+  else
+    (
+      cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+    )
+  fi
+}
+
+main() {
+  source "$(script_dir)/meta" && meta_init "var" "git"
+  var_color
+
+  if ! git_is_inside; then
+    var_error "not inside a git tree"
+    return 1
+  fi
+
+  git_conventionnal_commits
+
+  local SCOPE
+  SCOPE="$(for i in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do printf "%b%s%b %s\n" "${GREEN}" "${i}" "${RESET}" "${CONVENTIONAL_COMMIT_SCOPES[${i}]}"; done | fzf --height=20 --ansi --reverse | awk '{print $1}')"
+
+  if [[ -z ${SCOPE} ]]; then
+    return 1
+  fi
+
+  local COMPONENT=""
+  var_read COMPONENT
+
+  if [[ -n ${COMPONENT} ]]; then
+    COMPONENT="$(printf "(%s)" "${COMPONENT}")"
+  fi
+
+  local MESSAGE=""
+  var_read MESSAGE
+
+  local BREAKING=""
+  if var_confirm "Contains breaking changes"; then
+    BREAKING="!"
+  fi
+
+  git commit --signoff --message "$(printf "%s%s%s: %s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${MESSAGE}")" "${*}"
+}
+
+main "${@}"
