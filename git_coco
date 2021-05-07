@@ -30,6 +30,8 @@ main() {
     return 1
   fi
 
+  printf "SCOPE=%s\n" "${SCOPE}"
+
   local COMPONENT=""
   var_read COMPONENT
 
@@ -45,7 +47,7 @@ main() {
     BREAKING="!"
   fi
 
-  git commit --signoff --message "$(printf "%s%s%s: %s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${MESSAGE}")" ${*}
+  var_print_and_run "git commit --signoff --message '$(printf "%s%s%s: %s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${MESSAGE}")' ${*}"
 }
 
 main "${@}"
