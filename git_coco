@@ -45,7 +45,7 @@ main() {
     BREAKING="!"
   fi
 
-  git commit --signoff --message "$(printf "%s%s%s: %s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${MESSAGE}")" "${*}"
+  git commit --signoff --message "$(printf "%s%s%s: %s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${MESSAGE}")" ${*}
 }
 
 main "${@}"
