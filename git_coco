@@ -12,6 +12,22 @@ script_dir() {
   fi
 }
 
+guess_component() {
+  local COMPONENTS=()
+  for file in $(git diff --name-only --cached); do
+    local FILE_DIR
+    FILE_DIR="$(dirname "${file}")"
+
+    if [[ ${FILE_DIR} == "." ]]; then
+      COMPONENTS+=("${file}")
+    else
+      COMPONENTS+=("$(basename "${FILE_DIR}")")
+    fi
+  done
+
+  printf "%s\n" "${COMPONENTS[@]}" | sort | uniq -c | sort --reverse | head -1 | awk '{print $2}'
+}
+
 main() {
   source "$(script_dir)/meta" && meta_init "var" "git"
   var_color
@@ -33,7 +49,7 @@ main() {
   printf "SCOPE=%s\n" "${SCOPE}"
 
   local COMPONENT=""
-  var_read COMPONENT
+  var_read COMPONENT "$(guess_component)"
 
   if [[ -n ${COMPONENT} ]]; then
     COMPONENT="$(printf "(%s)" "${COMPONENT}")"
