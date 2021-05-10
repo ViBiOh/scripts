@@ -15,15 +15,22 @@ script_dir() {
 guess_component() {
   local COMPONENTS=()
 
+  add_part() {
+    local WORDS=()
+    read -r -a WORDS <<<"$(printf "%s" "${1}" | sed 's|_| |g;s|-| |g;s|\.| |g')"
+
+    COMPONENTS=("${COMPONENTS[@]}" "${WORDS[@]}")
+  }
+
   for file in $(git diff --name-only --cached); do
-    COMPONENTS+=("$(basename "${file}")")
+    add_part "$(basename "${file%.*}")"
 
     local FILE_DIR
     FILE_DIR="$(dirname "${file}")"
 
     while [[ ${FILE_DIR} != "." ]]; do
-      COMPONENTS+=("$(basename "${FILE_DIR}")")
-      FILE_DIR="$(dirname "${file}")"
+      add_part "$(basename "${FILE_DIR}")"
+      FILE_DIR="$(dirname "${FILE_DIR}")"
     done
   done
 
