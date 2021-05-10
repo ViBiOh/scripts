@@ -14,15 +14,17 @@ script_dir() {
 
 guess_component() {
   local COMPONENTS=()
+
   for file in $(git diff --name-only --cached); do
+    COMPONENTS+=("$(basename "${file}")")
+
     local FILE_DIR
     FILE_DIR="$(dirname "${file}")"
 
-    if [[ ${FILE_DIR} == "." ]]; then
-      COMPONENTS+=("${file}")
-    else
+    while [[ ${FILE_DIR} != "." ]]; do
       COMPONENTS+=("$(basename "${FILE_DIR}")")
-    fi
+      FILE_DIR="$(dirname "${file}")"
+    done
   done
 
   printf "%s\n" "${COMPONENTS[@]}" | sort | uniq -c | sort --reverse | head -1 | awk '{print $2}'
