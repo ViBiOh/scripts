@@ -3,11 +3,13 @@
 set -o nounset -o pipefail
 
 script_dir() {
-  if [[ -L ${BASH_SOURCE[0]} ]]; then
-    dirname "$(readlink "${BASH_SOURCE[0]}")"
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
+
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
   else
     (
-      cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
     )
   fi
 }
@@ -16,7 +18,9 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(script_dir)"
 
-  source "${SCRIPT_DIR}/../meta" && meta_init "git"
+  source "${SCRIPT_DIR}/../meta" && meta_init "git" "var"
+
+  var_script_dir
 
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"

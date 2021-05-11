@@ -2,11 +2,20 @@
 
 set -o nounset -o pipefail -o errexit
 
-main() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
 
-  source "${SCRIPT_DIR}/meta" && meta_init "var"
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
+  fi
+}
+
+main() {
+  source "$(script_dir)/meta" && meta_init "var"
   var_color
 
   local ROTATE_DRY_RUN=0

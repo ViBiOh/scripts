@@ -2,6 +2,18 @@
 
 set -o nounset -o pipefail -o errexit
 
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
+
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
+  fi
+}
+
 passget() {
   if ! command -v pass >/dev/null 2>&1; then
     return
@@ -22,10 +34,7 @@ passget() {
 }
 
 main() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-  source "${SCRIPT_DIR}/meta" && meta_init "var" "http"
+  source "$(script_dir)/meta" && meta_init "var" "http"
   var_color
 
   var_read DOCKER_REGISTRY "https://hub.docker.com/v2"

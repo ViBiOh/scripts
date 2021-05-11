@@ -2,6 +2,18 @@
 
 set -o nounset -o pipefail -o errexit
 
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
+
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
+  fi
+}
+
 release_clean() {
   var_info "Cleaning ${OUTPUT_DIR}"
 
@@ -188,10 +200,7 @@ release_usage() {
 }
 
 main() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-  source "${SCRIPT_DIR}/meta" && meta_init "var" "http" "git" "version" "golang"
+  source "$(script_dir)/meta" && meta_init "var" "http" "git" "version" "golang"
   var_color
 
   local ROOT_DIR
