@@ -20,8 +20,6 @@ main() {
 
   source "${SCRIPT_DIR}/../meta" && meta_init "git" "var"
 
-  var_script_dir
-
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
 
