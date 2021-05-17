@@ -125,7 +125,7 @@ github_repo_stats() {
     github_rate_limit_wait
     http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors"
     if [[ ${HTTP_STATUS} == "202" ]]; then
-      var_warning "Contributions are being compiled for ${GITHUB_REPOSITORY}, waiting 30seconds"
+      var_warning "Contributions are being compiled for ${GITHUB_REPOSITORY}, waiting 30 seconds"
       rm "${HTTP_OUTPUT}"
       sleep 30
       continue
