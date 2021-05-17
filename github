@@ -331,35 +331,6 @@ github_compare_version() {
   printf "%s\n" "${RELEASE_NOTES}"
 }
 
-github_last_release() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
-  var_color
-
-  if [[ ${#} -lt 1 ]]; then
-    var_error "Usage: github_last_release GITHUB_REPOSITORY [PREVIOUS_VERSION]"
-    return 1
-  fi
-
-  local GITHUB_REPOSITORY="${1}"
-  shift
-  local PREVIOUS_VERSION="${1:-}"
-  shift || true
-
-  http_init_client
-  if [[ -n ${GITHUB_TOKEN:-} ]]; then
-    HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
-  fi
-
-  http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest"
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    http_handle_error "Unable to list latest release for ${GITHUB_REPOSITORY}"
-    return 1
-  fi
-
-  github_compare_version "${GITHUB_REPOSITORY}" "$(jq -r '.tag_name' "${HTTP_OUTPUT}")" "${PREVIOUS_VERSION}" "${HTTP_OUTPUT}"
-  rm "${HTTP_OUTPUT}"
-}
-
 github_configure() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
@@ -372,6 +343,8 @@ github_configure() {
   local GITHUB_REPOSITORY="${1:-}"
 
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+
+  github_rate_limit_wait
   http_request --header "Content-Type: application/json" --request "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" --data '{
     "default_branch": "main",
     "allow_merge_commit": false,
