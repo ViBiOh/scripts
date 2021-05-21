@@ -284,7 +284,7 @@ github_batch_clone() {
       IFS=',' read -r -a details <<<"${REPO}"
 
       if [[ -d ${details[0]} ]]; then
-        var_success "${details[0]} already cloned"
+        var_success "${details[0]} already cloned!"
       else
         var_info "Cloning ${details[0]}"
         git clone "${details[1]}" "${details[0]}"
@@ -318,7 +318,7 @@ github_compare_version() {
   fi
 
   if [[ ${CURRENT_VERSION} == "${LATEST_VERSION}" ]]; then
-    var_success "✔ ${GITHUB_REPOSITORY} is up to date ${LATEST_VERSION}"
+    var_success "${GITHUB_REPOSITORY} is up to date ${LATEST_VERSION}!"
     rm "${RELEASE_API_FILE}"
     return
   fi

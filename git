@@ -374,8 +374,8 @@ git_sync() {
 
   if [[ ${#toSync[@]} -ne 0 ]]; then
     ! ${DRY} && rsync -raR "${toSync[@]}" "${REMOTE_SERVER}:${REMOTE_PATH_PREFIX}/"
-    var_success "+ Copied"
-    var_success "${toSync[*]}\n"
+    var_green "+ Copied"
+    var_green "${toSync[*]}\n"
   fi
 
   var_info "Done at $(date +'%H:%M:%S')!"

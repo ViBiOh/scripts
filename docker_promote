@@ -80,7 +80,7 @@ main() {
       continue
     fi
 
-    var_success "✔ Image promoted to latest"
+    var_success "Image promoted to latest!"
     rm "${HTTP_OUTPUT}"
 
     # Tagging image with date
@@ -94,7 +94,7 @@ main() {
       continue
     fi
 
-    var_success "✔ Image tagged ${TAG_DATE}"
+    var_success "Image tagged ${TAG_DATE}!"
     rm "${HTTP_OUTPUT}"
     return
   done

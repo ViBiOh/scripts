@@ -101,7 +101,7 @@ version_semver() {
 
   if [[ ${#} -lt 1 ]]; then
     git tag -a "${NEW_VERSION}" -m "${NEW_VERSION}" "${GIT_REF}"
-    var_success "New version is: ${NEW_VERSION}"
+    var_green "New version is: ${NEW_VERSION}"
   else
     printf "%s" "${NEW_VERSION}"
   fi

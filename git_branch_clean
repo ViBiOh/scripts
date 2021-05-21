@@ -55,7 +55,7 @@ main() {
     exit 1
   fi
 
-  var_success "✔ Everything looks fine"
+  var_success "Everything looks fine!"
   exit 0
 }
 

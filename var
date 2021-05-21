@@ -83,8 +83,12 @@ var_warning() {
   var_log "${YELLOW}" "${@}"
 }
 
-var_success() {
+var_green() {
   var_log "${GREEN}" "${@}"
+}
+
+var_success() {
+  var_log "${GREEN}" "✔ " "${@}"
 }
 
 var_info() {

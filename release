@@ -188,7 +188,7 @@ release() {
     done
   fi
 
-  var_success "✔ Done!"
+  var_success "${GITHUB_REPOSITORY}@${RELEASE_NAME} created!"
 }
 
 release_usage() {
