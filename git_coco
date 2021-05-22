@@ -72,7 +72,10 @@ main() {
     BREAKING="!"
   fi
 
-  var_print_and_run "git commit --signoff --message '$(printf "%s%s%s: %s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${MESSAGE}")' ${*}"
+  local SAFE_MESSAGE
+  SAFE_MESSAGE="$(printf "%s" "${MESSAGE}" | sed "s|'|\\\'|g")"
+
+  var_print_and_run "git commit --signoff --message $'$(printf "%s%s%s: %s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SAFE_MESSAGE}")' ${*}"
 }
 
 main "${@}"

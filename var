@@ -32,7 +32,9 @@ var_read() {
       read ${SECRET_ARG?} -r -p "${VAR_NAME}${DEFAULT_DISPLAY}=" READ_VALUE
     fi
 
-    eval "${VAR_NAME}='${READ_VALUE:-${VAR_DEFAULT}}'"
+    local SAFE_VALUE
+    SAFE_VALUE="$(printf "%s" "${READ_VALUE:-${VAR_DEFAULT}}" | sed "s|'|\\\'|g")"
+    eval "${VAR_NAME}=$'${SAFE_VALUE}'"
 
     if [[ ${SECRET_ARG} == "-s" ]]; then
       printf "\n" 1>&2
