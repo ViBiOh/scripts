@@ -7,7 +7,7 @@ version_value() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    var_error "Usage: version_value regex [files...]"
+    var_red "Usage: version_value regex [files...]"
     return 1
   fi
 
@@ -66,7 +66,7 @@ version_semver() {
 
   if [[ ${#} -lt 1 ]]; then
     var_info "Current version is: ${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
-    var_error "Usage: version_semver major|minor|patch [GIT_REF=HEAD] [quiet]"
+    var_red "Usage: version_semver major|minor|patch [GIT_REF=HEAD] [quiet]"
     return 3
   fi
 

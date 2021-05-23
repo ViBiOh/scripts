@@ -35,7 +35,7 @@ main() {
     fi
 
     if git_is_commit_wip "${commit}"; then
-      var_error "\twip commit, please rebase"
+      var_red "\twip commit, please rebase"
       UNCLEAR="true"
       continue
     fi

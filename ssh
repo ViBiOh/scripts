@@ -8,7 +8,7 @@ ssh_forward_local() {
   var_color
 
   if [[ ${#} -lt 3 ]]; then
-    var_error "Import remote port in local. Usage: ssh_forward_local REMOTE_PORT -> LOCAL_PORT SSH_PARTS..."
+    var_red "Import remote port in local. Usage: ssh_forward_local REMOTE_PORT -> LOCAL_PORT SSH_PARTS..."
     return 1
   fi
 
@@ -26,7 +26,7 @@ ssh_forward_remote() {
   var_color
 
   if [[ ${#} -lt 3 ]]; then
-    var_error "Expose local port to remote: Usage: ssh_forward_remote LOCAL_PORT -> REMOTE_PORT SSH_PARTS..."
+    var_red "Expose local port to remote: Usage: ssh_forward_remote LOCAL_PORT -> REMOTE_PORT SSH_PARTS..."
     return 1
   fi
 

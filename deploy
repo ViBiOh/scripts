@@ -22,7 +22,7 @@ main() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    var_error "Usage: ${0} APP_NAME COMPOSE_FILE"
+    var_red "Usage: ${0} APP_NAME COMPOSE_FILE"
     return 1
   fi
 

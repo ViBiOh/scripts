@@ -20,7 +20,7 @@ passget() {
   fi
 
   if [[ ${#} -lt 1 ]]; then
-    var_error "Usage: passget PASS_NAME PASS_FIELD"
+    var_red "Usage: passget PASS_NAME PASS_FIELD"
     return 1
   fi
 

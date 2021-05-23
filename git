@@ -159,7 +159,7 @@ git_changelog() {
   git_conventionnal_commits
 
   if [[ ${*} =~ ^-?help$ ]]; then
-    var_error "Usage: git_changelog [END_REF=HEAD] [START_REF=git_last_tag]"
+    var_red "Usage: git_changelog [END_REF=HEAD] [START_REF=git_last_tag]"
     return 1
   fi
 
@@ -277,7 +277,7 @@ head_sync() {
   var_color
 
   if [[ ${#} -ne 2 ]]; then
-    var_error "Usage: head_sync REMOTE_SERVER REMOTE_PATH"
+    var_red "Usage: head_sync REMOTE_SERVER REMOTE_PATH"
     return 1
   fi
 
@@ -296,7 +296,7 @@ git_sync() {
   var_color
 
   if [[ ${#} -lt 2 ]]; then
-    var_error "Usage: git_sync REMOTE_SERVER REMOTE_PATH [DRY]?"
+    var_red "Usage: git_sync REMOTE_SERVER REMOTE_PATH [DRY]?"
     return 1
   fi
 
@@ -368,8 +368,8 @@ git_sync() {
 
   if [[ ${#toDelete[@]} -ne 0 ]]; then
     ! ${DRY} && ssh "${REMOTE_SERVER}" "rm -rf ${toDelete[*]}"
-    var_error "- Deleted"
-    var_error "${toDelete[*]}\n"
+    var_red "- Deleted"
+    var_red "${toDelete[*]}\n"
   fi
 
   if [[ ${#toSync[@]} -ne 0 ]]; then
