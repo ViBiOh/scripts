@@ -74,7 +74,7 @@ var_log() {
   local COLOR="${1}"
   shift
 
-  printf "%b%b %b\n" "${COLOR}" "${@}" "${RESET}" 1>&2
+  printf "%b%b %b\n" "${COLOR}" "${*}" "${RESET}" 1>&2
 }
 
 var_error() {
@@ -90,7 +90,7 @@ var_green() {
 }
 
 var_success() {
-  var_log "${GREEN}" "✔ " "${@}"
+  var_log "${GREEN}" "✔" "${@}"
 }
 
 var_info() {
