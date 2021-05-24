@@ -34,11 +34,11 @@ guess_component() {
     done
   done
 
-  printf "%s\n" "${COMPONENTS[@]}" | sort | uniq -c | sort --reverse | head -1 | awk '{print $2}'
+  printf "%s\n" "${COMPONENTS[@]}" | sort | uniq
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "git"
+  source "$(script_dir)/meta" && meta_init "var" "git" "http"
   var_color
 
   if ! git_is_inside; then
@@ -58,11 +58,14 @@ main() {
   printf "SCOPE=%s\n" "${SCOPE}"
 
   local COMPONENT=""
-  var_read COMPONENT "$(guess_component)"
+  COMPONENT="$(cat <(guess_component) <(printf "None") | fzf --height=20 --ansi --reverse --prompt='Component>')"
 
-  if [[ -n ${COMPONENT} ]]; then
+  if [[ ${COMPONENT} == "None" ]]; then
+    COMPONENT=""
+  else
     COMPONENT="$(printf "(%s)" "${COMPONENT}")"
   fi
+  printf "COMPONENT=%s\n" "${COMPONENT}"
 
   local MESSAGE=""
   var_read MESSAGE
@@ -72,10 +75,26 @@ main() {
     BREAKING="!"
   fi
 
+  http_init_client
+  if [[ -n ${GITHUB_TOKEN} ]]; then
+    HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
+  fi
+
+  local ISSUES=""
+  http_request "https://api.github.com/repos/$(git_remote_repository)/issues?per_page=100"
+  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq -r '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -ne 0 ]]; then
+    ISSUES="$(cat <(jq -r '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") <(printf "None") | fzf --height=20 --ansi --reverse --multi --prompt='Issues closed>' | awk '{print "Closes " $1}')"
+
+    if [[ ${ISSUES} != "None" ]]; then
+      ISSUES="\n\n${ISSUES}"
+    fi
+  fi
+  rm "${HTTP_OUTPUT}"
+
   local SAFE_MESSAGE
   SAFE_MESSAGE="$(printf "%s" "${MESSAGE}" | sed "s|'|\\\'|g")"
 
-  var_print_and_run "git commit --signoff --message $'$(printf "%s%s%s: %s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SAFE_MESSAGE}")' ${*}"
+  var_print_and_run "git commit --signoff --message $'$(printf "%s%s%s: %s%s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SAFE_MESSAGE}" "${ISSUES}")' ${*}"
 }
 
 main "${@}"
