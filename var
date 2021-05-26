@@ -77,16 +77,20 @@ var_log() {
   printf "%b%b %b\n" "${COLOR}" "${*}" "${RESET}" 1>&2
 }
 
-var_error() {
+var_red() {
   var_log "${RED}" "${@}"
-}
-
-var_warning() {
-  var_log "${YELLOW}" "${@}"
 }
 
 var_green() {
   var_log "${GREEN}" "${@}"
+}
+
+var_error() {
+  var_log "${RED}" "x" "${@}"
+}
+
+var_warning() {
+  var_log "${YELLOW}" "${@}"
 }
 
 var_success() {
