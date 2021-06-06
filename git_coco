@@ -47,6 +47,9 @@ main() {
   fi
 
   git_conventionnal_commits
+  git_is_valid_description "value"
+
+  local REMAINING_LENGTH=$((COMMIT_MAX_LENGTH - 1))
 
   local SCOPE
   SCOPE="$(for i in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do printf "%b%s%b %s\n" "${GREEN}" "${i}" "${RESET}" "${CONVENTIONAL_COMMIT_SCOPES[${i}]}"; done | fzf --height=20 --ansi --reverse | awk '{print $1}')"
@@ -56,6 +59,7 @@ main() {
   fi
 
   printf "SCOPE=%s\n" "${SCOPE}"
+  REMAINING_LENGTH=$((REMAINING_LENGTH - ${#SCOPE}))
 
   local COMPONENT=""
   COMPONENT="$(cat <(guess_component) <(printf "None") | fzf --height=20 --ansi --reverse --prompt='Component>')"
@@ -66,14 +70,23 @@ main() {
     COMPONENT="$(printf "(%s)" "${COMPONENT}")"
   fi
   printf "COMPONENT=%s\n" "${COMPONENT}"
+  REMAINING_LENGTH=$((REMAINING_LENGTH - ${#COMPONENT}))
 
-  local MESSAGE=""
-  var_read MESSAGE
+  local SKIP_CI=""
+  if var_confirm "Skip CI"; then
+    SKIP_CI="[skip ci] "
+    REMAINING_LENGTH=$((REMAINING_LENGTH - ${#SKIP_CI}))
+  fi
 
   local BREAKING=""
   if var_confirm "Contains breaking changes"; then
     BREAKING="!"
+    REMAINING_LENGTH=$((REMAINING_LENGTH - ${#BREAKING}))
   fi
+
+  local MESSAGE=""
+  printf "${REMAINING_LENGTH} characters remaining\n"
+  var_read MESSAGE
 
   http_init_client
   if [[ -n ${GITHUB_TOKEN} ]]; then
@@ -94,7 +107,7 @@ main() {
   local SAFE_MESSAGE
   SAFE_MESSAGE="$(printf "%s" "${MESSAGE}" | sed "s|'|\\\'|g")"
 
-  var_print_and_run "git commit --signoff --message $'$(printf "%s%s%s: %s%s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SAFE_MESSAGE}" "${ISSUES}")' ${*}"
+  var_print_and_run "git commit --signoff --message $'$(printf "%s%s%s: %s%s%s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${SAFE_MESSAGE}" "${ISSUES}")' ${*}"
 }
 
 main "${@}"
