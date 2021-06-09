@@ -98,7 +98,9 @@ main() {
   if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq -r '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -ne 0 ]]; then
     ISSUES="$(cat <(jq -r '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") <(printf "None") | fzf --height=20 --ansi --reverse --multi --prompt='Issues closed>' | awk '{print "Closes " $1}')"
 
-    if [[ ${ISSUES} != "Closes None" ]]; then
+    if [[ ${ISSUES} == "Closes None" ]]; then
+      ISSUES=""
+    else
       ISSUES="\n\n${ISSUES}"
     fi
   fi
