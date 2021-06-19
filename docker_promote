@@ -80,7 +80,7 @@ main() {
       continue
     fi
 
-    var_success "Image promoted to latest!"
+    var_success "Image promoted to ${VERSION_TARGET}!"
     rm "${HTTP_OUTPUT}"
 
     # Tagging image with date
