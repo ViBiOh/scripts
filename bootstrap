@@ -7,6 +7,31 @@ main() {
   local SCRIPTS_PATH="./scripts"
 
   printf "Bootstrapping to %s\n" "${SCRIPTS_PATH}"
+
+  local SCRIPTS_CLEAN
+
+  while getopts ":c" option; do
+    case "${option}" in
+    c)
+      SCRIPTS_CLEAN="true"
+      ;;
+    :)
+      printf "option -%s requires a value\n" "${OPTARG}" >&2
+      return 1
+      ;;
+    \?)
+      printf "option -%s is invalid\n" "${OPTARG}" >&2
+      return 2
+      ;;
+    esac
+  done
+
+  shift $((OPTIND - 1))
+
+  if [[ ${SCRIPTS_CLEAN:-} == "true" ]]; then
+    rm -rf "${SCRIPTS_PATH}"
+  fi
+
   mkdir -p "${SCRIPTS_PATH}"
 
   (
@@ -17,5 +42,7 @@ main() {
     source "./meta" && meta_init "${@}"
   )
 }
+
+shift $((OPTIND - 1))
 
 main "${@}"
