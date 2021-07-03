@@ -13,37 +13,51 @@ var_read() {
   local VAR_SECRET="${1:-}"
   shift || true
 
-  local SECRET_ARG=""
+  local VAR_SECRET_ARG=""
   if [[ ${VAR_SECRET:-} == "secret" ]]; then
-    SECRET_ARG="-s"
+    VAR_SECRET_ARG="-s"
   fi
 
-  local DEFAULT_DISPLAY=""
+  local VAR_DEFAULT_DISPLAY=""
   if [[ -n ${VAR_DEFAULT} ]]; then
     if [[ ${VAR_SECRET:-} == "secret" ]]; then
-      DEFAULT_DISPLAY=" [*****]"
+      VAR_DEFAULT_DISPLAY=" [*****]"
     else
-      DEFAULT_DISPLAY=" [${VAR_DEFAULT}]"
+      VAR_DEFAULT_DISPLAY=" [${VAR_DEFAULT}]"
     fi
   fi
 
   if [[ -z ${!VAR_NAME:-} ]]; then
     if [[ -z ${SCRIPTS_NO_INTERACTIVE:-} ]]; then
-      read ${SECRET_ARG?} -r -p "${VAR_NAME}${DEFAULT_DISPLAY}=" READ_VALUE
+      read ${VAR_SECRET_ARG?} -r -p "${VAR_NAME}${VAR_DEFAULT_DISPLAY}=" READ_VALUE
     fi
 
-    local SAFE_VALUE
-    SAFE_VALUE="$(printf "%s" "${READ_VALUE:-${VAR_DEFAULT}}" | sed "s|'|\\\'|g")"
-    eval "${VAR_NAME}=$'${SAFE_VALUE}'"
+    local VAR_SAFE_VALUE
+    VAR_SAFE_VALUE="$(printf "%s" "${READ_VALUE:-${VAR_DEFAULT}}" | sed "s|'|\\\'|g")"
+    eval "${VAR_NAME}=$'${VAR_SAFE_VALUE}'"
 
-    if [[ ${SECRET_ARG} == "-s" ]]; then
+    if [[ ${VAR_SECRET_ARG} == "-s" ]]; then
       printf "\n" 1>&2
     fi
-  elif [[ ${SECRET_ARG} != "-s" ]]; then
+  elif [[ ${VAR_SECRET_ARG} != "-s" ]]; then
     printf "%s=%s\n" "${VAR_NAME}" "${!VAR_NAME}" 1>&2
   else
     printf "Using secret %s\n" "${VAR_NAME}" 1>&2
   fi
+}
+
+var_shift_or_read() {
+  local VAR_NAME="${1}"
+  shift
+
+  local VAR_VALUE="${1:-}"
+  if [[ -n ${VAR_VALUE} ]]; then
+    local VAR_SAFE_VALUE
+    VAR_SAFE_VALUE="$(printf "%s" "${VAR_VALUE}" | sed "s|'|\\\'|g")"
+    eval "${VAR_NAME}=$'${VAR_SAFE_VALUE}'"
+  fi
+
+  var_read "${VAR_NAME}"
 }
 
 var_confirm() {
