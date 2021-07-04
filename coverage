@@ -2,36 +2,17 @@
 
 set -o nounset -o pipefail -o errexit
 
-script_dir() {
-  local FILE_SOURCE="${BASH_SOURCE[0]}"
-
-  if [[ -L ${FILE_SOURCE} ]]; then
-    dirname "$(readlink "${FILE_SOURCE}")"
-  else
-    (
-      cd "$(dirname "${FILE_SOURCE}")" && pwd
-    )
-  fi
-}
-
 main() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(script_dir)"
-
-  source "${SCRIPT_DIR}/meta" && meta_init "golang"
-
   local COVERAGE_OUTPUT="coverage.txt"
   local COVER_PROFILE="profile.out"
   local COVER_MODE="atomic"
   local MODE="mode: ${COVER_MODE}"
 
   (
-    cd "${SCRIPT_DIR}/../" || return
-
     printf "%s\n" "${MODE}" >"${COVERAGE_OUTPUT}"
 
-    for pkg in $(golang_go list "${PACKAGES:-./...}"); do
-      golang_go test -race -covermode="${COVER_MODE}" -coverprofile="${COVER_PROFILE}" "${pkg}"
+    for pkg in $(go list "${PACKAGES:-./...}"); do
+      go test -race -covermode="${COVER_MODE}" -coverprofile="${COVER_PROFILE}" "${pkg}"
 
       if [[ -f ${COVER_PROFILE} ]]; then
         grep --invert-match "${MODE}" "${COVER_PROFILE}" >>"${COVERAGE_OUTPUT}" || true
@@ -40,7 +21,7 @@ main() {
     done
 
     if [[ $(wc -l <"${COVERAGE_OUTPUT}") -ne 1 ]]; then
-      golang_go tool cover -func="${COVERAGE_OUTPUT}"
+      go tool cover -func="${COVERAGE_OUTPUT}"
     fi
   )
 }

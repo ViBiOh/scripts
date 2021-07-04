@@ -22,30 +22,19 @@ release_clean() {
 }
 
 golang_build() {
-  local SOURCE_DIR
-
-  if [[ ${BUILD_WITH_DOCKER:-} == "true" ]]; then
-    if ! command -v docker >/dev/null 2>&1; then
-      var_error "docker not found"
-      return 1
-    fi
-
-    SOURCE_DIR="/go/src/app/..."
-    OUTPUT_DIR="/go/src/app/release"
-  else
-    if ! command -v go >/dev/null 2>&1; then
-      var_error "go not found"
-      return 1
-    fi
-
-    SOURCE_DIR="${ROOT_DIR}/..."
+  if ! command -v go >/dev/null 2>&1; then
+    var_error "go not found"
+    return 1
   fi
+
+  local SOURCE_DIR
+  SOURCE_DIR="${ROOT_DIR}/..."
 
   (
     cd "${ROOT_DIR}"
 
     local OUTPUT_BINARIES
-    mapfile -t OUTPUT_BINARIES < <(golang_go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
+    mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
 
     local GO_ARCHS="${GO_ARCHS:-darwin/amd64 darwin/arm64 linux/amd64 linux/arm linux/arm64}"
 
@@ -61,7 +50,7 @@ golang_build() {
           export GOARCH="${context[1]}"
           export CGO_ENABLED="0"
           var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
-          golang_go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
+          go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
         )
       done
     done
@@ -202,7 +191,7 @@ release_usage() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "http" "git" "version" "golang"
+  source "$(script_dir)/meta" && meta_init "var" "http" "git" "version"
   var_color
 
   local ROOT_DIR
