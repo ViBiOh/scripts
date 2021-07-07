@@ -55,6 +55,9 @@ var_shift_or_read() {
     local VAR_SAFE_VALUE
     VAR_SAFE_VALUE="$(printf "%s" "${VAR_VALUE}" | sed "s|'|\\\'|g")"
     eval "${VAR_NAME}=$'${VAR_SAFE_VALUE}'"
+
+    printf "%s=%s\n" "${VAR_NAME}" "${!VAR_NAME}" 1>&2
+    return
   fi
 
   var_read "${VAR_NAME}"
