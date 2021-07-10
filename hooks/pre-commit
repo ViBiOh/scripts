@@ -27,6 +27,10 @@ diff_check() {
 }
 
 golang_check() {
+  if ! [[ -e "Makefile" ]]; then
+    return
+  fi
+
   local GO_FILES
   GO_FILES=$(get_files "*.go")
 
@@ -40,6 +44,10 @@ golang_check() {
 }
 
 npm_check() {
+  if ! [[ -e "package.json" ]]; then
+    return
+  fi
+
   local PACKAGE_JSON
   PACKAGE_JSON=$(get_files "package.json")
 
