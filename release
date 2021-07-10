@@ -160,26 +160,41 @@ release() {
     http_handle_error "Unable to create release"
     return 1
   fi
-
-  if [[ -d ${OUTPUT_DIR} ]]; then
-    local RESPONSE_URL
-    RESPONSE_URL="$(jq -r .upload_url "${HTTP_OUTPUT}" | sed 's|{.*||')"
-    rm "${HTTP_OUTPUT}"
-
-    for asset in "${OUTPUT_DIR}"/*; do
-      var_info "Uploading asset ${asset}"
-
-      http_request --header "Content-Type: application/x-executable" --request POST "${RESPONSE_URL}?name=$(basename "${asset}")" --data-binary "@${asset}"
-      if [[ ${HTTP_STATUS} != "201" ]]; then
-        http_handle_error "Unable to upload asset ${asset}"
-        return 1
-      fi
-
-      rm "${HTTP_OUTPUT}"
-    done
-  fi
+  rm "${HTTP_OUTPUT}"
 
   var_success "${GITHUB_REPOSITORY}@${RELEASE_NAME} created!"
+}
+
+release_upload() {
+  if ! [[ -d ${OUTPUT_DIR} ]]; then
+    var_warning "Nothing to upload!"
+  fi
+
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+  HTTP_CLIENT_ARGS+=("--max-time" "120")
+
+  var_read GIT_TAG
+  http_request --header "Content-Type: application/json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${GIT_TAG}"
+  if [[ ${HTTP_STATUS} != "201" ]]; then
+    http_handle_error "Unable to create release"
+    return 1
+  fi
+
+  local RESPONSE_URL
+  RESPONSE_URL="$(jq -r .upload_url "${HTTP_OUTPUT}" | sed 's|{.*||')"
+  rm "${HTTP_OUTPUT}"
+
+  for asset in "${OUTPUT_DIR}"/*; do
+    var_info "Uploading asset ${asset}"
+
+    http_request --header "Content-Type: application/x-executable" --request POST "${RESPONSE_URL}?name=$(basename "${asset}")" --data-binary "@${asset}"
+    if [[ ${HTTP_STATUS} != "201" ]]; then
+      http_handle_error "Unable to upload asset ${asset}"
+      return 1
+    fi
+
+    rm "${HTTP_OUTPUT}"
+  done
 }
 
 release_usage() {
@@ -187,7 +202,9 @@ release_usage() {
   printf "clean\n\tClean output dir %s\n" "${OUTPUT_DIR}"
   printf "build\n\tBuild artifacts\n"
   printf "docker\n\tBuild docker images\n"
-  printf "release\n\tCreate GitHub release and upload output dir content\n"
+  printf "release\n\tCreate GitHub release\n"
+  printf "assets\n\tUpload output dir content to GitHub release\n"
+  printf "clea,\n\tClean created output directory\n"
 }
 
 main() {
@@ -218,6 +235,10 @@ main() {
       release
       ;;
 
+    "assets")
+      release_upload
+      ;;
+
     "clean")
       release_clean
       ;;
@@ -229,5 +250,5 @@ main() {
   done
 }
 
-DEFAULT_ARGS=("build" "release" "clean")
+DEFAULT_ARGS=("release" "build" "assets" "clean")
 main "${@:-${DEFAULT_ARGS[@]}}"
