@@ -37,7 +37,7 @@ main() {
     exit 0
   fi
 
-  if [[ -n ${BRANCH_NAME} && ${BRANCH_NAME} =~ (features|fixes)/([A-Z0-9]+[-_][0-9]+) ]]; then
+  if [[ -n ${BRANCH_NAME} && ${BRANCH_NAME} =~ (features/|fixes/|feat-|fix-)([A-Z0-9]+[-_][0-9]+) ]]; then
     local PREFIX="${BASH_REMATCH[2]}"
 
     if [[ ! ${FIRST_LINE} =~ ${PREFIX} ]]; then
