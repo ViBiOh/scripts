@@ -98,9 +98,9 @@ yaml_check() {
   YAML_FILES=$(get_files \*.y{,a}ml)
 
   if [[ -n ${YAML_FILES} ]]; then
-    if command -v prettier >/dev/null 2>&1; then
+    if command -v npx >/dev/null 2>&1; then
       var_info "Formating yaml files"
-      run_command prettier --write ${YAML_FILES[@]}
+      run_command npx prettier --write ${YAML_FILES[@]}
     else
       var_warning "cannot format yaml files: prettier not found. Skipping."
     fi
@@ -119,8 +119,12 @@ markdown_check() {
   MARKDOWN_FILES=$(get_files "*.md")
 
   if [[ -n ${MARKDOWN_FILES} ]]; then
-    var_info "Formating markdown files"
-    run_command prettier --write ${MARKDOWN_FILES[@]}
+    if command -v npx >/dev/null 2>&1; then
+      var_info "Formating markdown files"
+      run_command npx prettier --write ${MARKDOWN_FILES[@]}
+    else
+      var_warning "cannot format markdown files: npx not found. Skipping."
+    fi
   fi
 }
 
