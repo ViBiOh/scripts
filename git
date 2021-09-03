@@ -287,7 +287,7 @@ head_sync() {
   shift
 
   local branch
-  branch="$(git symbolic-ref --quiet HEAD | sed -e 's|^refs/heads/||')"
+  branch="$(git branch --show-current)"
   ssh -A "${REMOTE_SERVER}" "cd '${REMOTE_PATH}' && git reset HEAD . && git clean --force && git status --untracked-files --short | awk '{print \$2}' | xargs -r rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
 }
 

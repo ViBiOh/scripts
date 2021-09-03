@@ -28,7 +28,7 @@ main() {
   git_conventionnal_commits
 
   local BRANCH_NAME
-  BRANCH_NAME=$(git symbolic-ref --short HEAD)
+  BRANCH_NAME=$(git branch --show-current)
 
   local FIRST_LINE
   FIRST_LINE="$(head -1 "${1}")"
