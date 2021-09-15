@@ -19,7 +19,7 @@ version_value() {
 
 version_bump() {
   if [[ -e package.json ]]; then
-    ncu -u
+    npx ncu -u
     npm install --ignore-scripts
     npm audit fix
   fi
