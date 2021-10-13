@@ -20,7 +20,7 @@ main() {
 
   local BASE="${1:-main}"
   shift || true
-  local HEAD="${1:-$(git rev-parse --abbrev-ref HEAD)}"
+  local HEAD="${1:-$(git branch --show-current)}"
   shift || true
 
   local UNCLEAR="false"
