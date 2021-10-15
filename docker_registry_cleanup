@@ -19,7 +19,7 @@ passget() {
     return
   fi
 
-  if [[ ${#} -lt 1 ]]; then
+  if [[ ${#} -lt 2 ]]; then
     var_red "Usage: passget PASS_NAME PASS_FIELD"
     return 1
   fi
@@ -30,7 +30,7 @@ passget() {
   local PASS_FIELD="${1}"
   shift
 
-  pass show "${PASS_NAME}" | grep "^${PASS_FIELD}: " | sed 's|^[^ ]*: ||'
+  pass show "${PASS_NAME}" | grep "^${PASS_FIELD}: " | sed "s|^${PASS_FIELD}: ||"
 }
 
 main() {
