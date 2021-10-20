@@ -21,7 +21,7 @@ main() {
   var_read POSTGRES_DB
 
   local CONTEXT
-  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse -1 --query="${1:-}")"
+  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
 
   local BACKUP_FILE
   BACKUP_FILE="$(
@@ -32,7 +32,7 @@ main() {
   )"
 
   local POSTGRES_POD
-  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse -1 --query "^pod/${POSTGRES_DB}")"
+  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --select-1 --query "^pod/${POSTGRES_DB}")"
 
   if [[ -n ${POSTGRES_POD} ]]; then
     kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --data-only --user "${POSTGRES_DB}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
