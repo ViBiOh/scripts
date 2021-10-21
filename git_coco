@@ -52,7 +52,7 @@ main() {
   local REMAINING_LENGTH=$((COMMIT_MAX_LENGTH - 1))
 
   local SCOPE
-  SCOPE="$(for i in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do printf "%b%s%b %s\n" "${GREEN}" "${i}" "${RESET}" "${CONVENTIONAL_COMMIT_SCOPES[${i}]}"; done | fzf --height=20 --ansi --reverse | awk '{print $1}')"
+  SCOPE="$(for i in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do printf "%b%s%b %s\n" "${GREEN}" "${i}" "${RESET}" "${CONVENTIONAL_COMMIT_SCOPES[${i}]}"; done | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
 
   if [[ -z ${SCOPE} ]]; then
     return 1
@@ -96,7 +96,7 @@ main() {
   local ISSUES=""
   http_request "https://api.github.com/repos/$(git_remote_repository)/issues?per_page=100" || true
   if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq -r '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -ne 0 ]]; then
-    ISSUES="$(cat <(printf "None\n") <(jq -r '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Issues closed>' | awk '{print "Closes " $1}')"
+    ISSUES="$(cat <(printf "None\n") <(jq -r '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Issues closed>' | awk '{printf("Closes %s", $1)}')"
 
     if [[ ${ISSUES} == "Closes None" ]]; then
       ISSUES=""

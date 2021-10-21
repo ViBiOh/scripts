@@ -34,7 +34,7 @@ golang_build() {
     cd "${ROOT_DIR}"
 
     local OUTPUT_BINARIES
-    mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
+    mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{printf("%s", $1)}')
 
     local GO_ARCHS="${GO_ARCHS:-darwin/amd64 darwin/arm64 linux/amd64 linux/arm linux/arm64}"
 
@@ -113,7 +113,7 @@ release() {
   var_info "Identifying semver"
 
   local VERSION_REF
-  VERSION_REF="$(git log --no-merges --invert-grep --grep "\[skip ci\]" --color --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' "HEAD...$(git_last_tag)" | fzf --height=20 --ansi --reverse | awk '{print $1}')"
+  VERSION_REF="$(git log --no-merges --invert-grep --grep "\[skip ci\]" --color --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' "HEAD...$(git_last_tag)" | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
   var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep --invert-match "${VERSION_REF}" | head -1)"
 
   local CHANGELOG

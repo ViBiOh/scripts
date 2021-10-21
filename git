@@ -149,7 +149,7 @@ git_last_tag() {
     return 1
   fi
 
-  git describe --tag 2>/dev/null | awk -F "-" '{print $1}'
+  git describe --tag 2>/dev/null | awk -F "-" '{printf("%s", $1)}'
 }
 
 git_changelog() {
@@ -288,7 +288,7 @@ head_sync() {
 
   local branch
   branch="$(git branch --show-current)"
-  ssh -A "${REMOTE_SERVER}" "cd '${REMOTE_PATH}' && git reset HEAD . && git clean --force && git status --untracked-files --short | awk '{print \$2}' | xargs -r rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
+  ssh -A "${REMOTE_SERVER}" "cd '${REMOTE_PATH}' && git reset HEAD . && git clean --force && git status --untracked-files --short | awk '{printf(\"%s\", \$2)}' | xargs -r rm -rf && git checkout -- . && git fetch && git checkout '${branch}' && git pull"
 }
 
 git_sync() {
@@ -347,9 +347,9 @@ git_sync() {
 
     "R")
       local originFile
-      originFile="$(printf "%s" "${gitFile}" | awk '{print $2}')"
+      originFile="$(printf "%s" "${gitFile}" | awk '{printf("%s", $2)}')"
       local destinationFile
-      destinationFile="$(printf "%s" "${gitFile}" | awk '{print $4}')"
+      destinationFile="$(printf "%s" "${gitFile}" | awk '{printf("%s", $4)}')"
 
       toDelete+=("${REMOTE_PATH_PREFIX}/${originFile}")
       toSync+=("${destinationFile}")
