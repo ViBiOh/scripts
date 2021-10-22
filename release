@@ -34,7 +34,7 @@ golang_build() {
     cd "${ROOT_DIR}"
 
     local OUTPUT_BINARIES
-    mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{printf("%s", $1)}')
+    mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
 
     local GO_ARCHS="${GO_ARCHS:-darwin/amd64 darwin/arm64 linux/amd64 linux/arm linux/arm64}"
 
