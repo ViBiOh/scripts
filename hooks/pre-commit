@@ -31,6 +31,10 @@ golang_check() {
     return
   fi
 
+  if [[ $(make -pqr 2>/dev/null | awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1,A,/ /);for(i in A)print A[i]}' | grep --invert-match "Makefile" | sort --unique | grep --count --regexp style --regexp format) -ne 2 ]]; then
+    return
+  fi
+
   local GO_FILES
   GO_FILES=$(get_files "*.go")
 

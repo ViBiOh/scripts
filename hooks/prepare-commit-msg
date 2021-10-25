@@ -2,14 +2,6 @@
 
 set -o nounset -o pipefail
 
-sed_inplace() {
-  if [[ ${OSTYPE} =~ ^darwin ]]; then
-    sed -i '' "${@}"
-  else
-    sed -i "${@}"
-  fi
-}
-
 script_dir() {
   if [[ -L ${BASH_SOURCE[0]} ]]; then
     dirname "$(readlink "${BASH_SOURCE[0]}")"
@@ -44,7 +36,7 @@ main() {
       if git_is_conventional_commit "${FIRST_LINE}"; then
         perl -pi'' -e "s|^(revert:\ )?($(printf "%s\|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"))(\(.+\))?(\!?):|\1\2\3\4: ${PREFIX}|" "${1}"
       else
-        sed_inplace -e "1s|^|${PREFIX} |" "${1}"
+        perl -pi'' -e "s|^|${PREFIX} |" "${1}"
       fi
     fi
   fi
