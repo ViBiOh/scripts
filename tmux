@@ -14,5 +14,5 @@ tmux_split_cmd() (
     return 1
   fi
 
-  tmux split-window -hd -t "${TMUX_PANE}" "bash --rcfile <(echo '. ~/.bash_profile;${*}')" && tmux select-layout tiled
+  tmux split-window -hd -c "$(pwd)" -t "${TMUX_PANE}" "bash --rcfile <(echo '. ~/.bash_profile;${*}')" && tmux select-layout tiled
 )
