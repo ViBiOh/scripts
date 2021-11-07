@@ -110,11 +110,11 @@ git_is_conventional_commit() {
 git_is_valid_description() {
   export COMMIT_MAX_LENGTH="70"
 
-  if [[ ${1} =~ ^.{1,${COMMIT_MAX_LENGTH}}$ ]]; then
-    return 0
+  if [[ ${#1} -gt ${COMMIT_MAX_LENGTH} ]]; then
+    return 1
   fi
 
-  return 1
+  return 0
 }
 
 git_conventionnal_commit_guidelines() {
@@ -140,7 +140,7 @@ git_valid_description_guideline() {
   source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
 
-  var_warning "\nYou have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters)"
+  var_warning "\nYou have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters). Current size is ${#1}"
 }
 
 git_last_tag() {
