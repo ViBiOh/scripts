@@ -34,7 +34,10 @@ main() {
 
   if ! git_is_valid_description "${FIRST_LINE}"; then
     git_valid_description_guideline "${FIRST_LINE}"
-    exit 1
+
+    if ! var_confirm "Do you want to override"; then
+      exit 1
+    fi
   fi
 
   exit 0
