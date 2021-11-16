@@ -66,7 +66,7 @@ var_shift_or_read() {
 var_confirm() {
   local VAR_CONFIRM_MESSAGE="${1:-Are you sure}"
 
-  read -r -p "${VAR_CONFIRM_MESSAGE}? [y/N] " input
+  read -r -p "${VAR_CONFIRM_MESSAGE}? [y/N] " input </dev/tty
 
   case "${input}" in
   [yY][eE][sS] | [yY])
