@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+http_handle_error() {
+  printf "%bHTTP/%s: %s%b\n" "${RED}" "${HTTP_STATUS}" "${1:-}" "${RESET}"
+  cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+}
+
+http_init_client() {
+  export HTTP_OUTPUT="http_output.txt"
+
+  HTTP_CLIENT_ARGS=("curl" "--disable" "--silent" "--show-error" "--location" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
+  if [[ ${#} -gt 0 ]]; then
+    HTTP_CLIENT_ARGS+=("${@}")
+  fi
+
+  export HTTP_CLIENT_ARGS
+}
+
+http_request() {
+  export HTTP_STATUS
+  HTTP_STATUS="$("${HTTP_CLIENT_ARGS[@]}" "${@}")"
+}
+
+main() {
+  local dryRun="false"
+
+  while getopts ":d" option; do
+    case "${option}" in
+    d)
+      dryRun="true"
+      ;;
+    :)
+      printf "option -%s requires a value\n" "${OPTARG}" >&2
+      return 1
+      ;;
+    \?)
+      printf "option -%s is invalid\n" "${OPTARG}" >&2
+      return 2
+      ;;
+    esac
+  done
+
+  shift $((OPTIND - 1))
+
+  if [[ ${#} -lt 1 ]]; then
+    printf "%bUsage: %s [-d for dry run] ORGANIZATION PAGE?%b\n" "${RED}" "${0}" "${RESET}"
+    return 1
+  fi
+
+  local ORGANIZATION=${1}
+  shift
+
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json"
+
+  http_request "https://api.github.com/user"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to get user details"
+    return 1
+  fi
+
+  local USER
+  USER="$(jq -r '.login' "${HTTP_OUTPUT}")"
+
+  local pr_page=${1:-}
+  local pr_page_size=100
+  local pr_count="${pr_page_size}"
+
+  while [[ pr_count -eq ${pr_page_size} ]]; do
+    pr_page=$((pr_page + 1))
+
+    printf "%bFetching page %s of pull-requests%b\n" "${BLUE}" "${pr_page}" "${RESET}"
+
+    http_request "https://api.github.com/search/issues" -G --data-urlencode "q=is:pr author:${USER} archived:false is:closed user:${ORGANIZATION}" --data-urlencode "per_page=${pr_page_size}" --data-urlencode "page=${pr_page}"
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      http_handle_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${pr_page}"
+      return 1
+    fi
+
+    pr_count="$(jq -r '.items | length' "${HTTP_OUTPUT}")"
+    if [[ ${pr_count} -eq 0 ]]; then
+      rm "${HTTP_OUTPUT}"
+      break
+    fi
+
+    local PULL_REQUESTS
+    mapfile -t PULL_REQUESTS < <(jq -r '.items[].pull_request.url' "${HTTP_OUTPUT}")
+    rm "${HTTP_OUTPUT}"
+
+    for PR in "${PULL_REQUESTS[@]}"; do
+      http_request "${PR}"
+      if [[ ${HTTP_STATUS} != "200" ]]; then
+        http_handle_error "Unable to fetch pull-request ${PR}"
+        return 1
+      fi
+
+      local BRANCH
+      BRANCH="$(jq -r '.head.ref' "${HTTP_OUTPUT}")"
+      local REPO
+      REPO="$(jq -r '.head.repo.full_name' "${HTTP_OUTPUT}")"
+      rm "${HTTP_OUTPUT}"
+
+      http_request "https://api.github.com/repos/${REPO}/branches/${BRANCH}"
+      if [[ ${HTTP_STATUS} != "404" ]]; then
+        printf "%bPull-request for branch %s on %s can be deleted%b\n" "${YELLOW}" "${BRANCH}" "${REPO}" "${RESET}"
+
+        if [[ ${dryRun} == "false" ]]; then
+          http_request --request DELETE "https://api.github.com/repos/${REPO}/git/refs/heads/${BRANCH}"
+
+          if [[ ${HTTP_STATUS} != "204" ]]; then
+            http_handle_error "Unable to delete branch"
+            return 1
+          fi
+        fi
+      fi
+    done
+  done
+}
+
+main "${@}"
