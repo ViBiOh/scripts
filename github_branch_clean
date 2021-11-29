@@ -74,7 +74,7 @@ main() {
 
     http_request "https://api.github.com/search/issues" -G --data-urlencode "q=is:pr author:${USER} archived:false is:closed user:${ORGANIZATION}" --data-urlencode "per_page=${pr_page_size}" --data-urlencode "page=${pr_page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      http_handle_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${pr_page}"
+      http_handle_error "Unable to list pull-requests on page ${pr_page}"
       return 1
     fi
 
