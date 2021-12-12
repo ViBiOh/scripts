@@ -29,7 +29,7 @@ var_read() {
 
   if [[ -z ${!VAR_NAME:-} ]]; then
     if [[ -z ${SCRIPTS_NO_INTERACTIVE:-} ]]; then
-      read ${VAR_SECRET_ARG?} -r -p "${VAR_NAME}${VAR_DEFAULT_DISPLAY}=" READ_VALUE
+      read ${VAR_SECRET_ARG?} -r -p "${VAR_NAME}${VAR_DEFAULT_DISPLAY}=" READ_VALUE </dev/tty
     fi
 
     local VAR_SAFE_VALUE
