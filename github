@@ -376,6 +376,7 @@ github_configure() {
     "allow_deletions": false,
     "enforce_admins": false,
     "required_linear_history": true,
+    "required_conversation_resolution": true,
     "required_pull_request_reviews": null,
     "required_status_checks": {
       "strict": true,
@@ -385,6 +386,12 @@ github_configure() {
     },
     "restrictions": null
   }'
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to update branch protection for ${GITHUB_REPOSITORY}"
+    return 1
+  fi
+
+  http_request --header "Accept: application/vnd.github.v3+json" --request "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/main/protection/required_signatures"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to update branch protection for ${GITHUB_REPOSITORY}"
     return 1
