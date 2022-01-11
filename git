@@ -149,6 +149,10 @@ git_last_tag() {
     return 1
   fi
 
+  if [[ $(git tag --list | wc -l) -eq 0 ]]; then
+    return
+  fi
+
   git describe --tag 2>/dev/null | awk -F "-" '{printf("%s", $1)}'
 }
 

@@ -112,9 +112,19 @@ release() {
 
   var_info "Identifying semver"
 
+  local LAST_TAG
+  LAST_TAG="$(git_last_tag)"
+
   local VERSION_REF
-  VERSION_REF="$(git log --no-merges --invert-grep --grep "\[skip ci\]" --color --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' "HEAD...$(git_last_tag)" | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
-  var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep --invert-match "${VERSION_REF}" | head -1)"
+  local PREVIOUS_REF
+
+  if [[ -n ${LAST_TAG:-} ]]; then
+    VERSION_REF="$(git log --no-merges --invert-grep --grep "\[skip ci\]" --color --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' "HEAD...${LAST_TAG}" | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
+    var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep --invert-match "${VERSION_REF}" | head -1)"
+  else
+    PREVIOUS_REF="HEAD^1"
+    VERSION_REF="HEAD"
+  fi
 
   local CHANGELOG
   CHANGELOG=$(git_changelog "${VERSION_REF}" "${PREVIOUS_REF}")
