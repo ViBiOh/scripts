@@ -140,7 +140,7 @@ release() {
   printf "%bRelease seems to be a %b%s%b\n" "${BLUE}" "${YELLOW}" "${VERSION_TYPE}" "${RESET}"
   var_info "Specify explicit git tag or major|minor|patch for semver increment"
   local VERSION
-  VERSION="$(printf "%bmajor%b\nminor%b\npatch" "${RED}" "${YELLOW}" "${GREEN}" | fzf --height=20 --ansi --reverse)"
+  VERSION="$(printf "%bpatch\n%bminor\n%bbmajor" "${GREEN}" "${YELLOW}" "${RED}" | fzf --height=20 --ansi --reverse)"
 
   local GIT_TAG
   GIT_TAG="$(version_semver "${VERSION}" "${VERSION_REF}" "quiet")"
