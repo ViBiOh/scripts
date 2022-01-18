@@ -19,7 +19,7 @@ version_value() {
 
 version_bump() {
   if [[ -e package.json ]]; then
-    npx npm-check-updates -u
+    var_print_and_run "npx npm-check-updates -u"
     npm install --ignore-scripts
     npm audit fix
   fi
@@ -32,14 +32,14 @@ version_bump() {
       fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
 
     if [[ -n ${ORG_TO_BUMP} ]]; then
-      go get -u "${ORG_TO_BUMP}/..."
+      var_print_and_run "go get -u '${ORG_TO_BUMP}/...'"
       go mod tidy -compat=1.17
       git diff go.mod
     fi
   fi
 
   if [[ -e provider.tf ]]; then
-    terraform init -upgrade
+    var_print_and_run "terraform init -upgrade"
   fi
 }
 
