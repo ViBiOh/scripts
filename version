@@ -31,7 +31,7 @@ version_bump() {
       <(go list -m -json all | jq -r 'select(.Indirect != true) | .Path' | awk -F '/' '{print $1 "/" $2}' | sort | uniq) |
       fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
 
-    if [[ -n ${MODULE_TO_BUMP} ]]; then
+    if [[ -n ${ORG_TO_BUMP} ]]; then
       go get -u "${ORG_TO_BUMP}/..."
       go mod tidy -compat=1.17
       git diff go.mod
