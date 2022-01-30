@@ -305,7 +305,7 @@ github_clean_subscription() {
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
   local page=0
-  local page_size=100
+  local page_size=50 # wait for https://support.github.com/ticket/personal/0/1482504
   local count="${page_size}"
 
   local scope="user"
