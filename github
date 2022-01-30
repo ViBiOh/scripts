@@ -316,6 +316,8 @@ github_clean_subscription() {
   while [[ count -eq ${page_size} ]]; do
     page=$((page + 1))
 
+    var_info "Fetching all subscriptions page ${page}..."
+
     http_request --header "Accept: application/vnd.github.v3+json" "https://api.github.com/notifications?all=true&per_page=${page_size}&page=${page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list notifications on page ${page}"
