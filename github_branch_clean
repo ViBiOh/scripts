@@ -112,6 +112,8 @@ main() {
             http_handle_error "Unable to delete branch"
             return 1
           fi
+
+          rm "${HTTP_OUTPUT}"
         fi
       fi
     done
