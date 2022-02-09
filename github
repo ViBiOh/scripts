@@ -241,25 +241,48 @@ github_org_stats_user() {
   printf "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits)), opened: (reduce .[].contribution as $contrib (0; . + $contrib.opened)), reviewed: (reduce .[].contribution as $contrib (0; . + $contrib.reviewed))} | {added: .added, deleted: .deleted, commits: .commits, opened: .opened, reviewed: .reviewed, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
 }
 
-github_batch_clone() {
+github_clone() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
-  local GITHUB_ORGANIZATION="${1:-}"
-  shift || true
-
   var_read GITHUB_TOKEN "" "secret"
-
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+
+  http_request --header "Accept: application/vnd.github.v3+json" "https://api.github.com/user/orgs"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to list user organizations"
+    return 1
+  fi
+
+  local USER_ORGANIZATIONS
+  USER_ORGANIZATIONS="$(jq -r '.[].login' "${HTTP_OUTPUT}")"
+  rm "${HTTP_OUTPUT}"
+
+  http_request --header "Accept: application/vnd.github.v3+json" "https://api.github.com/user"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to get user information"
+    return 1
+  fi
+
+  local USERNAME
+  USERNAME="$(jq -r '.login' "${HTTP_OUTPUT}")"
+
+  USER_ORGANIZATIONS="$(printf "%s\n%s" "${USER_ORGANIZATIONS}" "${USERNAME}")"
+
+  local GITHUB_ORGANIZATION
+  GITHUB_ORGANIZATION="$(printf "%s" "${USER_ORGANIZATIONS}" | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt='Organization>')"
 
   local page=0
   local page_size=100
   local count="${page_size}"
 
   local scope="user"
-  if [[ -n ${GITHUB_ORGANIZATION} ]]; then
+  if [[ ${GITHUB_ORGANIZATION} != "${USERNAME}" ]]; then
     scope="orgs/${GITHUB_ORGANIZATION}"
   fi
+
+  local REPOSITORY_REGEX="${2:-}"
+  var_read REPOSITORY_REGEX ""
 
   while [[ count -eq ${page_size} ]]; do
     page=$((page + 1))
@@ -267,7 +290,7 @@ github_batch_clone() {
     http_request --header "Content-Type: application/json" "https://api.github.com/${scope}/repos?type=owner&per_page=${page_size}&page=${page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list user repositories on page ${page}"
-      break
+      return 1
     fi
 
     count="$(jq -r 'length' "${HTTP_OUTPUT}")"
@@ -282,6 +305,10 @@ github_batch_clone() {
 
     for REPO in "${REPOSITORIES[@]}"; do
       IFS=',' read -r -a details <<<"${REPO}"
+
+      if ! [[ ${details[0]} =~ ${REPOSITORY_REGEX} ]]; then
+        continue
+      fi
 
       if [[ -d ${details[0]} ]]; then
         var_success "${details[0]} already cloned!"
