@@ -367,6 +367,7 @@ github_clean_subscription() {
         http_handle_error "Unable to delete subscription for thread ${THREAD}"
         break
       fi
+      rm "${HTTP_OUTPUT}"
     done
   done
 }
