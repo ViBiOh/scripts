@@ -25,17 +25,26 @@ version_bump() {
   fi
 
   if [[ -e go.mod ]]; then
-    local ORG_TO_BUMP
-    ORG_TO_BUMP="$(cat \
-      <(printf ".\n") \
-      <(go list -m -json all | jq -r 'select(.Indirect != true) | .Path' | awk -F '/' '{print $1 "/" $2}' | sort | uniq) |
-      fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+    local CURRENT_MODULE
+    CURRENT_MODULE="$(go list -m)"
 
-    if [[ -n ${ORG_TO_BUMP} ]]; then
-      var_print_and_run "go get -u '${ORG_TO_BUMP}/...'"
-      go mod tidy -compat=1.17
-      git diff go.mod
-    fi
+    local DEP_REGEX="${1:-}"
+    var_read DEP_REGEX ""
+
+    for dep in $(go list -m -json all | jq -r 'select(.Indirect != true) | .Path'); do
+      if [[ ${dep} == "${CURRENT_MODULE}" ]]; then
+        continue
+      fi
+
+      if ! [[ ${dep} =~ ${DEP_REGEX} ]]; then
+        continue
+      fi
+
+      var_print_and_run "go get -u '${dep}@latest'"
+    done
+
+    go mod tidy -compat=1.17
+    git diff go.mod
   fi
 
   if [[ -e provider.tf ]]; then
