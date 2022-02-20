@@ -28,15 +28,15 @@ version_bump() {
     local CURRENT_MODULE
     CURRENT_MODULE="$(go list -m)"
 
-    local DEP_REGEX="${1:-}"
-    var_read DEP_REGEX ""
+    local REGEX_FILTER="${1:-}"
+    var_read REGEX_FILTER ""
 
     for dep in $(go list -m -json all | jq -r 'select(.Indirect != true) | .Path'); do
       if [[ ${dep} == "${CURRENT_MODULE}" ]]; then
         continue
       fi
 
-      if ! [[ ${dep} =~ ${DEP_REGEX} ]]; then
+      if [[ -n ${REGEX_FILTER} ]] && ! [[ ${dep} =~ ${REGEX_FILTER} ]]; then
         continue
       fi
 
