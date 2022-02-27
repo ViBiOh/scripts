@@ -460,8 +460,14 @@ github_configure() {
     "required_status_checks": {
       "strict": true,
       "contexts": [
-        "Build",
-        "Branch is clean"
+        {
+          "context": "Branch is clean",
+          "app_id": 15368
+        },
+        {
+          "context": "Build",
+          "app_id": 15368
+        }
       ]
     },
     "restrictions": null
