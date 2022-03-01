@@ -10,6 +10,7 @@ main() {
 
   local SCRIPTS_CLEAN
 
+  OPTIND=0
   while getopts ":c" option; do
     case "${option}" in
     c)

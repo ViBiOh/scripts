@@ -26,6 +26,7 @@ http_request() {
 main() {
   local dryRun="false"
 
+  OPTIND=0
   while getopts ":d" option; do
     case "${option}" in
     d)

@@ -20,6 +20,7 @@ main() {
 
   local ROTATE_DRY_RUN=0
 
+  OPTIND=0
   while getopts ":d" option; do
     case "${option}" in
     d)

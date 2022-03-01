@@ -23,6 +23,7 @@ tmux_batch() {
   local QUIET="false"
   local ITEMS=()
 
+  OPTIND=0
   while getopts ":a:i:n:q" option; do
     case "${option}" in
     a)
