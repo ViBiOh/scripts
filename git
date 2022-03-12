@@ -196,7 +196,7 @@ git_changelog() {
     local BREAK=""
 
     for line in $(git show --no-patch --format='%h %B' "${hash}" | grep --invert-match '^\s*$'); do
-      if [[ ${line} =~ \[skip\ ci\] ]]; then
+      if [[ ${line} =~ \[skip\ ci\]\ Automated ]]; then
         continue
       fi
 
