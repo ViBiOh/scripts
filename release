@@ -119,7 +119,7 @@ release() {
   local PREVIOUS_REF
 
   if [[ -n ${LAST_TAG:-} ]]; then
-    VERSION_REF="$(git log --no-merges --invert-grep --grep "\[skip ci\]" --color --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' "HEAD...${LAST_TAG}" | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
+    VERSION_REF="$(git log --no-merges --invert-grep --grep "\[skip ci\] Automated" --color --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' "HEAD...${LAST_TAG}" | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
     var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep --invert-match "${VERSION_REF}" | head -1)"
   else
     PREVIOUS_REF="HEAD^1"
