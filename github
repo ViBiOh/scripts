@@ -316,7 +316,7 @@ github_clone() {
         var_info "Cloning ${details[0]}"
         git clone "${details[1]}" "${details[0]}"
         (
-          cd "${details[0]}" && git config branch.default "$(git remote show origin | grep 'HEAD branch:' | awk '{printf(\"%s\", $3)}')"
+          cd "${details[0]}" && git config branch.default "$(git remote show origin | grep 'HEAD branch:' | awk '{printf("%s", $3)}')"
         )
       fi
     done
