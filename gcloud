@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+gcloud_auth() {
+  gcloud auth login --update-adc
+  gcloud config unset compute/region
+  gcloud config set project "$(gcloud projects list | grep dev | awk '{print $1}')"
+
+  if command -v docker >/dev/null 2>&1; then
+    gcloud --quiet auth configure-docker "eu.gcr.io"
+  fi
+}
+
+gcloud_kube_import() {
+  local CLUSTER_NAME
+
+  IFS='@' read -r -a CLUSTER_NAME <<<"$(gcloud container clusters list --format json | jq -r '.[] | .name + "@" + .zone' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+
+  if [[ -n ${CLUSTER_NAME[0]} ]]; then
+    gcloud container clusters get-credentials "${CLUSTER_NAME[0]}" --zone "${CLUSTER_NAME[1]}"
+  fi
+}
