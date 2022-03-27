@@ -34,7 +34,7 @@ passget() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "http"
+  source "$(script_dir)/meta" && meta_init "var"
   var_color
 
   var_read DOCKER_REGISTRY "https://hub.docker.com/v2"
@@ -42,37 +42,9 @@ main() {
   var_read DOCKER_USER "$(passget "dev/docker" "login")"
   var_read DOCKER_PASSWORD "$(pass "dev/docker" | head -1)" "secret"
 
-  http_init_client
-  HTTP_CLIENT_ARGS+=("--max-time" "60")
-
-  # Login to registry
-  LOGIN_PAYLOAD="$(jq -c -n --arg username "${DOCKER_USER}" --arg password "${DOCKER_PASSWORD}" '{username: $username, password: $password}')"
-
-  http_request --request "POST" --header "Content-Type: application/json" "${DOCKER_REGISTRY}/users/login/" --data "${LOGIN_PAYLOAD}"
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    http_handle_error "Unable to login to registry ${DOCKER_REGISTRY}"
-    return 1
-  fi
-
-  HTTP_CLIENT_ARGS+=("--header" "Authorization: JWT $(jq -r '.token' "${HTTP_OUTPUT}")")
-  rm "${HTTP_OUTPUT}"
-
-  # Listing repositories
-  var_info "Listing repositories for ${DOCKER_OWNER}..."
-
-  http_request --request GET "${DOCKER_REGISTRY}/users/${DOCKER_OWNER}/repositories/?page_size=100"
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    http_handle_error "Unable to list images for ${DOCKER_OWNER}"
-    return 1
-  fi
-
-  local REPOSITORIES
-  mapfile -t REPOSITORIES < <(jq -r '.[] | .name' "${HTTP_OUTPUT}")
-  rm "${HTTP_OUTPUT}"
-
-  for repository in "${REPOSITORIES[@]}"; do
-    registry-cleaner -image "${DOCKER_OWNER}/${repository}" -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -delete -grep '^[a-f0-9]{7}($|-)'
-    registry-cleaner -image "${DOCKER_OWNER}/${repository}" -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -delete -grep '[0-9]{12}' -last
+  for repo in $(registry-cleaner -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -list); do
+    registry-cleaner -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -image "${repo}" -delete -grep '^[a-f0-9]{7}($|-)'
+    registry-cleaner -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -image "${repo}" -delete -grep '[0-9]{12}' -last
   done
 
   unset DOCKER_PASSWORD
