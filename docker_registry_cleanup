@@ -47,7 +47,6 @@ main() {
 
   # Login to registry
   LOGIN_PAYLOAD="$(jq -c -n --arg username "${DOCKER_USER}" --arg password "${DOCKER_PASSWORD}" '{username: $username, password: $password}')"
-  unset DOCKER_PASSWORD
 
   http_request --request "POST" --header "Content-Type: application/json" "${DOCKER_REGISTRY}/users/login/" --data "${LOGIN_PAYLOAD}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
@@ -72,55 +71,11 @@ main() {
   rm "${HTTP_OUTPUT}"
 
   for repository in "${REPOSITORIES[@]}"; do
-    var_info "Listing tags for ${DOCKER_OWNER}/${repository}..."
-
-    http_request --request GET "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/?page_size=100"
-    if [[ ${HTTP_STATUS} != "200" ]]; then
-      http_handle_error "Unable to list tags for ${DOCKER_OWNER}/${repository}"
-      continue
-    fi
-
-    local TAGS
-    mapfile -t TAGS < <(jq -r '.results[] | .name' "${HTTP_OUTPUT}")
-    rm "${HTTP_OUTPUT}"
-
-    local TIMESTAMPS=()
-
-    for tag in "${TAGS[@]}"; do
-      if [[ ${tag} =~ ^[0-9]{12} ]]; then
-        TIMESTAMPS+=("${tag}")
-        continue
-      fi
-
-      if [[ ${tag} =~ ^[0-9A-Fa-f]{6,} ]]; then
-        http_request --request DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
-        if [[ ${HTTP_STATUS} != "204" ]]; then
-          http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
-          continue
-        fi
-
-        rm "${HTTP_OUTPUT}"
-        var_success "${DOCKER_OWNER}/${repository}:${tag} deleted!"
-      fi
-    done
-
-    readarray -t SORTED_TIMESTAMP < <(printf '%s\0' "${TIMESTAMPS[@]}" | sort --zero-terminated | xargs -0 -n 1)
-    if [[ ${#SORTED_TIMESTAMP[@]} -eq 0 ]]; then
-      continue
-    fi
-
-    unset "SORTED_TIMESTAMP[-1]"
-    for tag in "${SORTED_TIMESTAMP[@]}"; do
-      http_request --request DELETE "${DOCKER_REGISTRY}/repositories/${DOCKER_OWNER}/${repository}/tags/${tag}/"
-      if [[ ${HTTP_STATUS} != "204" ]]; then
-        http_handle_error "Unable to delete tags for ${DOCKER_OWNER}/${repository}:${tag}"
-        continue
-      fi
-
-      rm "${HTTP_OUTPUT}"
-      var_success "${DOCKER_OWNER}/${repository}:${tag} deleted!"
-    done
+    registry-cleaner -image "${DOCKER_OWNER}/${repository}" -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -delete -grep '^[a-f0-9]{7}($|-)'
+    registry-cleaner -image "${DOCKER_OWNER}/${repository}" -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -delete -grep '[0-9]{12}' -last
   done
+
+  unset DOCKER_PASSWORD
 }
 
 main
