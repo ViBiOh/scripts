@@ -70,10 +70,10 @@ npm_check() {
   if [[ -n ${JS_FILES:-} ]]; then
     if command -v npm >/dev/null 2>&1; then
       var_info "Formating javascript files"
-      run_command npm --silent run format ${JS_FILES[@]}
+      run_command npm --silent run --if-present format ${JS_FILES[@]}
 
       var_info "Linting javascript files"
-      run_command npm --silent run style ${JS_FILES[@]}
+      run_command npm --silent run --if-present style ${JS_FILES[@]}
     else
       var_warning "cannot format and lint javascript files: npm not found. Skipping."
     fi
