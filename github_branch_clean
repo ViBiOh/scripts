@@ -24,13 +24,13 @@ http_request() {
 }
 
 main() {
-  local dryRun="false"
+  local dryRun="true"
 
   OPTIND=0
-  while getopts ":d" option; do
+  while getopts ":a" option; do
     case "${option}" in
-    d)
-      dryRun="true"
+    a)
+      dryRun="false"
       ;;
     :)
       printf "option -%s requires a value\n" "${OPTARG}" >&2
@@ -104,18 +104,20 @@ main() {
 
       http_request "https://api.github.com/repos/${REPO}/branches/${BRANCH}"
       if [[ ${HTTP_STATUS} != "404" ]]; then
-        printf "%bPull-request for branch %s on %s can be deleted%b\n" "${YELLOW}" "${BRANCH}" "${REPO}" "${RESET}"
-
-        if [[ ${dryRun} == "false" ]]; then
-          http_request --request DELETE "https://api.github.com/repos/${REPO}/git/refs/heads/${BRANCH}"
-
-          if [[ ${HTTP_STATUS} != "204" ]]; then
-            http_handle_error "Unable to delete branch"
-            return 1
-          fi
-
-          rm "${HTTP_OUTPUT}"
+        if [[ ${dryRun} == "true" ]]; then
+          printf "%bBranches can be cleaned here https://github.com/%s/branches/yours\n%b" "${YELLOW}" "${REPO}" "${RESET}"
+          continue
         fi
+
+        printf "%bDeleting branch %s on %s...%b\n" "${YELLOW}" "${BRANCH}" "${REPO}" "${RESET}"
+
+        http_request --request DELETE "https://api.github.com/repos/${REPO}/git/refs/heads/${BRANCH}"
+        if [[ ${HTTP_STATUS} != "204" ]]; then
+          http_handle_error "Unable to delete branch"
+          return 1
+        fi
+
+        rm "${HTTP_OUTPUT}"
       fi
     done
   done
