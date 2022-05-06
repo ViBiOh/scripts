@@ -2,28 +2,22 @@
 
 set -o nounset -o pipefail -o errexit
 
-http_handle_error() {
-  printf "%bHTTP/%s: %s%b\n" "${RED}" "${HTTP_STATUS}" "${1:-}" "${RESET}"
-  cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
-}
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
 
-http_init_client() {
-  export HTTP_OUTPUT="http_output.txt"
-
-  HTTP_CLIENT_ARGS=("curl" "--disable" "--silent" "--show-error" "--location" "--max-time" "10" "-o" "${HTTP_OUTPUT}" "-w" "%{http_code}")
-  if [[ ${#} -gt 0 ]]; then
-    HTTP_CLIENT_ARGS+=("${@}")
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
   fi
-
-  export HTTP_CLIENT_ARGS
-}
-
-http_request() {
-  export HTTP_STATUS
-  HTTP_STATUS="$("${HTTP_CLIENT_ARGS[@]}" "${@}")"
 }
 
 main() {
+  source "$(script_dir)/meta" && meta_init "var" "http"
+  var_color
+
   local dryRun="true"
 
   OPTIND=0
@@ -46,7 +40,7 @@ main() {
   shift $((OPTIND - 1))
 
   if [[ ${#} -lt 1 ]]; then
-    printf "%bUsage: %s [-d for dry run] ORGANIZATION PAGE?%b\n" "${RED}" "${0}" "${RESET}"
+    var_red "Usage: ${0} [-d for dry run] ORGANIZATION PAGE?"
     return 1
   fi
 
@@ -71,7 +65,7 @@ main() {
   while [[ pr_count -eq ${pr_page_size} ]]; do
     pr_page=$((pr_page + 1))
 
-    printf "%bFetching page %s of pull-requests%b\n" "${BLUE}" "${pr_page}" "${RESET}"
+    var_info "Fetching page ${pr_page} of pull-requests"
 
     http_request "https://api.github.com/search/issues" -G --data-urlencode "q=is:pr author:${USER} archived:false is:closed user:${ORGANIZATION}" --data-urlencode "per_page=${pr_page_size}" --data-urlencode "page=${pr_page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
@@ -105,11 +99,11 @@ main() {
       http_request "https://api.github.com/repos/${REPO}/branches/${BRANCH}"
       if [[ ${HTTP_STATUS} != "404" ]]; then
         if [[ ${dryRun} == "true" ]]; then
-          printf "%bBranches can be cleaned here https://github.com/%s/branches/yours\n%b" "${YELLOW}" "${REPO}" "${RESET}"
+          var_warning "Branches can be cleaned here https://github.com/%s/branches/yours"
           continue
         fi
 
-        printf "%bDeleting branch %s on %s...%b\n" "${YELLOW}" "${BRANCH}" "${REPO}" "${RESET}"
+        var_warning "Deleting branch ${BRANCH} on ${REPO}..."
 
         http_request --request DELETE "https://api.github.com/repos/${REPO}/git/refs/heads/${BRANCH}"
         if [[ ${HTTP_STATUS} != "204" ]]; then
