@@ -20,15 +20,18 @@ http_urlencode() {
 }
 
 http_handle_error() {
+  if [[ $(type -t "var_color") != "function" ]]; then
   source "${HTTP_SCRIPT_DIR}/meta" && meta_init "var"
   var_color
+  fi
 
   var_error "HTTP/${HTTP_STATUS}: ${1:-}"
   cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
 }
 
 http_init_client() {
-  export HTTP_OUTPUT="http_output.txt"
+  export HTTP_OUTPUT
+  HTTP_OUTPUT="$(mktemp)"
 
   HTTP_CLIENT_ARGS=("curl" "--disable" "--silent" "--show-error" "--location" "--max-time" "10" "--output" "${HTTP_OUTPUT}" "--write-out" "%{http_code}")
   if [[ ${#} -gt 0 ]]; then
