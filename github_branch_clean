@@ -57,6 +57,7 @@ main() {
 
   local USER
   USER="$(jq --raw-output '.login' "${HTTP_OUTPUT}")"
+  rm "${HTTP_OUTPUT}"
 
   local pr_page=${1:-}
   local pr_page_size=100
