@@ -18,7 +18,7 @@ github_rate_limit_wait() {
       return
     fi
 
-    remaining="$(jq -r '.resources.core.remaining' "${HTTP_OUTPUT}")"
+    remaining="$(jq --raw-output '.resources.core.remaining' "${HTTP_OUTPUT}")"
     rm "${HTTP_OUTPUT}"
     if [[ ${remaining} -gt ${WANTED_CALLS} ]]; then
       return
@@ -64,14 +64,14 @@ github_repo_pr_stats() {
       break
     fi
 
-    pr_count="$(jq -r 'length' "${HTTP_OUTPUT}")"
+    pr_count="$(jq --raw-output 'length' "${HTTP_OUTPUT}")"
     if [[ ${pr_count} -eq 0 ]]; then
       rm "${HTTP_OUTPUT}"
       break
     fi
 
     local PULL_REQUESTS
-    mapfile -t PULL_REQUESTS < <(jq -r '. [] | select(.merged_at != null) | select(.user.login != null) | (.number | tostring) + "," + .user.login' "${HTTP_OUTPUT}")
+    mapfile -t PULL_REQUESTS < <(jq --raw-output '. [] | select(.merged_at != null) | select(.user.login != null) | (.number | tostring) + "," + .user.login' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     github_rate_limit_wait "${pr_page_size}"
@@ -192,7 +192,7 @@ github_org_stats() {
       break
     fi
 
-    repo_count="$(jq -r 'length' "${HTTP_OUTPUT}")"
+    repo_count="$(jq --raw-output 'length' "${HTTP_OUTPUT}")"
     if [[ ${repo_count} -eq 0 ]]; then
       rm "${HTTP_OUTPUT}"
       break
@@ -257,7 +257,7 @@ github_clone() {
   fi
 
   local USER_ORGANIZATIONS
-  USER_ORGANIZATIONS="$(jq -r '.[].login' "${HTTP_OUTPUT}")"
+  USER_ORGANIZATIONS="$(jq --raw-output '.[].login' "${HTTP_OUTPUT}")"
   rm "${HTTP_OUTPUT}"
 
   http_request --header "Accept: application/vnd.github.v3+json" "https://api.github.com/user"
@@ -267,7 +267,7 @@ github_clone() {
   fi
 
   local USERNAME
-  USERNAME="$(jq -r '.login' "${HTTP_OUTPUT}")"
+  USERNAME="$(jq --raw-output '.login' "${HTTP_OUTPUT}")"
 
   USER_ORGANIZATIONS="$(printf "%s\n%s" "${USER_ORGANIZATIONS}" "${USERNAME}")"
 
@@ -295,14 +295,14 @@ github_clone() {
       return 1
     fi
 
-    count="$(jq -r 'length' "${HTTP_OUTPUT}")"
+    count="$(jq --raw-output 'length' "${HTTP_OUTPUT}")"
     if [[ ${count} -eq 0 ]]; then
       rm "${HTTP_OUTPUT}"
       break
     fi
 
     local REPOSITORIES
-    mapfile -t REPOSITORIES < <(jq -r '.[] | select (.archived | not) | .name + "," + .ssh_url' "${HTTP_OUTPUT}")
+    mapfile -t REPOSITORIES < <(jq --raw-output '.[] | select (.archived | not) | .name + "," + .ssh_url' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for REPO in "${REPOSITORIES[@]}"; do
@@ -356,14 +356,14 @@ github_clean_subscription() {
       break
     fi
 
-    count="$(jq -r 'length' "${HTTP_OUTPUT}")"
+    count="$(jq --raw-output 'length' "${HTTP_OUTPUT}")"
     if [[ ${count} -eq 0 ]]; then
       rm "${HTTP_OUTPUT}"
       break
     fi
 
     local THREADS
-    mapfile -t THREADS < <(jq -r '.[].url' "${HTTP_OUTPUT}")
+    mapfile -t THREADS < <(jq --raw-output '.[].url' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for THREAD in "${THREADS[@]}"; do
@@ -410,7 +410,7 @@ github_compare_version() {
   fi
 
   local RELEASE_NOTES
-  RELEASE_NOTES="$(jq -r .body "${RELEASE_API_FILE}")"
+  RELEASE_NOTES="$(jq --raw-output .body "${RELEASE_API_FILE}")"
   rm "${RELEASE_API_FILE}"
 
   printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${GITHUB_REPOSITORY}" "${BLUE}" "${RED}" "${CURRENT_VERSION}" "${BLUE}" "${YELLOW}" "${LATEST_VERSION}" "${GREEN}" "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${LATEST_VERSION}" "${RESET}"

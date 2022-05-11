@@ -95,8 +95,8 @@ main() {
 
   local ISSUES=""
   http_request "https://api.github.com/repos/$(git_remote_repository)/issues?per_page=100" || true
-  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq -r '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -ne 0 ]]; then
-    ISSUES="$(cat <(printf "None\n") <(jq -r '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Issues closed>' | awk '{printf("Closes %s", $1)}')"
+  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq --raw-output '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -ne 0 ]]; then
+    ISSUES="$(cat <(printf "None\n") <(jq --raw-output '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Issues closed>' | awk '{printf("Closes %s", $1)}')"
 
     if [[ ${ISSUES} == "Closes None" ]]; then
       ISSUES=""

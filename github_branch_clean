@@ -56,7 +56,7 @@ main() {
   fi
 
   local USER
-  USER="$(jq -r '.login' "${HTTP_OUTPUT}")"
+  USER="$(jq --raw-output '.login' "${HTTP_OUTPUT}")"
 
   local pr_page=${1:-}
   local pr_page_size=100
@@ -73,14 +73,14 @@ main() {
       return 1
     fi
 
-    pr_count="$(jq -r '.items | length' "${HTTP_OUTPUT}")"
+    pr_count="$(jq --raw-output '.items | length' "${HTTP_OUTPUT}")"
     if [[ ${pr_count} -eq 0 ]]; then
       rm "${HTTP_OUTPUT}"
       break
     fi
 
     local PULL_REQUESTS
-    mapfile -t PULL_REQUESTS < <(jq -r '.items[].pull_request.url' "${HTTP_OUTPUT}")
+    mapfile -t PULL_REQUESTS < <(jq --raw-output '.items[].pull_request.url' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for PR in "${PULL_REQUESTS[@]}"; do
@@ -91,9 +91,9 @@ main() {
       fi
 
       local BRANCH
-      BRANCH="$(jq -r '.head.ref' "${HTTP_OUTPUT}")"
+      BRANCH="$(jq --raw-output '.head.ref' "${HTTP_OUTPUT}")"
       local REPO
-      REPO="$(jq -r '.head.repo.full_name' "${HTTP_OUTPUT}")"
+      REPO="$(jq --raw-output '.head.repo.full_name' "${HTTP_OUTPUT}")"
       rm "${HTTP_OUTPUT}"
 
       http_request "https://api.github.com/repos/${REPO}/branches/${BRANCH}"

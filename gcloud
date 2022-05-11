@@ -13,7 +13,7 @@ gcloud_auth() {
 gcloud_kube_import() {
   local CLUSTER_NAME
 
-  IFS='@' read -r -a CLUSTER_NAME <<<"$(gcloud container clusters list --format json | jq -r '.[] | .name + "@" + .zone' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+  IFS='@' read -r -a CLUSTER_NAME <<<"$(gcloud container clusters list --format json | jq --raw-output '.[] | .name + "@" + .zone' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
 
   if [[ -n ${CLUSTER_NAME[0]} ]]; then
     gcloud container clusters get-credentials "${CLUSTER_NAME[0]}" --zone "${CLUSTER_NAME[1]}"

@@ -51,7 +51,7 @@ main() {
     return 1
   fi
 
-  HTTP_CLIENT_ARGS+=("--header" "Authorization: Bearer $(jq -r .token "${HTTP_OUTPUT}")")
+  HTTP_CLIENT_ARGS+=("--header" "Authorization: Bearer $(jq --raw-output .token "${HTTP_OUTPUT}")")
   rm "${HTTP_OUTPUT}"
 
   var_info "Tagging image ${DOCKER_IMAGE} from ${IMAGE_VERSION} to ${VERSION_TARGET}..."

@@ -188,7 +188,7 @@ release_upload() {
   fi
 
   local RESPONSE_URL
-  RESPONSE_URL="$(jq -r .upload_url "${HTTP_OUTPUT}" | sed 's|{.*||')"
+  RESPONSE_URL="$(jq --raw-output .upload_url "${HTTP_OUTPUT}" | sed 's|{.*||')"
   rm "${HTTP_OUTPUT}"
 
   for asset in "${OUTPUT_DIR}"/*; do

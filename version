@@ -33,7 +33,7 @@ version_bump() {
     local REGEX_FILTER="${1:-}"
     var_read REGEX_FILTER ""
 
-    for dep in $(go list -m -json all | jq -r 'select(.Indirect != true) | .Path'); do
+    for dep in $(go list -m -json all | jq --raw-output 'select(.Indirect != true) | .Path'); do
       if [[ ${dep} == "${CURRENT_MODULE}" ]]; then
         continue
       fi
