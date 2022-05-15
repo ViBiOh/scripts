@@ -100,7 +100,7 @@ main() {
       http_request "https://api.github.com/repos/${REPO}/branches/${BRANCH}"
       if [[ ${HTTP_STATUS} != "404" ]]; then
         if [[ ${dryRun} == "true" ]]; then
-          var_warning "Branches can be cleaned here https://github.com/%s/branches/yours"
+          var_warning "Branches can be cleaned here https://github.com/${REPO}/branches/yours"
           continue
         fi
 
