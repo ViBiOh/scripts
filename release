@@ -155,7 +155,7 @@ release() {
   HTTP_CLIENT_ARGS+=("--max-time" "120")
 
   local PAYLOAD
-  PAYLOAD="$(jq -c -n \
+  PAYLOAD="$(jq --compact-output --null-input \
     --arg tag "${GIT_TAG}" \
     --arg target "$(git rev-parse "${VERSION_REF}")" \
     --arg name "${RELEASE_NAME}" \

@@ -85,7 +85,7 @@ github_repo_pr_stats() {
         break
       fi
 
-      pr="$(jq -c -r --arg author "${details[1]}" '[.[] | select(.user.login != null) | .user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
+      pr="$(jq --compact-output --raw-output --arg author "${details[1]}" '[.[] | select(.user.login != null) | .user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
       rm "${HTTP_OUTPUT}"
       if [[ -n ${pr:-} ]]; then
         if [[ -n ${prstats} ]]; then
@@ -97,7 +97,7 @@ github_repo_pr_stats() {
     done
   done
 
-  printf "[%s]" "${prstats}" | jq -c -r '
+  printf "[%s]" "${prstats}" | jq --compact-output --raw-output '
     [group_by(.author) | .[] | { author: (.[0].author), opened: length }] +
     [ [.[].reviewers] | flatten | group_by(.) | .[] | { author: .[0], reviewed: length}] |
     [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]]'
@@ -139,7 +139,7 @@ github_repo_stats() {
     retry="false"
 
     local stats
-    stats="$(jq -c -r --arg repo "${GITHUB_REPOSITORY}" \
+    stats="$(jq --compact-output --raw-output --arg repo "${GITHUB_REPOSITORY}" \
       '{
         repository: $repo,
         contributors: [.[] | {author: .author.login, added: (reduce .weeks[] as $item (0; . + $item.a)), deleted: (reduce .weeks[] as $item (0; . + $item.d)), commits: (reduce .weeks[] as $item (0; . + $item.c))} | {author, added, deleted, commits, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor }] | sort_by(.author)
@@ -150,7 +150,7 @@ github_repo_stats() {
     local prs
     prs="$(github_repo_pr_stats "${GITHUB_REPOSITORY}")"
 
-    printf "%s\n%s" "${stats}" "${prs}" | jq -c -r -s '{
+    printf "%s\n%s" "${stats}" "${prs}" | jq --compact-output --raw-output --slurp '{
       repository: .[0].repository,
       contributors: ((.[0] | .contributors) + .[1] | [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]] | sort_by(.author))
     }'
@@ -199,7 +199,7 @@ github_org_stats() {
     fi
 
     local REPOSITORIES
-    mapfile -t REPOSITORIES < <(jq -c -r --arg ignore "${REPOSITORY_IGNORE_REGEX}" '.[] | select(.full_name | test($ignore) | not) | .full_name' "${HTTP_OUTPUT}")
+    mapfile -t REPOSITORIES < <(jq --compact-output --raw-output --arg ignore "${REPOSITORY_IGNORE_REGEX}" '.[] | select(.full_name | test($ignore) | not) | .full_name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for REPO in "${REPOSITORIES[@]}"; do
@@ -237,7 +237,7 @@ github_org_stats_user() {
   shift || true
 
   local GITHUB_USER_STATS
-  GITHUB_USER_STATS="$(jq -c -r --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.ratio)' "${FILENAME}")"
+  GITHUB_USER_STATS="$(jq --compact-output --raw-output --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.ratio)' "${FILENAME}")"
 
   printf "%s\n" "${GITHUB_USER_STATS}"
   printf "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits)), opened: (reduce .[].contribution as $contrib (0; . + $contrib.opened)), reviewed: (reduce .[].contribution as $contrib (0; . + $contrib.reviewed))} | {added: .added, deleted: .deleted, commits: .commits, opened: .opened, reviewed: .reviewed, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / .commits) | floor}'
