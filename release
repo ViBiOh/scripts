@@ -149,14 +149,14 @@ release() {
   var_read GITHUB_REPOSITORY "$(git_remote_repository)"
   var_read RELEASE_NAME "${GIT_TAG}"
 
-  var_info "Creating release ${GIT_TAG} for ${GITHUB_REPOSITORY}..."
+  var_info "Creating release ${RELEASE_NAME} for ${GITHUB_REPOSITORY}..."
 
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
   HTTP_CLIENT_ARGS+=("--max-time" "120")
 
   local PAYLOAD
   PAYLOAD="$(jq --compact-output --null-input \
-    --arg tag "${GIT_TAG}" \
+    --arg tag "${RELEASE_NAME}" \
     --arg target "$(git rev-parse "${VERSION_REF}")" \
     --arg name "${RELEASE_NAME}" \
     --arg body "${CHANGELOG}" \
