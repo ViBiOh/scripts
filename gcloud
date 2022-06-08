@@ -12,6 +12,15 @@ gcloud_auth() {
   fi
 }
 
+gcloud_project() {
+  local GCLOUD_PROJECT
+  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+
+  if [[ -n ${GCLOUD_PROJECT} ]]; then
+    gcloud config set project "${GCLOUD_PROJECT}"
+  fi
+}
+
 gcloud_kube_import() {
   local CLUSTER_NAME
 
