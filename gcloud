@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+
 gcloud_auth() {
   gcloud auth login --update-adc
   gcloud config unset compute/region
