@@ -39,6 +39,8 @@ golang_build() {
     local GO_ARCHS="${GO_ARCHS:-darwin/amd64 darwin/arm64 linux/amd64 linux/arm linux/arm64}"
 
     for main in "${OUTPUT_BINARIES[@]}"; do
+      local EXTENSION
+
       local NAME
       NAME="$(basename "${main}")"
 
@@ -49,8 +51,15 @@ golang_build() {
           export GOOS="${context[0]}"
           export GOARCH="${context[1]}"
           export CGO_ENABLED="0"
+
+          if [[ ${GOOS} == "windows" ]]; then
+            EXTENSION=".exe"
+          else
+            EXTENSION=""
+          fi
+
           var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
-          go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}" "${main}"
+          go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
         )
       done
     done
