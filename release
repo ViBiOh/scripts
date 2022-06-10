@@ -36,7 +36,7 @@ golang_build() {
     local OUTPUT_BINARIES
     mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
 
-    local GO_ARCHS="${GO_ARCHS:-darwin/amd64 darwin/arm64 linux/amd64 linux/arm linux/arm64}"
+    local GO_ARCHS="${GO_ARCHS:-darwin/amd64 darwin/arm64 linux/amd64 linux/arm linux/arm64 windows/amd64 windows/arm64}"
 
     for main in "${OUTPUT_BINARIES[@]}"; do
       local EXTENSION
