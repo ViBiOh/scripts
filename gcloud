@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+export GOOGLE_REGISTRIES=("gcr.io" "eu.gcr.io" "us.gcr.io")
 
 gcloud_auth() {
   gcloud auth login --update-adc
@@ -8,9 +9,16 @@ gcloud_auth() {
   gcloud config set project "$(gcloud projects list | grep dev | awk '{print $1}')"
 
   if command -v docker >/dev/null 2>&1; then
-    gcloud --quiet auth configure-docker "gcr.io"
-    gcloud --quiet auth configure-docker "eu.gcr.io"
+    for registry in "${GOOGLE_REGISTRIES[@]}"; do
+      gcloud --quiet auth configure-docker "${registry}"
+    done
   fi
+}
+
+gcloud_docker_login() {
+  for registry in "${GOOGLE_REGISTRIES[@]}"; do
+    gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin "https://${registry}"
+  done
 }
 
 gcloud_project() {
