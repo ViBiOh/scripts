@@ -37,5 +37,6 @@ gcloud_kube_import() {
 
   if [[ -n ${CLUSTER_NAME[0]} ]]; then
     gcloud container clusters get-credentials "${CLUSTER_NAME[0]}" --zone "${CLUSTER_NAME[1]}"
+    kubectl config rename-context "$(kubectl config current-context)" "$(gcloud config get project 2>/dev/null)_${CLUSTER_NAME[0]}"
   fi
 }
