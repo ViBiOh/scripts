@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-export GOOGLE_REGISTRIES=("gcr.io" "eu.gcr.io" "us.gcr.io")
+export GOOGLE_CONTAINER_REGISTRIES=("gcr.io" "eu.gcr.io" "us.gcr.io")
 
 gcloud_auth() {
   gcloud auth login --update-adc
@@ -9,14 +9,14 @@ gcloud_auth() {
   gcloud config set project "$(gcloud projects list | grep dev | awk '{print $1}')"
 
   if command -v docker >/dev/null 2>&1; then
-    for registry in "${GOOGLE_REGISTRIES[@]}"; do
+    for registry in "${GOOGLE_CONTAINER_REGISTRIES[@]}"; do
       gcloud --quiet auth configure-docker "${registry}"
     done
   fi
 }
 
 gcloud_docker_login() {
-  for registry in "${GOOGLE_REGISTRIES[@]}"; do
+  for registry in "${GOOGLE_CONTAINER_REGISTRIES[@]}"; do
     gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin "https://${registry}"
   done
 }
@@ -38,5 +38,9 @@ gcloud_kube_import() {
   if [[ -n ${CLUSTER_NAME[0]} ]]; then
     gcloud container clusters get-credentials "${CLUSTER_NAME[0]}" --zone "${CLUSTER_NAME[1]}"
     kubectl config rename-context "$(kubectl config current-context)" "$(gcloud config get project 2>/dev/null)_${CLUSTER_NAME[0]}"
+
+    if [[ -n ${2:-} ]]; then
+      kubectl config set-context --current --namespace "${2}"
+    fi
   fi
 }
