@@ -18,7 +18,7 @@ gpg_import() {
 
   mkdir -p "${HOME}/.gnupg/"
   printf "%s" "${1}" >"${IMPORT_LOCATION}"
-  gpg --import "${IMPORT_LOCATION}"
+  gpg --batch --yes --import "${IMPORT_LOCATION}"
 
   rm "${IMPORT_LOCATION}"
 }
