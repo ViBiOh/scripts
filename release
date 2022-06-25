@@ -209,6 +209,18 @@ release_upload() {
       return 1
     fi
 
+    if [[ -n ${GPG_SIGN_KEY:-} ]]; then
+      local ASSET_SIGNATURE="${asset}.asc"
+
+      gpg --armor --detach-sign --local-user "${GPG_SIGN_KEY}" --output "${ASSET_SIGNATURE}" "${asset}"
+
+      http_request --request POST "${RESPONSE_URL}?name=$(basename "${ASSET_SIGNATURE}")" --data-binary "@${ASSET_SIGNATURE}"
+      if [[ ${HTTP_STATUS} != "201" ]]; then
+        http_handle_error "Unable to upload asset signature ${asset}"
+        return 1
+      fi
+    fi
+
     rm "${HTTP_OUTPUT}"
   done
 }
