@@ -186,6 +186,10 @@ release_upload() {
     var_warning "Nothing to upload!"
   fi
 
+  if [[ -n ${GPG_SIGNING_KEY:-} ]]; then
+    gpg_import "${GPG_SIGNING_KEY}"
+  fi
+
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
   HTTP_CLIENT_ARGS+=("--max-time" "120")
 
@@ -236,7 +240,7 @@ release_usage() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "http" "git" "version"
+  source "$(script_dir)/meta" && meta_init "var" "http" "git" "version" "gpg"
   var_color
 
   local ROOT_DIR
