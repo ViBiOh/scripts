@@ -11,8 +11,6 @@ meta_download_script() {
   local DEPENDENCY_FILENAME="${1}"
   shift
 
-  printf 1>&2 "Downloading script %s...\n" "${DEPENDENCY_FILENAME}"
-
   mkdir -p "$(dirname "${DEPENDENCY_FILENAME}")"
   curl --disable --silent --show-error --location --max-time 30 --output "${DEPENDENCY_FILENAME}" -- "${REMOTE_DEPENDENCIES_URL}/${DEPENDENCY_FILENAME}"
   chmod +x "${DEPENDENCY_FILENAME}"
@@ -29,10 +27,12 @@ meta_init() {
     fi
 
     if ! [[ -e "./${dep}" ]]; then
+      printf 1>&2 "Downloading script %s...\n" "${dep}"
       meta_download_script "${dep}"
     fi
 
     if [[ $(grep -c "main()" "./${dep}") -eq 0 ]]; then
+      printf 1>&2 "Sourcing script %s...\n" "${dep}"
       source "./${dep}"
     fi
   done

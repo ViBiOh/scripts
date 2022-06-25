@@ -9,7 +9,7 @@ gpg_import() {
   fi
 
   if [[ ${#} -ne 1 ]]; then
-    var_red "Usage: ${0} GPG_SIGNING_KEY"
+    var_red "Usage: gpg_import GPG_SIGNING_KEY"
     return 1
   fi
 
