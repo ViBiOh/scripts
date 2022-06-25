@@ -17,6 +17,7 @@ gpg_import() {
   local IMPORT_LOCATION="${GPG_FOLDER}/private.key"
 
   mkdir -p "${HOME}/.gnupg/"
+  chmod 700 "${HOME}/.gnupg"
   printf "%s" "${1}" >"${IMPORT_LOCATION}"
   gpg --batch --yes --import "${IMPORT_LOCATION}"
 
