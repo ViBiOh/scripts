@@ -4,8 +4,8 @@ GIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 git_conventionnal_commits() {
   if [[ $(type -t "var_color") != "function" ]]; then
-  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
+    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
   fi
 
   declare -gA CONVENTIONAL_COMMIT_SCOPES
@@ -121,8 +121,8 @@ git_is_valid_description() {
 
 git_conventionnal_commit_guidelines() {
   if [[ $(type -t "var_color") != "function" ]]; then
-  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
+    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
   fi
 
   git_conventionnal_commits
@@ -143,8 +143,8 @@ git_conventionnal_commit_guidelines() {
 
 git_valid_description_guideline() {
   if [[ $(type -t "var_color") != "function" ]]; then
-  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
+    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
   fi
 
   var_warning "\nYou have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters). Current size is ${#1}"
@@ -165,8 +165,8 @@ git_last_tag() {
 
 git_changelog() {
   if [[ $(type -t "var_color") != "function" ]]; then
-  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
+    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
   fi
 
   git_conventionnal_commits
@@ -287,8 +287,8 @@ git_changelog() {
 
 head_sync() {
   if [[ $(type -t "var_color") != "function" ]]; then
-  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
+    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
   fi
 
   if [[ ${#} -ne 2 ]]; then
@@ -308,8 +308,8 @@ head_sync() {
 
 git_sync() {
   if [[ $(type -t "var_color") != "function" ]]; then
-  source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
+    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
   fi
 
   if [[ ${#} -lt 2 ]]; then

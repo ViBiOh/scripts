@@ -21,8 +21,8 @@ http_urlencode() {
 
 http_handle_error() {
   if [[ $(type -t "var_color") != "function" ]]; then
-  source "${HTTP_SCRIPT_DIR}/meta" && meta_init "var"
-  var_color
+    source "${HTTP_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
   fi
 
   var_error "HTTP/${HTTP_STATUS}: ${1:-}"

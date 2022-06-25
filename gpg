@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+GPG_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+gpg_import() {
+  if [[ $(type -t "var_color") != "function" ]]; then
+    source "${GPG_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
+  fi
+
+  if [[ ${#} -ne 1 ]]; then
+    var_red "Usage: ${0} GPG_SIGNING_KEY"
+    return 1
+  fi
+
+  local GPG_FOLDER="${HOME}/.gnupg/"
+  local IMPORT_LOCATION="${GPG_FOLDER}/private.key"
+
+  mkdir -p "${HOME}/.gnupg/"
+  printf "%s" "${1}" >"${IMPORT_LOCATION}"
+  gpg --import "${IMPORT_LOCATION}"
+
+  rm "${IMPORT_LOCATION}"
+}
