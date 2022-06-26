@@ -48,5 +48,5 @@ gpg_sign() {
     return 1
   fi
 
-  gpg -vvv --no-tty --batch --yes --armor --detach-sign --local-user "${1:-}" --output "${3:-}" "${2:-}"
+  gpg -vvv --no-tty --batch --yes --armor --detach-sign --pinentry-mode "loopback" --local-user "${1:-}" --output "${3:-}" "${2:-}"
 }
