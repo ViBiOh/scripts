@@ -211,7 +211,7 @@ release_upload() {
     if [[ -n ${GPG_SIGN_EMAIL:-} ]]; then
       local ASSET_SIGNATURE="${asset}.asc"
 
-      gpg --no-tty --batch --armor --detach-sign --local-user "${GPG_SIGN_EMAIL}" --output "${ASSET_SIGNATURE}" "${asset}"
+      gpg_sign "${GPG_SIGN_EMAIL}" "${asset}" "${ASSET_SIGNATURE}"
 
       http_request --request POST "${RESPONSE_URL}?name=$(basename "${ASSET_SIGNATURE}")" --data-binary "@${ASSET_SIGNATURE}"
       if [[ ${HTTP_STATUS} != "201" ]]; then

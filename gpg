@@ -21,12 +21,6 @@ list-options show-uid-validity
 verify-options show-uid-validity
 with-fingerprint
 require-cross-certification" >"${HOME}/.gnupg/gpg.conf"
-
-  gpg --version
-
-  if command -v gpg2 /dev/null 2>&1; then
-    gpg2 --version
-  fi
 }
 
 gpg_import() {
@@ -40,5 +34,19 @@ gpg_import() {
     return 1
   fi
 
-  printf "%s" "${1}" | gpg --no-tty --batch --yes --import
+  printf "%s" "${1}" | gpg -vvv --no-tty --batch --yes --import
+}
+
+gpg_sign() {
+  if [[ $(type -t "var_color") != "function" ]]; then
+    source "${GPG_SCRIPT_DIR}/meta" && meta_init "var"
+    var_color
+  fi
+
+  if [[ ${#} -ne 3 ]]; then
+    var_red "Usage: gpg_import GPG_SIGN_EMAIL FILE_TO_SIGN SIGNATURE_OUTPUT"
+    return 1
+  fi
+
+  gpg -vvv --no-tty --batch --yes --armor --detach-sign --local-user "${1:-}" --output "${3:-}" "${2:-}"
 }
