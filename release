@@ -207,22 +207,22 @@ release_upload() {
   for asset in "${OUTPUT_DIR}"/*; do
     var_info "Uploading asset ${asset}"
 
-    http_request --header "Content-Type: application/x-executable" --request POST "${RESPONSE_URL}?name=$(basename "${asset}")" --data-binary "@${asset}"
-    if [[ ${HTTP_STATUS} != "201" ]]; then
-      http_handle_error "Unable to upload asset ${asset}"
-      return 1
-    fi
-
     if [[ -n ${GPG_SIGN_EMAIL:-} ]]; then
       local ASSET_SIGNATURE="${asset}.asc"
 
-      var_print_and_run "gpg --armor --detach-sign --local-user '${GPG_SIGN_EMAIL}' --output '${ASSET_SIGNATURE}' '${asset}'"
+      var_print_and_run "gpg --armor --detach-sign --local-user '${GPG_SIGN_EMAIL}' '${asset}'"
 
       http_request --request POST "${RESPONSE_URL}?name=$(basename "${ASSET_SIGNATURE}")" --data-binary "@${ASSET_SIGNATURE}"
       if [[ ${HTTP_STATUS} != "201" ]]; then
         http_handle_error "Unable to upload asset signature ${asset}"
         return 1
       fi
+    fi
+
+    http_request --header "Content-Type: application/x-executable" --request POST "${RESPONSE_URL}?name=$(basename "${asset}")" --data-binary "@${asset}"
+    if [[ ${HTTP_STATUS} != "201" ]]; then
+      http_handle_error "Unable to upload asset ${asset}"
+      return 1
     fi
 
     rm "${HTTP_OUTPUT}"
