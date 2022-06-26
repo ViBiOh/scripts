@@ -186,11 +186,6 @@ release_upload() {
     var_warning "Nothing to upload!"
   fi
 
-  if [[ -n ${GPG_SIGNING_KEY:-} ]]; then
-    gpg_config
-    gpg_import "${GPG_SIGNING_KEY}"
-  fi
-
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
   HTTP_CLIENT_ARGS+=("--max-time" "120")
 
@@ -207,18 +202,6 @@ release_upload() {
 
   for asset in "${OUTPUT_DIR}"/*; do
     var_info "Uploading asset ${asset}"
-
-    if [[ -n ${GPG_SIGN_EMAIL:-} ]]; then
-      local ASSET_SIGNATURE="${asset}.asc"
-
-      gpg_sign "${GPG_SIGN_EMAIL}" "${asset}" "${ASSET_SIGNATURE}"
-
-      http_request --request POST "${RESPONSE_URL}?name=$(basename "${ASSET_SIGNATURE}")" --data-binary "@${ASSET_SIGNATURE}"
-      if [[ ${HTTP_STATUS} != "201" ]]; then
-        http_handle_error "Unable to upload asset signature ${asset}"
-        return 1
-      fi
-    fi
 
     http_request --header "Content-Type: application/x-executable" --request POST "${RESPONSE_URL}?name=$(basename "${asset}")" --data-binary "@${asset}"
     if [[ ${HTTP_STATUS} != "201" ]]; then
@@ -241,7 +224,7 @@ release_usage() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "http" "git" "version" "gpg"
+  source "$(script_dir)/meta" && meta_init "var" "http" "git" "version"
   var_color
 
   local ROOT_DIR
