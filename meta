@@ -32,7 +32,6 @@ meta_init() {
     fi
 
     if [[ $(grep -c "main()" "./${dep}") -eq 0 ]]; then
-      printf 1>&2 "Sourcing script %s...\n" "${dep}"
       source "./${dep}"
     fi
   done
