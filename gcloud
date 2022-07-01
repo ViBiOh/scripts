@@ -44,3 +44,22 @@ gcloud_kube_import() {
     fi
   fi
 }
+
+gcloud_sql_proxy() {
+  local SQL_NAME
+
+  IFS='@' read -r -a SQL_NAME <<<"$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+
+  if [[ -n ${SQL_NAME[1]} ]]; then
+    cloud_sql_proxy "-instances=${SQL_NAME[1]}=tcp:127.0.0.1:${2:-5432}"
+  fi
+}
+
+gcloud_sql_connect() {
+  local SERVICE_ACCOUNT
+  SERVICE_ACCOUNT="$(gcloud iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+
+  var_shift_or_read DATABASE_NAME "${2:-}"
+
+  PGPASSWORD=$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}") pgcli -h localhost -p 5432 -U "${SERVICE_ACCOUNT%.gserviceaccount.com}" "${DATABASE_NAME}"
+}
