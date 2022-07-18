@@ -77,8 +77,8 @@ docker_build() {
   fi
 
   local DOCKER_PLATFORMS
-  DOCKER_PLATFORMS="$(printf "%s," "${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}")"
-  DOCKER_PLATFORMS="${DOCKER_PLATFORMS::-1}" # remove trailing slash
+  DOCKER_PLATFORMS="${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}"
+  DOCKER_PLATFORMS="${DOCKER_PLATFORMS// /,}"
 
   local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}"
 
