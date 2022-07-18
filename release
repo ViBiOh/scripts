@@ -90,7 +90,14 @@ docker_build() {
   export DOCKER_BUILDKIT="1"
 
   var_info "Building and pushing image ${BUILT_IMAGE} for ${DOCKER_PLATFORMS}"
-  docker buildx build --push --platform "${DOCKER_PLATFORMS}" --file "${DOCKERFILE}" --tag "${BUILT_IMAGE}" --build-arg "VERSION=${IMAGE_VERSION}" .
+  docker buildx build \
+    --push \
+    --platform "${DOCKER_PLATFORMS}" \
+    --file "${DOCKERFILE}" \
+    --tag "${BUILT_IMAGE}" \
+    --build-arg "VERSION=${IMAGE_VERSION}" \
+    -o "type=registry,oci-mediatypes=true,compression=estargz,force-compression=true" \
+    .
 }
 
 release() {
