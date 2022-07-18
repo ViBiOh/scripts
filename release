@@ -76,41 +76,21 @@ docker_build() {
     return 1
   fi
 
-  local DOCKER_ARCHS="${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}"
+  local DOCKER_PLATFORM
+  DOCKER_PLATFORM="$(printf "%s," "${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}")"
+  DOCKER_PLATFORM="${DOCKER_PLATFORM::-1}" # remove trailing slash
+
+  local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}"
 
   var_read DOCKER_IMAGE
   var_read IMAGE_VERSION
   var_read DOCKERFILE "Dockerfile"
 
-  local DOCKER_MANIFEST_ARGS=()
   export DOCKER_CLI_EXPERIMENTAL="enabled"
   export DOCKER_BUILDKIT="1"
 
-  for PLATFORM in ${DOCKER_ARCHS[*]}; do
-    IFS='/' read -r -a context <<<"${PLATFORM}"
-    local OS="${context[0]}"
-    local ARCH="${context[1]}"
-    local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}"
-
-    var_info "Building and pushing image for ${PLATFORM}"
-    docker build --file "${DOCKERFILE}" --tag "${BUILT_IMAGE}" --build-arg "VERSION=${IMAGE_VERSION}" --platform "${PLATFORM}" "."
-    docker push "${BUILT_IMAGE}"
-
-    DOCKER_MANIFEST_ARGS+=("${BUILT_IMAGE}")
-  done
-
-  var_info "Creating docker manifest for ${DOCKER_IMAGE}:${IMAGE_VERSION}"
-  docker manifest create "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_MANIFEST_ARGS[@]}"
-
-  for DOCKER_ARCH in ${DOCKER_ARCHS[*]}; do
-    IFS='/' read -r -a context <<<"${DOCKER_ARCH}"
-    local OS="${context[0]}"
-    local ARCH="${context[1]}"
-
-    docker manifest annotate "${DOCKER_IMAGE}:${IMAGE_VERSION}" "${DOCKER_IMAGE}:${IMAGE_VERSION}-${OS}-${ARCH}" --arch "${ARCH}" --os "${OS}"
-  done
-
-  docker manifest push "${DOCKER_IMAGE}:${IMAGE_VERSION}"
+  var_info "Building and pushing image ${BUILT_IMAGE}"
+  docker buildx build --push --file "${DOCKERFILE}" --tag "${BUILT_IMAGE}" --build-arg "VERSION=${IMAGE_VERSION}" --platform "${DOCKER_PLATFORM}" "."
 }
 
 release() {
