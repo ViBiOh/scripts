@@ -56,7 +56,7 @@ main() {
 
   var_info "Tagging image ${DOCKER_IMAGE} from ${IMAGE_VERSION} to ${VERSION_TARGET}..."
 
-  local MANIFEST_ACCEPT=("application/vnd.docker.distribution.manifest.list.v2+json" "application/vnd.docker.distribution.manifest.v2+json")
+  local MANIFEST_ACCEPT=("application/vnd.oci.image.index.v1+json" "application/vnd.docker.distribution.manifest.list.v2+json" "application/vnd.docker.distribution.manifest.v2+json")
   for manifest in "${MANIFEST_ACCEPT[@]}"; do
     var_warning "Trying with manifest ${manifest}"
 
@@ -64,7 +64,7 @@ main() {
     http_request --request GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" --header "Accept: ${manifest}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to retrieve manifest for ${DOCKER_IMAGE}"
-      return 1
+      continue
     fi
 
     local MANIFEST_PAYLOAD
