@@ -98,6 +98,9 @@ main() {
     rm "${HTTP_OUTPUT}"
     return
   done
+
+  var_error "Manifest not found!"
+  return 1
 }
 
 main "${@}"
