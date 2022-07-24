@@ -24,8 +24,30 @@ main() {
   local DOCKER_REGISTRY="https://registry-1.docker.io/v2"
   local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
 
+  local DATE_VERSION
+
+  OPTIND=0
+
+  while getopts ":d:" option; do
+    case "${option}" in
+    d)
+      DATE_VERSION="${OPTARG}"
+      ;;
+    :)
+      printf "option -%s requires a value\n" "${OPTARG}" >&2
+      return 1
+      ;;
+    \?)
+      printf "option -%s is invalid\n" "${OPTARG}" >&2
+      return 2
+      ;;
+    esac
+  done
+
+  shift $((OPTIND - 1))
+
   if [[ ${#} -lt 2 ]]; then
-    var_red "Usage: ${0} DOCKER_IMAGE IMAGE_VERSION [VERSION_TARGET] [TIMESTAMP_VERSION]"
+    var_red "Usage: ${0} DOCKER_IMAGE IMAGE_VERSION [VERSION_TARGET]"
     return 1
   fi
 
@@ -37,8 +59,6 @@ main() {
   local IMAGE_VERSION="${1}"
   shift
   local VERSION_TARGET="${1:-latest}"
-  shift || true
-  local TIMESTAMP_VERSION="${1:-$(TZ="UTC" date '+%Y%m%d%H%M')}"
   shift || true
 
   http_init_client
@@ -85,17 +105,20 @@ main() {
     var_success "Image promoted to ${VERSION_TARGET}!"
     rm "${HTTP_OUTPUT}"
 
-    # Tagging image with timestamp
-    http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${TIMESTAMP_VERSION}" \
-      --header "Content-Type: ${manifest}" \
-      --data "${MANIFEST_PAYLOAD}"
-    if [[ ${HTTP_STATUS} != "201" ]]; then
-      http_handle_error "Unable to tag date manifest for ${DOCKER_IMAGE}"
-      continue
+    if [[ -n ${DATE_VERSION} ]]; then
+      # Tagging image with timestamp
+      http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${DATE_VERSION}" \
+        --header "Content-Type: ${manifest}" \
+        --data "${MANIFEST_PAYLOAD}"
+      if [[ ${HTTP_STATUS} != "201" ]]; then
+        http_handle_error "Unable to tag date manifest for ${DOCKER_IMAGE}"
+        continue
+      fi
+
+      var_success "Image tagged ${DATE_VERSION}!"
+      rm "${HTTP_OUTPUT}"
     fi
 
-    var_success "Image tagged ${TIMESTAMP_VERSION}!"
-    rm "${HTTP_OUTPUT}"
     return
   done
 
