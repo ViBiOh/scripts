@@ -25,7 +25,7 @@ main() {
   local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
 
   if [[ ${#} -lt 2 ]]; then
-    var_red "Usage: ${0} DOCKER_IMAGE IMAGE_VERSION [VERSION_TARGET]"
+    var_red "Usage: ${0} DOCKER_IMAGE IMAGE_VERSION [VERSION_TARGET] [TIMESTAMP_VERSION]"
     return 1
   fi
 
@@ -37,6 +37,8 @@ main() {
   local IMAGE_VERSION="${1}"
   shift
   local VERSION_TARGET="${1:-latest}"
+  shift || true
+  local TIMESTAMP_VERSION="${1:-$(TZ="UTC" date '+%Y%m%d%H%M')}"
   shift || true
 
   http_init_client
@@ -83,10 +85,8 @@ main() {
     var_success "Image promoted to ${VERSION_TARGET}!"
     rm "${HTTP_OUTPUT}"
 
-    # Tagging image with date
-    local TAG_DATE
-    TAG_DATE="$(TZ="UTC" date '+%Y%m%d%H%M')"
-    http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${TAG_DATE}" \
+    # Tagging image with timestamp
+    http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${TIMESTAMP_VERSION}" \
       --header "Content-Type: ${manifest}" \
       --data "${MANIFEST_PAYLOAD}"
     if [[ ${HTTP_STATUS} != "201" ]]; then
@@ -94,7 +94,7 @@ main() {
       continue
     fi
 
-    var_success "Image tagged ${TAG_DATE}!"
+    var_success "Image tagged ${TIMESTAMP_VERSION}!"
     rm "${HTTP_OUTPUT}"
     return
   done
