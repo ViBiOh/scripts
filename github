@@ -273,7 +273,7 @@ github_clone() {
   USER_ORGANIZATIONS="$(printf "%s\n%s" "${USER_ORGANIZATIONS}" "${USERNAME}")"
 
   local GITHUB_ORGANIZATION
-  GITHUB_ORGANIZATION="$(printf "%s" "${USER_ORGANIZATIONS}" | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt='Organization>')"
+  GITHUB_ORGANIZATION="$(printf "%s" "${USER_ORGANIZATIONS}" | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt="Organization:")"
 
   local page=0
   local page_size=100

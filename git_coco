@@ -52,7 +52,7 @@ main() {
   local REMAINING_LENGTH=$((COMMIT_MAX_LENGTH - 1))
 
   local SCOPE
-  SCOPE="$(for i in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do printf "%b%s%b %s\n" "${GREEN}" "${i}" "${RESET}" "${CONVENTIONAL_COMMIT_SCOPES[${i}]}"; done | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
+  SCOPE="$(for i in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do printf "%b%s%b %s\n" "${GREEN}" "${i}" "${RESET}" "${CONVENTIONAL_COMMIT_SCOPES[${i}]}"; done | fzf --height=20 --ansi --reverse --prompt "Scope:" | awk '{printf("%s", $1)}')"
 
   if [[ -z ${SCOPE} ]]; then
     return 1
@@ -62,7 +62,7 @@ main() {
   REMAINING_LENGTH=$((REMAINING_LENGTH - ${#SCOPE}))
 
   local COMPONENT=""
-  COMPONENT="$(cat <(guess_component) <(printf "None") | fzf --height=20 --ansi --reverse --prompt='Component>')"
+  COMPONENT="$(cat <(guess_component) <(printf "None") | fzf --height=20 --ansi --reverse --prompt='Component:')"
 
   if [[ ${COMPONENT} == "None" ]]; then
     COMPONENT=""
