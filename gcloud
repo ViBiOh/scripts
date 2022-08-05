@@ -33,13 +33,17 @@ gcloud_project() {
 }
 
 gcloud_kube_import() {
+  local GCLOUD_CLUSTER
+  GCLOUD_CLUSTER="$(gcloud container clusters list --format json | jq --raw-output '.[] | .name + "@" + .zone' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+
   local CLUSTER_NAME
+  CLUSTER_NAME="$(printf '%s' "${GCLOUD_CLUSTER}" | awk -F '@' '{ print $1 }')"
+  local CLUSTER_ZONE
+  CLUSTER_ZONE="$(printf '%s' "${GCLOUD_CLUSTER}" | awk -F '@' '{ print $2 }')"
 
-  IFS='@' read -r -a CLUSTER_NAME <<<"$(gcloud container clusters list --format json | jq --raw-output '.[] | .name + "@" + .zone' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
-
-  if [[ -n ${CLUSTER_NAME[0]} ]]; then
-    gcloud container clusters get-credentials "${CLUSTER_NAME[0]}" --zone "${CLUSTER_NAME[1]}"
-    kubectl config rename-context "$(kubectl config current-context)" "$(gcloud config get project 2>/dev/null)_${CLUSTER_NAME[0]}"
+  if [[ -n ${CLUSTER_NAME:-} ]]; then
+    gcloud container clusters get-credentials "${CLUSTER_NAME}" --zone "${CLUSTER_ZONE}"
+    kubectl config rename-context "$(kubectl config current-context)" "$(gcloud config get project 2>/dev/null)_${CLUSTER_NAME}"
 
     if [[ -n ${2:-} ]]; then
       kubectl config set-context --current --namespace "${2}"
@@ -53,15 +57,17 @@ gcloud_sql_proxy() {
     var_color
   fi
 
-  local SQL_NAME
+  local SQL_INSTANCE
+  SQL_INSTANCE="$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt "SQL instances:")"
 
-  IFS='@' read -r -a SQL_NAME <<<"$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt "SQL instances:")"
+  local SQL_CONNECTION_NAME
+  SQL_CONNECTION_NAME="$(printf '%s' "${SQL_INSTANCE}" | awk -F '@' '{ print $2 }')"
 
-  if [[ -n ${SQL_NAME[1]} ]]; then
+  if [[ -n ${SQL_CONNECTION_NAME:-} ]]; then
     local SERVICE_ACCOUNT
     SERVICE_ACCOUNT="$(gcloud iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${2:-}" --prompt "Service Account:")"
 
     var_info "Connect using: pgcli -h localhost -p '${3:-5432}' -U '${SERVICE_ACCOUNT%.gserviceaccount.com}' <db_name>\n"
-    var_print_and_run "cloud_sql_proxy '-instances=${SQL_NAME[1]}=tcp:127.0.0.1:${3:-5432}' -enable_iam_login -token \$(gcloud auth print-access-token --impersonate-service-account '${SERVICE_ACCOUNT}')"
+    var_print_and_run "cloud_sql_proxy '-instances=${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${3:-5432}' -enable_iam_login -token \$(gcloud auth print-access-token --impersonate-service-account '${SERVICE_ACCOUNT}')"
   fi
 }
