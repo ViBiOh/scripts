@@ -45,11 +45,14 @@ golang_build() {
       NAME="$(basename "${main}")"
 
       for OS_ARCH in ${GO_ARCHS[*]}; do
-        IFS='/' read -r -a context <<<"${OS_ARCH}"
+        local BUILD_GOOS
+        BUILD_GOOS="$(printf '%s' "${OS_ARCH}" | awk -F '/' '{ print $1 }')"
+        local BUILD_GOARCH
+        BUILD_GOARCH="$(printf '%s' "${OS_ARCH}" | awk -F '/' '{ print $2 }')"
 
         (
-          export GOOS="${context[0]}"
-          export GOARCH="${context[1]}"
+          export GOOS="${BUILD_GOOS}"
+          export GOARCH="${BUILD_GOARCH}"
           export CGO_ENABLED="0"
 
           if [[ ${GOOS} == "windows" ]]; then

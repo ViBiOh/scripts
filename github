@@ -77,15 +77,18 @@ github_repo_pr_stats() {
     github_rate_limit_wait "${pr_page_size}"
 
     for PR in "${PULL_REQUESTS[@]}"; do
-      IFS=',' read -r -a details <<<"${PR}"
+      local PR_NUMER
+      PR_NUMER="$(printf '%s' "${PR}" | awk -F ',' '{ print $1 }')"
+      local PR_AUTHOR
+      PR_AUTHOR="$(printf '%s' "${PR}" | awk -F ',' '{ print $2 }')"
 
-      http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${details[0]}/reviews"
+      http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMER}/reviews"
       if [[ ${HTTP_STATUS} != "200" ]]; then
-        http_handle_error "Unable to fetch ${GITHUB_REPOSITORY}/pulls/${details[0]} reviews"
+        http_handle_error "Unable to fetch ${GITHUB_REPOSITORY}/pulls/${PR_NUMER} reviews"
         break
       fi
 
-      pr="$(jq --compact-output --raw-output --arg author "${details[1]}" '[.[] | select(.user.login != null) | .user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
+      pr="$(jq --compact-output --raw-output --arg author "${PR_AUTHOR}" '[.[] | select(.user.login != null) | .user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
       rm "${HTTP_OUTPUT}"
       if [[ -n ${pr:-} ]]; then
         if [[ -n ${prstats} ]]; then
@@ -307,19 +310,22 @@ github_clone() {
     rm "${HTTP_OUTPUT}"
 
     for REPO in "${REPOSITORIES[@]}"; do
-      IFS=',' read -r -a details <<<"${REPO}"
+      local REPO_NAME
+      REPO_NAME="$(printf '%s' "${PR}" | awk -F ',' '{ print $1 }')"
+      local REPO_SSH_URL
+      REPO_SSH_URL="$(printf '%s' "${PR}" | awk -F ',' '{ print $2 }')"
 
-      if ! [[ ${details[0]} =~ ${REPOSITORY_REGEX} ]]; then
+      if ! [[ ${REPO_NAME} =~ ${REPOSITORY_REGEX} ]]; then
         continue
       fi
 
-      if [[ -d ${details[0]} ]]; then
-        var_success "${details[0]} already cloned!"
+      if [[ -d ${REPO_NAME} ]]; then
+        var_success "${REPO_NAME} already cloned!"
       else
-        var_info "Cloning ${details[0]}"
-        git clone "${details[1]}" "${details[0]}"
+        var_info "Cloning ${REPO_NAME}"
+        git clone "${REPO_SSH_URL}" "${REPO_NAME}"
         (
-          cd "${details[0]}" && git config branch.default "$(git remote show origin | grep 'HEAD branch:' | awk '{printf("%s", $3)}')"
+          cd "${REPO_NAME}" && git config branch.default "$(git remote show origin | grep 'HEAD branch:' | awk '{printf("%s", $3)}')"
         )
       fi
     done
