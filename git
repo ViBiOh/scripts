@@ -5,8 +5,8 @@ GIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 git_conventionnal_commits() {
   if [[ $(type -t "var_color") != "function" ]]; then
     source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-    var_color
   fi
+  var_color
 
   declare -gA CONVENTIONAL_COMMIT_SCOPES
   CONVENTIONAL_COMMIT_SCOPES['build']='Changes that affect the build system or external dependencies'
