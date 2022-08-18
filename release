@@ -44,6 +44,11 @@ golang_build() {
       local NAME
       NAME="$(basename "${main}")"
 
+      local LDFLAGS="-s -w"
+      if [[ -n ${GIT_TAG:-} ]] && [[ -n ${GO_VERSION_PATH:-} ]]; then
+        LDFLAGS+=" -X '${GO_VERSION_PATH}=${GIT_TAG}'"
+      fi
+
       for OS_ARCH in ${GO_ARCHS[*]}; do
         local BUILD_GOOS
         BUILD_GOOS="$(printf '%s' "${OS_ARCH}" | awk -F '/' '{ print $1 }')"
@@ -62,7 +67,7 @@ golang_build() {
           fi
 
           var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
-          go build -ldflags="-s -w" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
+          go build "-ldflags=${LDFLAGS}" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
         )
       done
     done
