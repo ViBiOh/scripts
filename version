@@ -119,7 +119,7 @@ version_semver() {
   local NEW_VERSION="${PREFIX}${MAJOR}.${MINOR}.${PATCH}"
 
   if [[ ${#} -lt 1 ]]; then
-    git tag -a "${NEW_VERSION}" -m "${NEW_VERSION}" "${GIT_REF}"
+    git tag -m "${NEW_VERSION}" "${GIT_REF}"
     var_green "New version is: ${NEW_VERSION}"
   else
     printf "%s" "${NEW_VERSION}"
