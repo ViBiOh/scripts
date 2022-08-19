@@ -5,8 +5,9 @@ VERSION_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 version_value() {
   if [[ $(type -t "var_color") != "function" ]]; then
     source "${VERSION_SCRIPT_DIR}/meta" && meta_init "var"
-    var_color
   fi
+
+  var_color
 
   if [[ ${#} -lt 2 ]]; then
     var_red "Usage: version_value regex [files...]"

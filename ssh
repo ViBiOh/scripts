@@ -6,8 +6,9 @@ SSH_ENV="${HOME}/.ssh/environment"
 ssh_forward_local() {
   if [[ $(type -t "var_color") != "function" ]]; then
     source "${SSH_SCRIPT_DIR}/meta" && meta_init "var"
-    var_color
   fi
+
+  var_color
 
   if [[ ${#} -lt 3 ]]; then
     var_red "Import remote port in local. Usage: ssh_forward_local REMOTE_PORT -> LOCAL_PORT SSH_PARTS..."
@@ -26,8 +27,9 @@ ssh_forward_local() {
 ssh_forward_remote() {
   if [[ $(type -t "var_color") != "function" ]]; then
     source "${SSH_SCRIPT_DIR}/meta" && meta_init "var"
-    var_color
   fi
+
+  var_color
 
   if [[ ${#} -lt 3 ]]; then
     var_red "Expose local port to remote: Usage: ssh_forward_remote LOCAL_PORT -> REMOTE_PORT SSH_PARTS..."

@@ -226,8 +226,9 @@ github_org_stats() {
 github_org_stats_user() {
   if [[ $(type -t "var_color") != "function" ]]; then
     source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
-    var_color
   fi
+
+  var_color
 
   if [[ ${#} -ne 2 ]]; then
     var_red "Usage: github_org_stats_user github_org_stats.json GITHUB_USER"
@@ -387,8 +388,9 @@ github_clean_subscription() {
 github_compare_version() {
   if [[ $(type -t "var_color") != "function" ]]; then
     source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
-    var_color
   fi
+
+  var_color
 
   if [[ ${#} -lt 2 ]]; then
     var_red "Usage: github_compare_version GITHUB_REPOSITORY LATEST_VERSION [CURRENT_VERSION] [RELEASE_API_FILE]"

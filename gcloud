@@ -54,8 +54,8 @@ gcloud_kube_import() {
 gcloud_sql_proxy() {
   if [[ $(type -t "var_color") != "function" ]]; then
     source "${GCLOUD_SCRIPT_DIR}/meta" && meta_init "var"
-    var_color
   fi
+  var_color
 
   local SQL_INSTANCE
   SQL_INSTANCE="$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt "SQL instances:")"
