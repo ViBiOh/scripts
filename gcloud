@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-GCLOUD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 export GOOGLE_CONTAINER_REGISTRIES=("gcr.io" "eu.gcr.io" "us.gcr.io")
 
@@ -52,10 +50,14 @@ gcloud_kube_import() {
 }
 
 gcloud_sql_proxy() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GCLOUD_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
-  var_color
+  _print_and_run() {
+    printf -- "%b%b%b\n" "${YELLOW}" "${@}" "${RESET}" 1>&2
+    eval "${*}"
+  }
+
+  _info() {
+    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
+  }
 
   local SQL_INSTANCE
   SQL_INSTANCE="$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt "SQL instances:")"
@@ -67,7 +69,7 @@ gcloud_sql_proxy() {
     local SERVICE_ACCOUNT
     SERVICE_ACCOUNT="$(gcloud iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${2:-}" --prompt "Service Account:")"
 
-    var_info "Connect using: pgcli -h localhost -p '${3:-5432}' -U '${SERVICE_ACCOUNT%.gserviceaccount.com}' <db_name>\n"
-    var_print_and_run "cloud_sql_proxy '-instances=${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${3:-5432}' -enable_iam_login -token \$(gcloud auth print-access-token --impersonate-service-account '${SERVICE_ACCOUNT}')"
+    _info "Connect using: pgcli -h localhost -p '${3:-5432}' -U '${SERVICE_ACCOUNT%.gserviceaccount.com}' <db_name>\n"
+    _print_and_run "cloud_sql_proxy '-instances=${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${3:-5432}' -enable_iam_login -token \$(gcloud auth print-access-token --impersonate-service-account '${SERVICE_ACCOUNT}')"
   fi
 }

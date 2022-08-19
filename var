@@ -92,7 +92,7 @@ var_log() {
   local COLOR="${1}"
   shift
 
-  printf -- "%b%b %b\n" "${COLOR}" "${*}" "${RESET}" 1>&2
+  printf -- "%b%b%b\n" "${COLOR}" "${*}" "${RESET}" 1>&2
 }
 
 var_red() {
@@ -121,5 +121,5 @@ var_info() {
 
 var_print_and_run() {
   printf -- "%b%b%b\n" "${YELLOW}" "${@}" "${RESET}" 1>&2
-  eval "${@}"
+  eval "${*}"
 }
