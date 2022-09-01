@@ -312,9 +312,9 @@ github_clone() {
 
     for REPO in "${REPOSITORIES[@]}"; do
       local REPO_NAME
-      REPO_NAME="$(printf '%s' "${PR}" | awk -F ',' '{ print $1 }')"
+      REPO_NAME="$(printf '%s' "${REPO}" | awk -F ',' '{ print $1 }')"
       local REPO_SSH_URL
-      REPO_SSH_URL="$(printf '%s' "${PR}" | awk -F ',' '{ print $2 }')"
+      REPO_SSH_URL="$(printf '%s' "${REPO}" | awk -F ',' '{ print $2 }')"
 
       if ! [[ ${REPO_NAME} =~ ${REPOSITORY_REGEX} ]]; then
         continue
