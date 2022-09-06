@@ -99,7 +99,7 @@ terraform_check() {
 
 yaml_check() {
   local YAML_FILES
-  YAML_FILES=$(get_files \*.y{,a}ml)
+  YAML_FILES=$(get_files \*.y{,a}ml ':(exclude)*/fixtures/*')
 
   if [[ -n ${YAML_FILES} ]]; then
     if command -v npx >/dev/null 2>&1; then
