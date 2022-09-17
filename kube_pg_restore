@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o nounset -o pipefail -o errexit
-
 script_dir() {
   local FILE_SOURCE="${BASH_SOURCE[0]}"
 
@@ -14,11 +12,42 @@ script_dir() {
   fi
 }
 
-main() {
+kube_pg_backup() {
   source "$(script_dir)/meta" && meta_init "var"
-  var_color
 
-  var_read POSTGRES_DB
+  local POSTGRES_USER
+  var_shift_or_read POSTGRES_USER "${1:-}"
+  shift || true
+
+  local POSTGRES_DB
+  var_shift_or_read POSTGRES_DB "${1:-}"
+  shift || true
+
+  local BACKUP_FILE
+  var_shift_or_read BACKUP_FILE "${1:-}"
+  shift || true
+
+  local CONTEXT
+  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt "Context:")"
+
+  local POSTGRES_POD
+  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
+
+  if [[ -n ${POSTGRES_POD} ]]; then
+    kubectl --context "${CONTEXT}" exec --tty "${POSTGRES_POD}" -- pg_dump --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" >"${BACKUP_FILE}"
+  fi
+}
+
+kube_pg_restore() {
+  source "$(script_dir)/meta" && meta_init "var"
+
+  local POSTGRES_USER
+  var_shift_or_read POSTGRES_USER "${1:-}"
+  shift || true
+
+  local POSTGRES_DB
+  var_shift_or_read POSTGRES_DB "${1:-}"
+  shift || true
 
   local CONTEXT
   CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt "Context:")"
@@ -32,11 +61,9 @@ main() {
   )"
 
   local POSTGRES_POD
-  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --select-1 --query "^pod/${POSTGRES_DB}" --prompt "Database pod:")"
+  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
 
   if [[ -n ${POSTGRES_POD} ]]; then
-    kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --data-only --user "${POSTGRES_DB}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
+    kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
   fi
 }
-
-main "${@}"
