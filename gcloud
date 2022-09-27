@@ -40,8 +40,11 @@ gcloud_kube_import() {
   CLUSTER_ZONE="$(printf '%s' "${GCLOUD_CLUSTER}" | awk -F '@' '{ print $2 }')"
 
   if [[ -n ${CLUSTER_NAME:-} ]]; then
+    local PROJECT_NAME
+    PROJECT_NAME="$(gcloud projects describe "$(gcloud config get project)" --format json | jq -r .name | tr '[:upper:]' '[:lower:]' | sed 's| |-|')"
+
     gcloud container clusters get-credentials "${CLUSTER_NAME}" --zone "${CLUSTER_ZONE}"
-    kubectl config rename-context "$(kubectl config current-context)" "$(gcloud config get project 2>/dev/null)_${CLUSTER_NAME}"
+    kubectl config rename-context "$(kubectl config current-context)" "${PROJECT_NAME}_${CLUSTER_NAME}"
 
     if [[ -n ${2:-} ]]; then
       kubectl config set-context --current --namespace "${2}"
