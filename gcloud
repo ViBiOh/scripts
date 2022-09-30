@@ -9,9 +9,7 @@ gcloud_auth() {
   gcloud config set project "$(gcloud projects list | grep dev | awk '{print $1}')"
 
   if command -v docker >/dev/null 2>&1; then
-    for registry in "${GOOGLE_CONTAINER_REGISTRIES[@]}"; do
-      gcloud --quiet auth configure-docker "${registry}"
-    done
+    gcloud_docker_login
   fi
 }
 
