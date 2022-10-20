@@ -76,7 +76,7 @@ gcloud_sql_proxy() {
 
     local LISTENING_PORT="${3:-5432}"
 
-    if ! [[ $(echo "" | nc "127.0.0.1" "${LISTENING_PORT}") ]]; then
+    if [[ $(echo "" | nc "127.0.0.1" "${LISTENING_PORT}") -ne 0 ]]; then
       _warning "Port ${LISTENING_PORT} is not available, using another one"
       LISTENING_PORT="6543"
     fi
