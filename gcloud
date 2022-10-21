@@ -60,10 +60,6 @@ gcloud_sql_proxy() {
     printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
   }
 
-  _warning() {
-    printf -- "%b%b%b\n" "${YELLOW}" "${*}" "${RESET}" 1>&2
-  }
-
   local SQL_INSTANCE
   SQL_INSTANCE="$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt "SQL instances:")"
 
@@ -75,11 +71,7 @@ gcloud_sql_proxy() {
     SERVICE_ACCOUNT="$(gcloud iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${2:-}" --prompt "Service Account:")"
 
     local LISTENING_PORT="${3:-5432}"
-
-    if nc -z "127.0.0.1" "${LISTENING_PORT}" >/dev/null; then
-      _warning "Port ${LISTENING_PORT} is not available, using another one"
-      LISTENING_PORT="6543"
-    fi
+    find_pg_port
 
     local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
     USERNAME=${USERNAME/@/%40}
@@ -87,4 +79,19 @@ gcloud_sql_proxy() {
     _info "Connect using: postgres://${USERNAME}@127.0.0.1:${LISTENING_PORT}/db_name\n"
     _print_and_run "cloud_sql_proxy -instances='${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${LISTENING_PORT}' -enable_iam_login -token \$(gcloud auth print-access-token --impersonate-service-account '${SERVICE_ACCOUNT}')"
   fi
+}
+
+find_pg_port() {
+  local START_INDEX=3
+  local POSSIBLE_PORTS="9876543"
+
+  while nc -z "127.0.0.1" "${LISTENING_PORT}" >/dev/null; do
+    if [[ ${START_INDEX} -lt 0 ]]; then
+      return 1
+    fi
+
+    LISTENING_PORT="${POSSIBLE_PORTS:START_INDEX:4}"
+
+    START_INDEX=$((START_INDEX - 1))
+  done
 }
