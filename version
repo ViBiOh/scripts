@@ -22,7 +22,7 @@ version_value() {
 
 version_bump() {
   if [[ -e package.json ]]; then
-    var_print_and_run "npx npm-check-updates -u"
+    var_print_and_run npx npm-check-updates -u
     npm install --ignore-scripts
     npm audit fix
   fi
@@ -43,7 +43,7 @@ version_bump() {
         continue
       fi
 
-      var_print_and_run "go get -u '${dep}@latest'"
+      var_print_and_run go get -u "${dep}@latest"
     done
 
     go mod tidy -compat=1.17
@@ -51,7 +51,7 @@ version_bump() {
   fi
 
   if [[ -e provider.tf ]]; then
-    var_print_and_run "terraform init -upgrade"
+    var_print_and_run terraform init -upgrade
   fi
 }
 
