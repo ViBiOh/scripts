@@ -2,6 +2,10 @@
 
 set -o nounset -o pipefail
 
+if [[ ${TRACE:-0} == "1" ]]; then
+  set -o xtrace
+fi
+
 script_dir() {
   if [[ -L ${BASH_SOURCE[0]} ]]; then
     dirname "$(readlink "${BASH_SOURCE[0]}")"

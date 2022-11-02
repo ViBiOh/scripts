@@ -1,19 +1,9 @@
 #!/usr/bin/env bash
 
-script_dir() {
-  local FILE_SOURCE="${BASH_SOURCE[0]}"
-
-  if [[ -L ${FILE_SOURCE} ]]; then
-    dirname "$(readlink "${FILE_SOURCE}")"
-  else
-    (
-      cd "$(dirname "${FILE_SOURCE}")" && pwd
-    )
-  fi
-}
+KUBE_PG_RESTORE_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 kube_pg_backup() {
-  source "$(script_dir)/meta" && meta_init "var"
+  source "${KUBE_PG_RESTORE_SCRIPT_DIR}/meta" && meta_init "var"
 
   local POSTGRES_USER
   var_shift_or_read POSTGRES_USER "${1:-}"
@@ -39,7 +29,7 @@ kube_pg_backup() {
 }
 
 kube_pg_restore() {
-  source "$(script_dir)/meta" && meta_init "var"
+  source "${KUBE_PG_RESTORE_SCRIPT_DIR}/meta" && meta_init "var"
 
   local POSTGRES_USER
   var_shift_or_read POSTGRES_USER "${1:-}"
