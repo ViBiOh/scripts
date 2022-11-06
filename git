@@ -47,7 +47,7 @@ git_browse() {
       fi
 
       var_info "Running command in ${dir}"
-      eval "${@}"
+      eval "${*}"
     )
   done < <(find . -type d -maxdepth 1 -print0)
 }
