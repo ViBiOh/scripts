@@ -40,7 +40,7 @@ golang_build() {
     local OUTPUT_BINARIES
     mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
 
-    local GO_ARCHS="${GO_ARCHS:-darwin/amd64 darwin/arm64 linux/amd64 linux/arm linux/arm64}"
+    local GO_ARCHS="${GO_ARCHS:-linux/amd64 linux/arm linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64}"
 
     for main in "${OUTPUT_BINARIES[@]}"; do
       local EXTENSION
@@ -72,6 +72,10 @@ golang_build() {
 
           var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
           go build "-ldflags=${LDFLAGS}" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
+
+          if [[ -n ${GPG_FINGERPRINT:-} ]]; then
+            gpg --detach-sign --armor --local-user "${GPG_FINGERPRINT}" "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}"
+          fi
         )
       done
     done
