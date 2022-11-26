@@ -74,7 +74,7 @@ golang_build() {
           go build "-ldflags=${LDFLAGS}" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
 
           if [[ -n ${GPG_FINGERPRINT:-} ]]; then
-            gpg --detach-sign --armor --local-user "${GPG_FINGERPRINT}" "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}"
+            gpg --no-tty --batch --detach-sign --armor --local-user "${GPG_FINGERPRINT}" "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}"
           fi
         )
       done
