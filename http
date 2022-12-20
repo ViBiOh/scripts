@@ -3,7 +3,7 @@
 HTTP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 http_urlencode() {
-  local old_lc_collate="${LC_COLLATE:-}"
+  local old_lc_collate="${LC_COLLATE-}"
   LC_COLLATE="C"
 
   local length="${#1}"
@@ -26,7 +26,7 @@ http_handle_error() {
 
   var_color
 
-  var_error "HTTP/${HTTP_STATUS}: ${1:-}"
+  var_error "HTTP/${HTTP_STATUS}: ${1-}"
   cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
 }
 
@@ -45,4 +45,11 @@ http_init_client() {
 http_request() {
   export HTTP_STATUS
   HTTP_STATUS="$("${HTTP_CLIENT_ARGS[@]}" "${@}")"
+}
+
+http_reset() {
+  rm "${HTTP_OUTPUT}"
+
+  HTTP_CLIENT_ARGS=()
+  export HTTP_CLIENT_ARGS
 }
