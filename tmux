@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 tmux_is_inside() {
-  if [[ -z ${TMUX:-} ]]; then
+  if [[ -z ${TMUX-} ]]; then
     return 1
   fi
 
@@ -76,7 +76,7 @@ tmux_batch() {
   while IFS= read -r -d '' item; do
     spread["$((index % MAX_PARALLEL))"]+="${item},"
     index="$((index + 1))"
-  done < <(${1:-})
+  done < <(${1-})
 
   (
     index=0

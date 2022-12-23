@@ -8,27 +8,27 @@ var_read() {
 
   local VAR_NAME="${1}"
   shift
-  local VAR_DEFAULT="${1:-}"
+  local VAR_DEFAULT="${1-}"
   shift || true
-  local VAR_SECRET="${1:-}"
+  local VAR_SECRET="${1-}"
   shift || true
 
   local VAR_SECRET_ARG=""
-  if [[ ${VAR_SECRET:-} == "secret" ]]; then
+  if [[ ${VAR_SECRET-} == "secret" ]]; then
     VAR_SECRET_ARG="-s"
   fi
 
   local VAR_DEFAULT_DISPLAY=""
   if [[ -n ${VAR_DEFAULT} ]]; then
-    if [[ ${VAR_SECRET:-} == "secret" ]]; then
+    if [[ ${VAR_SECRET-} == "secret" ]]; then
       VAR_DEFAULT_DISPLAY=" [*****]"
     else
       VAR_DEFAULT_DISPLAY=" [${VAR_DEFAULT}]"
     fi
   fi
 
-  if [[ -z ${!VAR_NAME:-} ]]; then
-    if [[ -z ${SCRIPTS_NO_INTERACTIVE:-} ]]; then
+  if [[ -z ${!VAR_NAME-} ]]; then
+    if [[ -z ${SCRIPTS_NO_INTERACTIVE-} ]]; then
       read ${VAR_SECRET_ARG?} -r -p "${VAR_NAME}${VAR_DEFAULT_DISPLAY}=" READ_VALUE </dev/tty
     fi
 
@@ -50,7 +50,7 @@ var_shift_or_read() {
   local VAR_NAME="${1}"
   shift
 
-  local VAR_VALUE="${1:-}"
+  local VAR_VALUE="${1-}"
   if [[ -n ${VAR_VALUE} ]]; then
     local VAR_SAFE_VALUE
     VAR_SAFE_VALUE="$(printf "%s" "${VAR_VALUE}" | sed "s|'|\\\'|g")"

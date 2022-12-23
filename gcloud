@@ -21,7 +21,7 @@ gcloud_docker_login() {
 
 gcloud_account() {
   local GCLOUD_ACCOUNT
-  GCLOUD_ACCOUNT="$(gcloud auth list --format 'value(account)' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+  GCLOUD_ACCOUNT="$(gcloud auth list --format 'value(account)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}")"
 
   if [[ -n ${GCLOUD_ACCOUNT} ]]; then
     gcloud config set account "${GCLOUD_ACCOUNT}"
@@ -30,7 +30,7 @@ gcloud_account() {
 
 gcloud_project() {
   local GCLOUD_PROJECT
-  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}")"
 
   if [[ -n ${GCLOUD_PROJECT} ]]; then
     gcloud config set project "${GCLOUD_PROJECT}"
@@ -39,21 +39,21 @@ gcloud_project() {
 
 gcloud_kube_import() {
   local GCLOUD_CLUSTER
-  GCLOUD_CLUSTER="$(gcloud container clusters list --format json | jq --raw-output '.[] | .name + "@" + .zone' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}")"
+  GCLOUD_CLUSTER="$(gcloud container clusters list --format json | jq --raw-output '.[] | .name + "@" + .zone' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}")"
 
   local CLUSTER_NAME
   CLUSTER_NAME="$(printf '%s' "${GCLOUD_CLUSTER}" | awk -F '@' '{ print $1 }')"
   local CLUSTER_ZONE
   CLUSTER_ZONE="$(printf '%s' "${GCLOUD_CLUSTER}" | awk -F '@' '{ print $2 }')"
 
-  if [[ -n ${CLUSTER_NAME:-} ]]; then
+  if [[ -n ${CLUSTER_NAME-} ]]; then
     local PROJECT_NAME
     PROJECT_NAME="$(gcloud projects describe "$(gcloud config get project)" --format json | jq -r .name | tr '[:upper:]' '[:lower:]' | sed 's| |-|')"
 
     gcloud container clusters get-credentials "${CLUSTER_NAME}" --zone "${CLUSTER_ZONE}"
     kubectl config rename-context "$(kubectl config current-context)" "${PROJECT_NAME}_${CLUSTER_NAME}"
 
-    if [[ -n ${2:-} ]]; then
+    if [[ -n ${2-} ]]; then
       kubectl config set-context --current --namespace "${2}"
     fi
   fi
@@ -70,14 +70,14 @@ gcloud_sql_proxy() {
   }
 
   local SQL_INSTANCE
-  SQL_INSTANCE="$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1:-}" --prompt "SQL instances:")"
+  SQL_INSTANCE="$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "SQL instances:")"
 
   local SQL_CONNECTION_NAME
   SQL_CONNECTION_NAME="$(printf '%s' "${SQL_INSTANCE}" | awk -F '@' '{ print $2 }')"
 
-  if [[ -n ${SQL_CONNECTION_NAME:-} ]]; then
+  if [[ -n ${SQL_CONNECTION_NAME-} ]]; then
     local SERVICE_ACCOUNT
-    SERVICE_ACCOUNT="$(gcloud iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${2:-}" --prompt "Service Account:")"
+    SERVICE_ACCOUNT="$(gcloud iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Service Account:")"
 
     local LISTENING_PORT="${3:-5432}"
     find_pg_port

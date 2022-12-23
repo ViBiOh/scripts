@@ -31,7 +31,7 @@ version_bump() {
     local CURRENT_MODULE
     CURRENT_MODULE="$(go list -m)"
 
-    local REGEX_FILTER="${1:-}"
+    local REGEX_FILTER="${1-}"
     var_read REGEX_FILTER ""
 
     for dep in $(go list -m -json all | jq --raw-output 'select(.Indirect != true) | .Path'); do
