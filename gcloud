@@ -61,7 +61,7 @@ gcloud_kube_import() {
 
 gcloud_sql_proxy() {
   _print_and_run() {
-    printf -- "%b%b%b\n" "${YELLOW}" "${@}" "${RESET}" 1>&2
+    printf -- "%b%s%b\n" "${YELLOW}" "${@}" "${RESET}" 1>&2
     "${@}"
   }
 
