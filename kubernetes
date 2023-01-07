@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+sql_forward() {
+  if [[ ${#} -lt 2 ]]; then
+    var_red "Usage: sql_forward ENV NAME PORT=5432"
+    return 1
+  fi
+
+  local CMD="k${1-}"
+  shift
+
+  local NAME="${1-}"
+  shift
+
+  local PORT="${1-5432}"
+  shift || true
+
+  local LISTENING_PORT="${3:-5432}"
+  find_pg_port
+
+  kubectl port-forward $(${CMD} find pod "${NAME}") --address "127.0.0.1" "${PORT}:${LISTENING_PORT}"
+}
