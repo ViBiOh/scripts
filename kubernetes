@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sql_forward() {
+kubeernetes_sql_forward() {
   if [[ ${#} -lt 2 ]]; then
     var_red "Usage: sql_forward ENV NAME PORT=5432"
     return 1
@@ -15,8 +15,13 @@ sql_forward() {
   local PORT="${1-5432}"
   shift || true
 
-  local LISTENING_PORT="${3:-5432}"
-  find_pg_port
+  local POSTGRES_PORT="${3:-5432}"
+  sql_find_port
 
-  kubectl port-forward $(${CMD} find pod "${NAME}") --address "127.0.0.1" "${PORT}:${LISTENING_PORT}"
+  _print_and_run() {
+    printf -- "%b%s%b\n" "${YELLOW}" "${*}" "${RESET}" 1>&2
+    "${@}"
+  }
+
+  _print_and_run kubectl port-forward $(${CMD} find pod "${NAME}") --address "127.0.0.1" "${PORT}:${POSTGRES_PORT}"
 }

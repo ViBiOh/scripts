@@ -70,7 +70,7 @@ gcloud_sql_proxy() {
   }
 
   local SQL_INSTANCE
-  SQL_INSTANCE="$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "SQL instances:")"
+  SQL_INSTANCE="$(gcloud sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion + "@" + (.settings.ipConfiguration.ipv4Enabled | tostring)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "SQL instances:")"
 
   local SQL_CONNECTION_NAME
   SQL_CONNECTION_NAME="$(printf '%s' "${SQL_INSTANCE}" | awk -F '@' '{ print $2 }')"
@@ -79,28 +79,22 @@ gcloud_sql_proxy() {
     local SERVICE_ACCOUNT
     SERVICE_ACCOUNT="$(gcloud iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Service Account:")"
 
-    local LISTENING_PORT="${3:-5432}"
-    find_pg_port
-
     local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
     USERNAME=${USERNAME/@/%40}
 
     _info "Connect using: postgres://${USERNAME}@127.0.0.1:${LISTENING_PORT}/db_name\n"
-    _print_and_run cloud_sql_proxy -instances="${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${LISTENING_PORT}" -enable_iam_login -token "$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
-  fi
-}
 
-find_pg_port() {
-  local START_INDEX=3
-  local POSSIBLE_PORTS="9876543"
+    local IS_PUBLIC
+    IS_PUBLIC="$(printf '%s' "${SQL_INSTANCE}" | awk -F '@' '{ print $4 }')"
 
-  while nc -z "127.0.0.1" "${LISTENING_PORT}" >/dev/null 2>&1; do
-    if [[ ${START_INDEX} -lt 0 ]]; then
-      return 1
+    if [[ ${IS_PUBLIC} == "false" ]]; then
+      printf "GCP SQL instance is private, connect by using kubernetes port-forward\n"
+      return
     fi
 
-    LISTENING_PORT="${POSSIBLE_PORTS:START_INDEX:4}"
+    local LISTENING_PORT="${3:-5432}"
+    sql_find_port
 
-    START_INDEX=$((START_INDEX - 1))
-  done
+    _print_and_run cloud_sql_proxy -instances="${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${LISTENING_PORT}" -enable_iam_login -token "$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
+  fi
 }
