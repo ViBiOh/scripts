@@ -2,7 +2,7 @@
 
 KUBERNETES_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-kubeernetes_sql_forward() {
+kubernetes_sql_forward() {
   source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var" "sql"
 
   if [[ ${#} -lt 2 ]]; then
