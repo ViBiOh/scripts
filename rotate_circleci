@@ -144,7 +144,7 @@ circleci_clean_checkout_key() {
         "${CIRCLECI_API}/${1}/checkout-key/${key}"
     )"
     if [[ ${CIRCLECI_HTTP_STATUS} != "200" ]]; then
-      printf "%bUnable to delete CircleCI checkout key %ss%b\n" "${RED}" "${key}" "${RESET}"
+      printf "%bUnable to delete CircleCI checkout key %s%b\n" "${RED}" "${key}" "${RESET}"
       printf "HTTP/%s\n" "${CIRCLECI_HTTP_STATUS}"
       cat "${CIRCLECI_HTTP_OUTPUT}"
       return 1
