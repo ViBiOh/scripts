@@ -22,7 +22,7 @@ kubernetes_sql_forward() {
   local POSTGRES_PORT="${3:-5432}"
   sql_find_port
 
-  var_print_and_run kubectl port-forward $(${CMD} find pod "${NAME}") --address "127.0.0.1" "${PORT}:${POSTGRES_PORT}"
+  var_print_and_run kubectl port-forward $(${CMD} find pod "${NAME}") --address "127.0.0.1" "${POSTGRES_PORT}:${PORT}"
 }
 
 kubernetes_postgres_backup() {
