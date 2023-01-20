@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+database_find_port() {
+  local START_INDEX=3
+  local POSSIBLE_PORTS="9876543"
+
+  local DATABASE_PORT="${1-5432}"
+
+  while nc -z "127.0.0.1" "${DATABASE_PORT}" >/dev/null 2>&1; do
+    if [[ ${START_INDEX} -lt 0 ]]; then
+      return 1
+    fi
+
+    DATABASE_PORT="${POSSIBLE_PORTS:START_INDEX:4}"
+
+    START_INDEX=$((START_INDEX - 1))
+  done
+
+  printf "%s" "${DATABASE_PORT}"
+}

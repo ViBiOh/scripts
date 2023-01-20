@@ -38,11 +38,11 @@ passget() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var"
+  source "$(script_dir)/meta" && meta_init "var" "pass"
   var_color
 
-  var_read DOCKER_OWNER
-  var_read DOCKER_USER "$(passget "dev/docker" "login")"
+  var_read DOCKER_OWNER "${1-}"
+  var_read DOCKER_USER "$(pass_get "dev/docker" "login")"
   var_read DOCKER_PASSWORD "$(pass "dev/docker" | head -1)" "secret"
 
   for repo in $(registry-cleaner -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -owner "${DOCKER_OWNER}" -list); do
@@ -53,4 +53,4 @@ main() {
   unset DOCKER_PASSWORD
 }
 
-main
+main "${@}"

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+pass_get() {
+  if ! command -v pass >/dev/null 2>&1; then
+    return
+  fi
+
+  if [[ ${#} -lt 2 ]]; then
+    var_red "Usage: passget PASS_NAME PASS_FIELD"
+    return 1
+  fi
+
+  local PASS_NAME="${1}"
+  shift
+
+  local PASS_FIELD="${1}"
+  shift
+
+  pass show "${PASS_NAME}" | grep "^${PASS_FIELD}: " | sed "s|^${PASS_FIELD}: ||"
+}

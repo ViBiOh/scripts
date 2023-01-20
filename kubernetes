@@ -3,7 +3,7 @@
 KUBERNETES_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 kubernetes_sql_forward() {
-  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var" "sql"
+  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var" "database"
 
   if [[ ${#} -lt 2 ]]; then
     var_red "Usage: sql_forward ENV NAME PORT=5432"
@@ -19,10 +19,10 @@ kubernetes_sql_forward() {
   local PORT="${1-5432}"
   shift || true
 
-  local POSTGRES_PORT="${3:-5432}"
-  sql_find_port
+  local EXPOSED_PORT="5432"
+  EXPOSED_PORT="$(database_find_port "${EXPOSED_PORT}")"
 
-  var_print_and_run kubectl port-forward $(${CMD} find pod "${NAME}") --address "127.0.0.1" "${POSTGRES_PORT}:${PORT}"
+  var_print_and_run kubectl port-forward "deployment/$(${CMD} find deployment "${NAME}")" --address "127.0.0.1" "${EXPOSED_PORT}:${PORT}"
 }
 
 kubernetes_postgres_backup() {

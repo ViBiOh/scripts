@@ -92,9 +92,9 @@ gcloud_sql_proxy() {
       return
     fi
 
-    local LISTENING_PORT="${3:-5432}"
-    sql_find_port
+    local EXPOSED_PORT="5432"
+    EXPOSED_PORT="$(database_find_port "${EXPOSED_PORT}")"
 
-    _print_and_run cloud_sql_proxy -instances="${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${LISTENING_PORT}" -enable_iam_login -token "$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
+    _print_and_run cloud_sql_proxy -instances="${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${EXPOSED_PORT}" -enable_iam_login -token "$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
   fi
 }
