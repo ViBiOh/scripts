@@ -437,36 +437,40 @@ github_configure() {
 
   local GITHUB_REPOSITORY="${1-}"
 
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+  http_init_client --header "Authorization: Bearer ${GITHUB_TOKEN}"
 
   github_rate_limit_wait
-  http_request --header "Content-Type: application/json" --request "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" --data '{
+  http_request --header "Content-Type: application/json" --header "Accept: application/vnd.github+json" --request "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" --data '{
     "default_branch": "main",
     "allow_merge_commit": false,
     "allow_squash_merge": false,
     "allow_rebase_merge": true,
     "delete_branch_on_merge": true,
     "has_wiki": false,
-    "has_projects": false
+    "has_projects": false,
+    "security_and_analysis": {
+      "secret_scanning": "enabled",
+      "secret_scanning_push_protection": "enabled"
+    }
   }'
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to edit ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  http_request --header "Accept: application/vnd.github.dorian-preview+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/vulnerability-alerts"
+  http_request --header "Accept: application/vnd.github+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/vulnerability-alerts"
   if [[ ${HTTP_STATUS} != "204" ]]; then
     http_handle_error "Unable to enable vulnerability alerts for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  http_request --header "Accept: application/vnd.github.london-preview+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/automated-security-fixes"
+  http_request --header "Accept: application/vnd.github+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/automated-security-fixes"
   if [[ ${HTTP_STATUS} != "204" ]]; then
     http_handle_error "Unable to enable automated security fixes for ${GITHUB_REPOSITORY}"
     return 1
   fi
 
-  http_request --header "Accept: application/vnd.github.luke-cage-preview+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/main/protection" --data '{
+  http_request --header "Accept: application/vnd.github+json" --request "PUT" "https://api.github.com/repos/${GITHUB_REPOSITORY}/branches/main/protection" --data '{
     "allow_force_pushes": false,
     "allow_deletions": false,
     "enforce_admins": false,
