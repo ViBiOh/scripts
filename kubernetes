@@ -22,7 +22,7 @@ kubernetes_sql_forward() {
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(database_find_port "${EXPOSED_PORT}")"
 
-  var_print_and_run kubectl port-forward "deployment/$(${CMD} find deployment "${NAME}")" --address "127.0.0.1" "${EXPOSED_PORT}:${PORT}"
+  var_print_and_run kubectl port-forward $(${CMD} find deployment "${NAME}") --address "127.0.0.1" "${EXPOSED_PORT}:${PORT}"
 }
 
 kubernetes_postgres_backup() {
