@@ -342,10 +342,10 @@ github_clean_subscription() {
 
   var_read GITHUB_TOKEN "" "secret"
 
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" --header "X-GitHub-Api-Version: 2022-11-28"
 
   local page=0
-  local page_size=50 # wait for https://support.github.com/ticket/personal/0/1482504
+  local page_size=50
   local count="${page_size}"
 
   local scope="user"
@@ -358,7 +358,7 @@ github_clean_subscription() {
 
     var_info "Fetching all subscriptions page ${page}..."
 
-    http_request --header "Accept: application/vnd.github.v3+json" "https://api.github.com/notifications?all=true&per_page=${page_size}&page=${page}"
+    http_request --header "Accept: application/vnd.github+json" "https://api.github.com/notifications?all=true&per_page=${page_size}&page=${page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list notifications on page ${page}"
       break
