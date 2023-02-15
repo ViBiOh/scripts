@@ -82,8 +82,6 @@ gcloud_sql_proxy() {
     local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
     USERNAME=${USERNAME/@/%40}
 
-    _info "Connect using: postgres://${USERNAME}@127.0.0.1:${LISTENING_PORT}/db_name\n"
-
     local IS_PUBLIC
     IS_PUBLIC="$(printf '%s' "${SQL_INSTANCE}" | awk -F '@' '{ print $4 }')"
 
@@ -94,6 +92,8 @@ gcloud_sql_proxy() {
 
     local EXPOSED_PORT="5432"
     EXPOSED_PORT="$(database_find_port "${EXPOSED_PORT}")"
+
+    _info "Connect using: postgres://${USERNAME}@127.0.0.1:${EXPOSED_PORT}/db_name\n"
 
     _print_and_run cloud_sql_proxy -instances="${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${EXPOSED_PORT}" -enable_iam_login -token "$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
   fi
