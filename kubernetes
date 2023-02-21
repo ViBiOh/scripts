@@ -80,3 +80,81 @@ kubernetes_postgres_restore() {
     kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
   fi
 }
+
+kubernetes_redis_cli() {
+  _info() {
+    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
+  }
+
+  local CONTEXT
+  CONTEXT="$(kubectl config get-contexts -o name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
+
+  if [[ -z ${CONTEXT-} ]]; then
+    return 1
+  fi
+
+  local NAMESPACE
+  NAMESPACE="$(kubectl --context "${CONTEXT}" get namespaces --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Namespace:")"
+
+  if [[ -z ${NAMESPACE-} ]]; then
+    return 1
+  fi
+
+  local KUBECTL_COMMAND="kubectl --context ${CONTEXT} --namespace ${NAMESPACE}"
+
+  local ENDPOINT
+  ENDPOINT="$(${KUBECTL_COMMAND} get endpoints --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Endpoint:")"
+
+  if [[ -z ${ENDPOINT-} ]]; then
+    return 1
+  fi
+
+  local AUTH_SECRET
+  AUTH_SECRET="$(${KUBECTL_COMMAND} get secrets --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Secret:")"
+
+  if [[ -z ${AUTH_SECRET-} ]]; then
+    return 1
+  fi
+
+  local AUTH_PASS
+  AUTH_PASS="$(${KUBECTL_COMMAND} get secrets "${AUTH_SECRET}" --output=yaml | yq eval '.data[] |= @base64d | .data' | fzf --height=20 --ansi --reverse --select-1 --prompt "Auth:" | awk '{print $2}')"
+
+  if [[ -z ${AUTH_PASS-} ]]; then
+    return 1
+  fi
+
+  local POD_NAME="redis-cli"
+
+  if [[ $(${KUBECTL_COMMAND} get pod "${POD_NAME}" 2>/dev/null | wc -l) -eq 0 ]]; then
+    _info "Creating a redis-cli pod"
+
+    cat <<EOF | ${KUBECTL_COMMAND} apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${POD_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: kubernetes-redis-cli
+    app.kubernetes.io/instance: ${POD_NAME}
+spec:
+  containers:
+    - name: cli
+      image: dbcliorg/iredis
+      command:
+        - /bin/sh
+      args:
+        - "-c"
+        - "tail -f /dev/null"
+EOF
+
+    _info "Waiting for Running condition..."
+    ${KUBECTL_COMMAND} wait --for=jsonpath='{.status.phase}'=Running "pod/${POD_NAME}"
+  fi
+
+  _info "Connecting to the ${POD_NAME} pod..."
+  ${KUBECTL_COMMAND} exec "${POD_NAME}" --stdin --tty -- iredis -h "${ENDPOINT}" --password "${AUTH_PASS}" || true
+
+  _info "Deleting the ${POD_NAME} pod..."
+  ${KUBECTL_COMMAND} delete pod "${POD_NAME}"
+}
