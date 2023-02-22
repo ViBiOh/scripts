@@ -3,82 +3,52 @@
 KUBERNETES_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 kubernetes_sql_forward() {
-  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var" "database"
+  _print_and_run() {
+    printf -- "%b%s%b\n" "${YELLOW}" "${*}" "${RESET}" 1>&2
+    "${@}"
+  }
 
-  if [[ ${#} -lt 2 ]]; then
-    var_red "Usage: sql_forward ENV NAME PORT=5432"
+  _info() {
+    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
+  }
+
+  local CONTEXT
+  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
+
+  if [[ -z ${CONTEXT-} ]]; then
     return 1
   fi
 
-  local CMD="k${1-}"
-  shift
+  _info "Context: ${CONTEXT}"
 
-  local NAME="${1-}"
-  shift
+  local DEPLOYMENT
+  DEPLOYMENT="$(kubectl --context "${CONTEXT}" get --all-namespaces deployments.apps --output yaml | yq eval '.items[] | .metadata.namespace + "/" + .metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Deployment:")"
 
-  local PORT="${1-5432}"
-  shift || true
+  if [[ -z ${DEPLOYMENT-} ]]; then
+    return 1
+  fi
+
+  _info "Deployment: ${DEPLOYMENT}"
+
+  local NAMESPACE
+  NAMESPACE="$(printf '%s' "${DEPLOYMENT}" | awk -F '/' '{ print $1 }')"
+
+  local NAME
+  NAME="$(printf '%s' "${DEPLOYMENT}" | awk -F '/' '{ print $2 }')"
+
+  local FORWARDED_PORT
+  FORWARDED_PORT="$(kubectl --context "${CONTEXT}" get --namespace "${NAMESPACE}" "deployments.apps/${NAME}" --output yaml | yq eval '.spec.template.spec.containers[] | .ports[] | .containerPort' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Port:")"
+
+  if [[ -z ${FORWARDED_PORT-} ]]; then
+    return 1
+  fi
+
+  _info "Port: ${FORWARDED_PORT}"
 
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(database_find_port "${EXPOSED_PORT}")"
 
-  var_print_and_run kubectl port-forward $(${CMD} find deployment "${NAME}") --address "127.0.0.1" "${EXPOSED_PORT}:${PORT}"
-}
-
-kubernetes_postgres_backup() {
-  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var"
-
-  local POSTGRES_USER
-  var_shift_or_read POSTGRES_USER "${1-}"
-  shift || true
-
-  local POSTGRES_DB
-  var_shift_or_read POSTGRES_DB "${1-}"
-  shift || true
-
-  local BACKUP_FILE
-  var_shift_or_read BACKUP_FILE "${1-}"
-  shift || true
-
-  local CONTEXT
-  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
-
-  local POSTGRES_POD
-  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
-
-  if [[ -n ${POSTGRES_POD} ]]; then
-    kubectl --context "${CONTEXT}" exec --tty "${POSTGRES_POD}" -- pg_dump --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" >"${BACKUP_FILE}"
-  fi
-}
-
-kubernetes_postgres_restore() {
-  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var"
-
-  local POSTGRES_USER
-  var_shift_or_read POSTGRES_USER "${1-}"
-  shift || true
-
-  local POSTGRES_DB
-  var_shift_or_read POSTGRES_DB "${1-}"
-  shift || true
-
-  local CONTEXT
-  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
-
-  local BACKUP_FILE
-  BACKUP_FILE="$(
-    if command -v rg >/dev/null 2>&1; then
-      export FZF_DEFAULT_COMMAND='rg --files --sortr path 2> /dev/null'
-    fi
-    fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
-  )"
-
-  local POSTGRES_POD
-  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
-
-  if [[ -n ${POSTGRES_POD} ]]; then
-    kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
-  fi
+  _print_and_run kubectl --context "${CONTEXT}" port-forward --namespace "${NAMESPACE}" "deployments.app/${NAME}" --address "127.0.0.1" "${EXPOSED_PORT}:${FORWARDED_PORT}"
 }
 
 kubernetes_redis_cli() {
@@ -155,4 +125,60 @@ EOF
 
   _info "Deleting the ${POD_NAME} pod..."
   kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" delete pod "${POD_NAME}"
+}
+
+kubernetes_postgres_backup() {
+  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var"
+
+  local POSTGRES_USER
+  var_shift_or_read POSTGRES_USER "${1-}"
+  shift || true
+
+  local POSTGRES_DB
+  var_shift_or_read POSTGRES_DB "${1-}"
+  shift || true
+
+  local BACKUP_FILE
+  var_shift_or_read BACKUP_FILE "${1-}"
+  shift || true
+
+  local CONTEXT
+  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
+
+  local POSTGRES_POD
+  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
+
+  if [[ -n ${POSTGRES_POD} ]]; then
+    kubectl --context "${CONTEXT}" exec --tty "${POSTGRES_POD}" -- pg_dump --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" >"${BACKUP_FILE}"
+  fi
+}
+
+kubernetes_postgres_restore() {
+  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var"
+
+  local POSTGRES_USER
+  var_shift_or_read POSTGRES_USER "${1-}"
+  shift || true
+
+  local POSTGRES_DB
+  var_shift_or_read POSTGRES_DB "${1-}"
+  shift || true
+
+  local CONTEXT
+  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
+
+  local BACKUP_FILE
+  BACKUP_FILE="$(
+    if command -v rg >/dev/null 2>&1; then
+      export FZF_DEFAULT_COMMAND='rg --files --sortr path 2> /dev/null'
+    fi
+    fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
+  )"
+
+  local POSTGRES_POD
+  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
+
+  if [[ -n ${POSTGRES_POD} ]]; then
+    kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
+  fi
 }
