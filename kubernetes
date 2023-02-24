@@ -40,34 +40,25 @@ kubernetes_sql_forward() {
 
   _info "Context: ${CONTEXT}"
 
-  local DEPLOYMENT
-  DEPLOYMENT="$(kubectl --context "${CONTEXT}" get --all-namespaces deployments.apps --output yaml | yq eval '.items[] | .metadata.namespace + "/" + .metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Deployment:")"
+  local POD
+  POD="$(kubectl --context "${CONTEXT}" get --all-namespaces pods --output yaml | yq eval '.items[] | .metadata.namespace + "/" + .metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "POD:")"
 
-  if [[ -z ${DEPLOYMENT-} ]]; then
+  if [[ -z ${POD-} ]]; then
     return 1
   fi
 
-  _info "Deployment: ${DEPLOYMENT}"
+  _info "POD: ${POD}"
 
   local NAMESPACE
-  NAMESPACE="$(printf '%s' "${DEPLOYMENT}" | awk -F '/' '{ print $1 }')"
+  NAMESPACE="$(printf '%s' "${POD}" | awk -F '/' '{ print $1 }')"
 
   local NAME
-  NAME="$(printf '%s' "${DEPLOYMENT}" | awk -F '/' '{ print $2 }')"
-
-  local FORWARDED_PORT
-  FORWARDED_PORT="$(kubectl --context "${CONTEXT}" get --namespace "${NAMESPACE}" "deployments.apps/${NAME}" --output yaml | yq eval '.spec.template.spec.containers[] | .ports[] | .containerPort' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Port:")"
-
-  if [[ -z ${FORWARDED_PORT-} ]]; then
-    return 1
-  fi
-
-  _info "Port: ${FORWARDED_PORT}"
+  NAME="$(printf '%s' "${POD}" | awk -F '/' '{ print $2 }')"
 
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
 
-  _print_and_run kubectl --context "${CONTEXT}" port-forward --namespace "${NAMESPACE}" "deployments.app/${NAME}" --address "127.0.0.1" "${EXPOSED_PORT}:${FORWARDED_PORT}"
+  _print_and_run kubectl --context "${CONTEXT}" port-forward --namespace "${NAMESPACE}" "pod/${NAME}" --address "127.0.0.1" "${EXPOSED_PORT}:5432"
 }
 
 kubernetes_redis_cli() {
