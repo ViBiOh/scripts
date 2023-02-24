@@ -58,7 +58,7 @@ kubernetes_sql_forward() {
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
 
-  _print_and_run kubectl --context "${CONTEXT}" port-forward --namespace "${NAMESPACE}" "pod/${NAME}" --address "127.0.0.1" "${EXPOSED_PORT}:5432"
+  _print_and_run kubectl --context "${CONTEXT}" port-forward --namespace "${NAMESPACE}" "pod/${NAME}" --address "127.0.0.1" "${EXPOSED_PORT}:${3:-5432}"
 }
 
 kubernetes_redis_cli() {
