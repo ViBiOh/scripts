@@ -60,6 +60,35 @@ gcloud_kube_import() {
   fi
 }
 
+gcloud_sql_forward() {
+  _info() {
+    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
+  }
+
+  local GCLOUD_PROJECT
+  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Project:")"
+
+  if [[ -z ${GCLOUD_PROJECT-} ]]; then
+    return 1
+  fi
+
+  _info "Project: ${GCLOUD_PROJECT}"
+
+  local SERVICE_ACCOUNT
+  SERVICE_ACCOUNT="$(gcloud --project "${GCLOUD_PROJECT}" iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Service Account:")"
+
+  if [[ -z ${SERVICE_ACCOUNT-} ]]; then
+    return 1
+  fi
+
+  local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
+  USERNAME=${USERNAME/@/%40}
+
+  _info "Connect using: postgres://${USERNAME}@127.0.0.1:PORT/DATABASE\n"
+
+  kubernetes_sql_forward
+}
+
 gcloud_sql_proxy() {
   _print_and_run() {
     printf -- "%b%s%b\n" "${YELLOW}" "${*}" "${RESET}" 1>&2
@@ -70,19 +99,42 @@ gcloud_sql_proxy() {
     printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
   }
 
+  _find_port() {
+    local START_INDEX=3
+    local POSSIBLE_PORTS="9876543"
+
+    local DATABASE_PORT="${1-5432}"
+
+    while nc -z "127.0.0.1" "${DATABASE_PORT}" >/dev/null 2>&1; do
+      if [[ ${START_INDEX} -lt 0 ]]; then
+        return 1
+      fi
+
+      DATABASE_PORT="${POSSIBLE_PORTS:START_INDEX:4}"
+
+      START_INDEX=$((START_INDEX - 1))
+    done
+
+    printf "%s" "${DATABASE_PORT}"
+  }
+
   local GCLOUD_PROJECT
-  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}")"
+  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Project:")"
 
   if [[ -z ${GCLOUD_PROJECT-} ]]; then
     return 1
   fi
 
+  _info "Project: ${GCLOUD_PROJECT}"
+
   local SQL_INSTANCE
-  SQL_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion + "@" + (.settings.ipConfiguration.ipv4Enabled | tostring)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "SQL instances:")"
+  SQL_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion + "@" + (.settings.ipConfiguration.ipv4Enabled | tostring)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "SQL instance:")"
 
   if [[ -z ${SQL_INSTANCE-} ]]; then
     return 1
   fi
+
+  _info "SQL instance: ${SQL_INSTANCE}"
 
   local SQL_CONNECTION_NAME
   SQL_CONNECTION_NAME="$(printf '%s' "${SQL_INSTANCE}" | awk -F '@' '{ print $2 }')"
@@ -110,7 +162,7 @@ gcloud_sql_proxy() {
   fi
 
   local EXPOSED_PORT="5432"
-  EXPOSED_PORT="$(database_find_port "${EXPOSED_PORT}")"
+  EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
 
   _info "Connect using: postgres://${USERNAME}@127.0.0.1:${EXPOSED_PORT}/db_name\n"
 

@@ -12,6 +12,25 @@ kubernetes_sql_forward() {
     printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
   }
 
+  _find_port() {
+    local START_INDEX=3
+    local POSSIBLE_PORTS="9876543"
+
+    local DATABASE_PORT="${1-5432}"
+
+    while nc -z "127.0.0.1" "${DATABASE_PORT}" >/dev/null 2>&1; do
+      if [[ ${START_INDEX} -lt 0 ]]; then
+        return 1
+      fi
+
+      DATABASE_PORT="${POSSIBLE_PORTS:START_INDEX:4}"
+
+      START_INDEX=$((START_INDEX - 1))
+    done
+
+    printf "%s" "${DATABASE_PORT}"
+  }
+
   local CONTEXT
   CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
 
@@ -46,7 +65,7 @@ kubernetes_sql_forward() {
   _info "Port: ${FORWARDED_PORT}"
 
   local EXPOSED_PORT="5432"
-  EXPOSED_PORT="$(database_find_port "${EXPOSED_PORT}")"
+  EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
 
   _print_and_run kubectl --context "${CONTEXT}" port-forward --namespace "${NAMESPACE}" "deployments.app/${NAME}" --address "127.0.0.1" "${EXPOSED_PORT}:${FORWARDED_PORT}"
 }
