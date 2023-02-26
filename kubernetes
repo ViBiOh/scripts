@@ -155,8 +155,16 @@ kubernetes_postgres_backup() {
   local CONTEXT
   CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
 
+  if [[ -z ${CONTEXT-} ]]; then
+    return 1
+  fi
+
   local POSTGRES_POD
   POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
+
+  if [[ -z ${POSTGRES_POD-} ]]; then
+    return 1
+  fi
 
   if [[ -n ${POSTGRES_POD} ]]; then
     kubectl --context "${CONTEXT}" exec --tty "${POSTGRES_POD}" -- pg_dump --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" >"${BACKUP_FILE}"
@@ -177,6 +185,10 @@ kubernetes_postgres_restore() {
   local CONTEXT
   CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
 
+  if [[ -z ${CONTEXT-} ]]; then
+    return 1
+  fi
+
   local BACKUP_FILE
   BACKUP_FILE="$(
     if command -v rg >/dev/null 2>&1; then
@@ -185,8 +197,16 @@ kubernetes_postgres_restore() {
     fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
   )"
 
+  if [[ -z ${BACKUP_FILE-} ]]; then
+    return 1
+  fi
+
   local POSTGRES_POD
   POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
+
+  if [[ -z ${POSTGRES_POD-} ]]; then
+    return 1
+  fi
 
   if [[ -n ${POSTGRES_POD} ]]; then
     kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
