@@ -36,7 +36,7 @@ gcloud_kube_import() {
   GCLOUD_PROJECT_ID="$(printf '%s' "${GCLOUD_PROJECT}" | awk '{ print $1 }')"
 
   local GCLOUD_PROJECT_NAME
-  GCLOUD_PROJECT_NAME="$(printf '%s' "${GCLOUD_PROJECT}" | awk '{ print $2 }' | tr '[:upper:]' '[:lower:]' | sed 's| |-|')"
+  GCLOUD_PROJECT_NAME="$(printf '%s' "${GCLOUD_PROJECT}" | cut -f 2- -d ' ' | tr '[:upper:]' '[:lower:]' | sed 's| |-|')"
 
   local GCLOUD_CLUSTER
   GCLOUD_CLUSTER="$(gcloud --project "${GCLOUD_PROJECT_ID}" container clusters list --format json | jq --raw-output '.[] | .name + "@" + .zone' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}")"
@@ -51,11 +51,11 @@ gcloud_kube_import() {
   CLUSTER_ZONE="$(printf '%s' "${GCLOUD_CLUSTER}" | awk -F '@' '{ print $2 }')"
 
   if [[ -n ${CLUSTER_NAME-} ]]; then
-    gcloud --project "${GCLOUD_PROJECT_ID}" container clusters get-credentials "${GCLOUD_PROJECT_NAME}" --zone "${CLUSTER_ZONE}"
-    kubectl config rename-context "$(kubectl config current-context)" "${PROJECT_NAME}_${GCLOUD_PROJECT_NAME}"
+    gcloud --project "${GCLOUD_PROJECT_ID}" container clusters get-credentials "${CLUSTER_NAME}" --zone "${CLUSTER_ZONE}"
+    kubectl config rename-context "$(kubectl config current-context)" "${GCLOUD_PROJECT_NAME}_${CLUSTER_NAME}"
 
     if [[ -n ${2-} ]]; then
-      kubectl config set-context --current --namespace "${2}"
+      kubectl config set-context --current --namespace "${3:-default}"
     fi
   fi
 }
