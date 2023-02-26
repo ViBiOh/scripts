@@ -41,13 +41,13 @@ kubernetes_sql_forward() {
   _info "Context: ${CONTEXT}"
 
   local POD
-  POD="$(kubectl --context "${CONTEXT}" get --all-namespaces pods --output yaml | yq eval '.items[] | .metadata.namespace + "/" + .metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "POD:")"
+  POD="$(kubectl --context "${CONTEXT}" get --all-namespaces pods --output yaml | yq eval '.items[] | select(.status.phase == "Running") | .metadata.namespace + "/" + .metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Pod:")"
 
   if [[ -z ${POD-} ]]; then
     return 1
   fi
 
-  _info "POD: ${POD}"
+  _info "Pod: ${POD}"
 
   local NAMESPACE
   NAMESPACE="$(printf '%s' "${POD}" | awk -F '/' '{ print $1 }')"
