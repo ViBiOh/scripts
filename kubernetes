@@ -146,15 +146,14 @@ kubernetes_redis_cli() {
   local AUTH_SECRET
   AUTH_SECRET="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get secrets --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Secret:")"
 
-  if [[ -z ${AUTH_SECRET-} ]]; then
-    return 1
-  fi
-
   local AUTH_PASS
-  AUTH_PASS="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get secrets "${AUTH_SECRET}" --output=yaml | yq eval '.data[] |= @base64d | .data' | fzf --height=20 --ansi --reverse --select-1 --prompt "Auth:" | awk '{print $2}')"
 
-  if [[ -z ${AUTH_PASS-} ]]; then
-    return 1
+  if [[ -n ${AUTH_SECRET-} ]]; then
+    AUTH_PASS="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get secrets "${AUTH_SECRET}" --output=yaml | yq eval '.data[] |= @base64d | .data' | fzf --height=20 --ansi --reverse --select-1 --prompt "Auth:" | awk '{print $2}')"
+
+    if [[ -z ${AUTH_PASS-} ]]; then
+      return 1
+    fi
   fi
 
   local POD_NAME="redis-cli"
