@@ -25,9 +25,6 @@ main() {
   source "${SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
-  local DOCKER_REGISTRY="https://registry-1.docker.io/v2"
-  local DOCKER_AUTH_TOKEN="https://auth.docker.io/token?service=registry.docker.io"
-
   local DATE_VERSION
 
   OPTIND=0
@@ -55,15 +52,17 @@ main() {
     return 1
   fi
 
-  var_read DOCKER_USER
-  var_read DOCKER_PASS "" "secret"
-
   local DOCKER_IMAGE="${1}"
   shift
   local IMAGE_VERSION="${1}"
   shift
   local VERSION_TARGET="${1:-latest}"
   shift || true
+
+  var_read DOCKER_REGISTRY "https://registry.gitlab.com/v2"
+  var_read DOCKER_AUTH_TOKEN "https://auth.docker.io/token?service=registry.docker.io"
+  var_read DOCKER_USER
+  var_read DOCKER_PASS "" "secret"
 
   http_init_client
 
