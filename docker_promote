@@ -59,7 +59,7 @@ main() {
   local VERSION_TARGET="${1:-latest}"
   shift || true
 
-  var_read DOCKER_REGISTRY "https://registry.gitlab.com/v2"
+  var_read DOCKER_REGISTRY "https://registry-1.docker.io/v2"
   var_read DOCKER_AUTH_TOKEN "https://auth.docker.io/token?service=registry.docker.io"
   var_read DOCKER_USER
   var_read DOCKER_PASS "" "secret"
