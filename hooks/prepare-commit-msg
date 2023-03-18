@@ -45,6 +45,26 @@ main() {
     fi
   fi
 
+  if [[ ${2-} == "commit" ]]; then
+    local ORIGINAL_COMMITTER
+    ORIGINAL_COMMITTER=$(git show --format="%aN <%aE>" HEAD | head -1)
+
+    local CURRENT_COMMITTER
+    CURRENT_COMMITTER="$(git var GIT_COMMITTER_IDENT | sed -n 's|^\(.*>\).*$|\1|p')"
+
+    if [[ ${ORIGINAL_COMMITTER} != "${CURRENT_COMMITTER}" ]]; then
+      local CO_AUTHOR_LINE="Co-authored-by: ${CURRENT_COMMITTER}"
+
+      local WITH_TRAILER
+      WITH_TRAILER="$(mktemp)"
+
+      git interpret-trailers --where start --trailer "${CO_AUTHOR_LINE}" <"${1}" >"${WITH_TRAILER}"
+
+      cat "${WITH_TRAILER}" >"${1}"
+      rm "${WITH_TRAILER}"
+    fi
+  fi
+
   exit 0
 }
 
