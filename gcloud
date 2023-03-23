@@ -134,10 +134,10 @@ gcloud_sql_proxy() {
     return 1
   fi
 
-  _info "SQL instance: ${SQL_INSTANCE}"
-
   local SQL_CONNECTION_NAME
   SQL_CONNECTION_NAME="$(printf '%s' "${SQL_INSTANCE}" | awk -F '@' '{ print $2 }')"
+
+  _info "SQL instance: ${SQL_CONNECTION_NAME}"
 
   if [[ -z ${SQL_CONNECTION_NAME-} ]]; then
     return 1
