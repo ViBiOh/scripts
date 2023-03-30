@@ -516,8 +516,8 @@ github_pull_request() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
-  if [[ ${#} -ne 5 ]]; then
-    var_red "Usage: github_pull_request GITHUB_REPOSITORY TITLE BASE HEAD DRAFT?"
+  if [[ ${#} -ne 4 ]]; then
+    var_red "Usage: github_pull_request GITHUB_REPOSITORY TITLE BASE HEAD"
     return 1
   fi
 
