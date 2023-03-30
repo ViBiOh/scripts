@@ -51,6 +51,9 @@ main() {
   local ORGANIZATION=${1}
   shift
 
+  local GITHUB_TOKEN
+  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
+
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json"
 
   http_request "https://api.github.com/user"

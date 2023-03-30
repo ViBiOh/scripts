@@ -437,6 +437,9 @@ github_configure() {
 
   local GITHUB_REPOSITORY="${1-}"
 
+  local GITHUB_TOKEN
+  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
+
   http_init_client --header "Authorization: Bearer ${GITHUB_TOKEN}"
 
   github_rate_limit_wait
@@ -507,4 +510,43 @@ github_configure() {
   fi
 
   rm "${HTTP_OUTPUT}"
+}
+
+github_pull_request() {
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  var_color
+
+  if [[ ${#} -ne 5 ]]; then
+    var_red "Usage: github_pull_request GITHUB_REPOSITORY TITLE BASE HEAD DRAFT?"
+    return 1
+  fi
+
+  local GITHUB_REPOSITORY="${1-}"
+  shift
+
+  local PR_TITLE="${1-}"
+  shift
+
+  local PR_BASE="${1-}"
+  shift
+
+  local PR_HEAD="${1-}"
+  shift
+
+  local GITHUB_TOKEN
+  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
+
+  http_init_client --header "Authorization: Bearer ${GITHUB_TOKEN}"
+
+  http_request \
+    --header "Accept: application/vnd.github+json" \
+    --request "POST" \
+    "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls" \
+    --data "$(
+      jq --compact-output --null-input \
+        --arg title "${PR_TITLE}" \
+        --arg base "${PR_BASE}" \
+        --arg head "${PR_HEAD}" \
+        '{title: $title, base: $base, head: $head}'
+    )"
 }

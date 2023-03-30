@@ -93,6 +93,10 @@ main() {
   var_read MESSAGE
 
   http_init_client
+
+  local GITHUB_TOKEN
+  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
+
   if [[ -n ${GITHUB_TOKEN} ]]; then
     HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
   fi

@@ -49,7 +49,7 @@ golang_build() {
       NAME="$(basename "${main}")"
 
       local LDFLAGS="-s -w"
-      if [[ -n ${GIT_TAG:-} ]] && [[ -n ${GO_VERSION_PATH:-} ]]; then
+      if [[ -n ${GIT_TAG-} ]] && [[ -n ${GO_VERSION_PATH-} ]]; then
         LDFLAGS+=" -X '${GO_VERSION_PATH}=${GIT_TAG}'"
       fi
 
@@ -73,7 +73,7 @@ golang_build() {
           var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
           go build "-ldflags=${LDFLAGS}" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
 
-          if [[ -n ${GPG_FINGERPRINT:-} ]]; then
+          if [[ -n ${GPG_FINGERPRINT-} ]]; then
             gpg --no-tty --batch --detach-sign --armor --local-user "${GPG_FINGERPRINT}" "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}"
           fi
         )
@@ -130,7 +130,7 @@ release() {
   local VERSION_REF
   local PREVIOUS_REF
 
-  if [[ -n ${LAST_TAG:-} ]]; then
+  if [[ -n ${LAST_TAG-} ]]; then
     VERSION_REF="$(git log --no-merges --invert-grep --grep "\[skip ci\] Automated" --color --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' "HEAD...${LAST_TAG}" | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
     var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep --invert-match "${VERSION_REF}" | head -1)"
   else
@@ -156,6 +156,9 @@ release() {
 
   local GIT_TAG
   GIT_TAG="$(version_semver "${VERSION}" "${VERSION_REF}" "quiet")"
+
+  local GITHUB_TOKEN
+  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
 
   var_read GITHUB_TOKEN "" "secret"
   var_read GITHUB_REPOSITORY "$(git_remote_repository)"

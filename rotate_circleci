@@ -59,6 +59,9 @@ github_clean_deploy_key() {
   local GITHUB_HTTP_OUTPUT
   GITHUB_HTTP_OUTPUT="$(mktemp)"
 
+  local GITHUB_TOKEN
+  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
+
   GITHUB_HTTP_STATUS="$(
     curl \
       --disable \
