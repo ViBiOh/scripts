@@ -549,4 +549,11 @@ github_pull_request() {
         --arg head "${PR_HEAD}" \
         '{title: $title, base: $base, head: $head}'
     )"
+  if [[ ${HTTP_STATUS} != "201" ]]; then
+    http_handle_error "Unable to create pull request for ${PR_HEAD}"
+    return 1
+  fi
+
+  jq --raw-output '.html_url' "${HTTP_OUTPUT}"
+  rm "${HTTP_OUTPUT}"
 }
