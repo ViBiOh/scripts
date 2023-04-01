@@ -18,32 +18,13 @@ script_dir() {
   fi
 }
 
-passget() {
-  if ! command -v pass >/dev/null 2>&1; then
-    return
-  fi
-
-  if [[ ${#} -lt 2 ]]; then
-    var_red "Usage: passget PASS_NAME PASS_FIELD"
-    return 1
-  fi
-
-  local PASS_NAME="${1}"
-  shift
-
-  local PASS_FIELD="${1}"
-  shift
-
-  pass show "${PASS_NAME}" | grep "^${PASS_FIELD}: " | sed "s|^${PASS_FIELD}: ||"
-}
-
 main() {
   source "$(script_dir)/meta" && meta_init "var" "pass"
   var_color
 
   var_read DOCKER_OWNER "${1-}"
   var_read DOCKER_USER "$(pass_get "dev/docker" "login")"
-  var_read DOCKER_PASSWORD "$(pass "dev/docker" | head -1)" "secret"
+  var_read DOCKER_PASSWORD "$(pass show "dev/docker" | head -1)" "secret"
 
   for repo in $(registry-cleaner -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -owner "${DOCKER_OWNER}" -list); do
     registry-cleaner -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -image "${repo}" -delete -grep '^[a-f0-9]{7}($|-)'

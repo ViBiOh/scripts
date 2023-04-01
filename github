@@ -3,7 +3,7 @@
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 github_token() {
-  pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}'
+  pass_get "dev/github" "token"
 }
 
 github_rate_limit_wait() {
@@ -34,7 +34,7 @@ github_rate_limit_wait() {
 }
 
 github_repo_pr_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -111,7 +111,7 @@ github_repo_pr_stats() {
 }
 
 github_repo_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -165,7 +165,7 @@ github_repo_stats() {
 }
 
 github_org_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
   var_color
 
   if [[ ${#} -lt 1 ]]; then
@@ -252,7 +252,7 @@ github_org_stats_user() {
 }
 
 github_clone() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
   var_color
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
@@ -338,7 +338,7 @@ github_clone() {
 }
 
 github_clean_subscription() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
   var_color
 
   local GITHUB_ORGANIZATION="${1-}"
@@ -431,7 +431,7 @@ github_compare_version() {
 }
 
 github_configure() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -517,7 +517,7 @@ github_configure() {
 }
 
 github_pull_request() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
   var_color
 
   if [[ ${#} -ne 4 ]]; then

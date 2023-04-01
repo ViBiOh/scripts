@@ -16,5 +16,5 @@ pass_get() {
   local PASS_FIELD="${1}"
   shift
 
-  pass show "${PASS_NAME}" | grep "^${PASS_FIELD}: " | sed "s|^${PASS_FIELD}: ||"
+  pass show "${PASS_NAME}" | awk -v "field=${PASS_FIELD}" -F': ' '$1 == field {printf("%s", $2)}'
 }
