@@ -2,6 +2,10 @@
 
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+github_token() {
+  pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}'
+}
+
 github_rate_limit_wait() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
@@ -41,7 +45,7 @@ github_repo_pr_stats() {
   local GITHUB_REPOSITORY="${1}"
   shift
 
-  var_read GITHUB_TOKEN "" "secret"
+  var_read GITHUB_TOKEN "$(github_token)" "secret"
 
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
@@ -118,7 +122,7 @@ github_repo_stats() {
   local GITHUB_REPOSITORY="${1}"
   shift
 
-  var_read GITHUB_TOKEN "" "secret"
+  var_read GITHUB_TOKEN "$(github_token)" "secret"
 
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
@@ -174,7 +178,7 @@ github_org_stats() {
   local REPOSITORY_IGNORE_REGEX="${1:-\$^}"
   shift || true
 
-  var_read GITHUB_TOKEN "" "secret"
+  var_read GITHUB_TOKEN "$(github_token)" "secret"
 
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
@@ -251,7 +255,7 @@ github_clone() {
   source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
   var_color
 
-  var_read GITHUB_TOKEN "" "secret"
+  var_read GITHUB_TOKEN "$(github_token)" "secret"
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
   http_request --header "Accept: application/vnd.github.v3+json" "https://api.github.com/user/orgs"
@@ -340,7 +344,7 @@ github_clean_subscription() {
   local GITHUB_ORGANIZATION="${1-}"
   shift || true
 
-  var_read GITHUB_TOKEN "" "secret"
+  var_read GITHUB_TOKEN "$(github_token)" "secret"
 
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}" --header "X-GitHub-Api-Version: 2022-11-28"
 
@@ -438,7 +442,7 @@ github_configure() {
   local GITHUB_REPOSITORY="${1-}"
 
   local GITHUB_TOKEN
-  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
+  GITHUB_TOKEN="$(github_token)"
 
   http_init_client --header "Authorization: Bearer ${GITHUB_TOKEN}"
 
@@ -534,7 +538,7 @@ github_pull_request() {
   shift
 
   local GITHUB_TOKEN
-  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
+  GITHUB_TOKEN="$(github_token)"
 
   http_init_client --header "Authorization: Bearer ${GITHUB_TOKEN}"
 

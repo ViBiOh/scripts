@@ -158,7 +158,7 @@ release() {
   GIT_TAG="$(version_semver "${VERSION}" "${VERSION_REF}" "quiet")"
 
   local GITHUB_TOKEN
-  GITHUB_TOKEN="$(pass show "dev/github" | awk -F': ' '$1 == "token" {printf("%s", $2)}')"
+  GITHUB_TOKEN="$(github_token)"
 
   var_read GITHUB_TOKEN "" "secret"
   var_read GITHUB_REPOSITORY "$(git_remote_repository)"
