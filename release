@@ -230,7 +230,13 @@ release_usage() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "http" "git" "github" "pass" "version"
+  source "$(script_dir)/meta" && meta_init \
+    "git" \
+    "github" \
+    "http" \
+    "pass" \
+    "var" \
+    "version"
   var_color
 
   local ROOT_DIR
