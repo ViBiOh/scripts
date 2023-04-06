@@ -128,7 +128,7 @@ gcloud_sql_proxy() {
   _info "Project: ${GCLOUD_PROJECT}"
 
   local SQL_INSTANCE
-  SQL_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName + "@" + .databaseVersion + "@" + (.settings.ipConfiguration.ipv4Enabled | tostring)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "SQL instance:")"
+  SQL_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "SQL instance:")"
 
   if [[ -z ${SQL_INSTANCE-} ]]; then
     return 1
@@ -152,14 +152,6 @@ gcloud_sql_proxy() {
 
   local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
   USERNAME=${USERNAME/@/%40}
-
-  local IS_PUBLIC
-  IS_PUBLIC="$(printf '%s' "${SQL_INSTANCE}" | awk -F '@' '{ print $4 }')"
-
-  if [[ ${IS_PUBLIC} == "false" ]]; then
-    printf "GCP SQL instance is private, connect by using kubernetes port-forward\n"
-    return
-  fi
 
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
