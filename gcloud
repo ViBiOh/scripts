@@ -99,6 +99,22 @@ gcloud_sql_proxy() {
     printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
   }
 
+  _confirm() {
+    local VAR_CONFIRM_MESSAGE="${1:-Are you sure}"
+
+    read -r -p "${VAR_CONFIRM_MESSAGE}? [y/N] " input </dev/tty
+
+    case "${input}" in
+    [yY][eE][sS] | [yY])
+      return 0
+      ;;
+
+    *)
+      return 1
+      ;;
+    esac
+  }
+
   _find_port() {
     local START_INDEX=3
     local POSSIBLE_PORTS="9876543"
@@ -143,20 +159,29 @@ gcloud_sql_proxy() {
     return 1
   fi
 
-  local SERVICE_ACCOUNT
-  SERVICE_ACCOUNT="$(gcloud --project "${GCLOUD_PROJECT}" iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Service Account:")"
+  local USERNAME="sql"
+  local EXTRA_ARGS=()
 
-  if [[ -z ${SERVICE_ACCOUNT-} ]]; then
-    return 1
+  if _confirm "Connect using a service account"; then
+    local SERVICE_ACCOUNT
+    SERVICE_ACCOUNT="$(gcloud --project "${GCLOUD_PROJECT}" iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Service Account:")"
+
+    if [[ -z ${SERVICE_ACCOUNT-} ]]; then
+      return 1
+    fi
+
+    _info "Service Account: ${SERVICE_ACCOUNT}"
+
+    local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
+    USERNAME=${USERNAME/@/%40}
+
+    EXTRA_ARGS+=("-enable_iam_login" "-token" "$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")")
   fi
-
-  local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
-  USERNAME=${USERNAME/@/%40}
 
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
 
   _info "Connect using: postgres://${USERNAME}@127.0.0.1:${EXPOSED_PORT}/db_name\n"
 
-  _print_and_run cloud_sql_proxy -instances="${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${EXPOSED_PORT}" -enable_iam_login -token "$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
+  _print_and_run cloud_sql_proxy -instances="${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${EXPOSED_PORT}" "${EXTRA_ARGS[@]}"
 }
