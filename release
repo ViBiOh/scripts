@@ -84,6 +84,29 @@ golang_build() {
 
 docker_dependencies() {
   docker run -v "$(pwd):/tmp/" --rm "alpine" /bin/sh -c 'apk --update add tzdata ca-certificates zip && cd /usr/share/zoneinfo/ && zip -q -r -0 /tmp/zoneinfo.zip . && cp /etc/ssl/certs/ca-certificates.crt /tmp/ca-certificates.crt'
+
+  if [[ ${RELEASE_NEED_WAIT-} == "true" ]]; then
+    local WAIT_VERSION="0.0.2"
+
+    for platform in ${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}; do
+      local BUILD_GOOS
+      BUILD_GOOS="$(printf '%s' "${platform}" | awk -F '/' '{ print $1 }')"
+      local BUILD_GOARCH
+      BUILD_GOARCH="$(printf '%s' "${platform}" | awk -F '/' '{ print $2 }')"
+
+      local WAIT_BINARY_NAME="wait_${BUILD_GOOS}_${BUILD_GOARCH}"
+
+      curl \
+        --disable \
+        --silent \
+        --show-error \
+        --location \
+        --max-time 300 \
+        --output "${WAIT_BINARY_NAME}" \
+        "https://github.com/ViBiOh/wait/releases/download/v${WAIT_VERSION}/${WAIT_BINARY_NAME}"
+      chmod +x "${WAIT_BINARY_NAME}"
+    done
+  fi
 }
 
 docker_build() {
