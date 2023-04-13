@@ -73,7 +73,13 @@ gcloud_sql_proxy() {
   _confirm() {
     local VAR_CONFIRM_MESSAGE="${1:-Are you sure}"
 
-    read -r -p "${VAR_CONFIRM_MESSAGE}? [y/N] " input </dev/tty
+    if [[ -n ${BASH_VERSION} ]]; then
+      read -r -p "${VAR_CONFIRM_MESSAGE}? [y/N] " input </dev/tty
+    elif [[ -n ${ZSH_VERSION} ]]; then
+      read -r "input?${VAR_CONFIRM_MESSAGE}? [y/N] " </dev/tty
+    else
+      return 0
+    fi
 
     case "${input}" in
     [yY][eE][sS] | [yY])
@@ -146,7 +152,10 @@ gcloud_sql_proxy() {
     local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
     USERNAME=${USERNAME/@/%40}
 
-    EXTRA_ARGS+=("-enable_iam_login" "-token" "$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")")
+    local TOKEN
+    TOKEN="$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
+
+    EXTRA_ARGS+=("-enable_iam_login" "-login_token" "${TOKEN}" "-token" "${TOKEN}")
   fi
 
   local EXPOSED_PORT="5432"
