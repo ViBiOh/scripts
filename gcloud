@@ -136,10 +136,13 @@ gcloud_sql_proxy() {
     return 1
   fi
 
-  local USERNAME="sql"
+  local USERNAME="migrate"
   local EXTRA_ARGS=()
 
-  if _confirm "Connect using a service account"; then
+  if _confirm "Connect using Google IAM"; then
+    USERNAME="$(gcloud config get account | head -1)"
+    EXTRA_ARGS+=("-enable_iam_login")
+  elif _confirm "Connect using a impersonate of a service account"; then
     local SERVICE_ACCOUNT
     SERVICE_ACCOUNT="$(gcloud --project "${GCLOUD_PROJECT}" iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Service Account:")"
 
@@ -149,14 +152,16 @@ gcloud_sql_proxy() {
 
     _info "Service Account: ${SERVICE_ACCOUNT}"
 
-    local USERNAME=${SERVICE_ACCOUNT%.gserviceaccount.com}
-    USERNAME=${USERNAME/@/%40}
+    USERNAME="${SERVICE_ACCOUNT%.gserviceaccount.com}"
 
     local TOKEN
     TOKEN="$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
 
     EXTRA_ARGS+=("-enable_iam_login" "-login_token" "${TOKEN}" "-token" "${TOKEN}")
   fi
+
+  # Sanitize username in case it contains an arobase
+  USERNAME="${USERNAME/@/%40}"
 
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
