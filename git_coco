@@ -42,7 +42,7 @@ guess_component() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "git" "http"
+  source "$(script_dir)/meta" && meta_init "var" "git" "github" "pass" "http"
   var_color
 
   if ! git_is_inside; then
