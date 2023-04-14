@@ -136,11 +136,11 @@ gcloud_sql_proxy() {
     return 1
   fi
 
-  local USERNAME="migrate"
+  local SQL_USERNAME="migrate"
   local EXTRA_ARGS=()
 
   if _confirm "Connect using Google IAM"; then
-    USERNAME="$(gcloud config get account | head -1)"
+    SQL_USERNAME="$(gcloud config get account | head -1)"
     EXTRA_ARGS+=("-enable_iam_login")
   elif _confirm "Connect using a impersonate of a service account"; then
     local SERVICE_ACCOUNT
@@ -152,7 +152,7 @@ gcloud_sql_proxy() {
 
     _info "Service Account: ${SERVICE_ACCOUNT}"
 
-    USERNAME="${SERVICE_ACCOUNT%.gserviceaccount.com}"
+    SQL_USERNAME="${SERVICE_ACCOUNT%.gserviceaccount.com}"
 
     local TOKEN
     TOKEN="$(gcloud auth print-access-token --impersonate-service-account "${SERVICE_ACCOUNT}")"
@@ -161,12 +161,50 @@ gcloud_sql_proxy() {
   fi
 
   # Sanitize username in case it contains an arobase
-  USERNAME="${USERNAME/@/%40}"
+  SQL_USERNAME="${SQL_USERNAME/@/%40}"
 
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
 
-  _info "Connect using: postgres://${USERNAME}@127.0.0.1:${EXPOSED_PORT}/db_name\n"
+  _info "Connect using: postgres://${SQL_USERNAME}@127.0.0.1:${EXPOSED_PORT}/db_name\n"
 
   _print_and_run cloud_sql_proxy -instances="${SQL_CONNECTION_NAME}=tcp:127.0.0.1:${EXPOSED_PORT}" "${EXTRA_ARGS[@]}"
+}
+
+gcloud_redis() {
+  _info() {
+    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
+  }
+
+  local GCLOUD_PROJECT
+  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Project:")"
+
+  if [[ -z ${GCLOUD_PROJECT-} ]]; then
+    return 1
+  fi
+
+  _info "Project: ${GCLOUD_PROJECT}"
+
+  local GCLOUD_REGION
+  GCLOUD_REGION="$(gcloud redis regions list --format 'value(locationId)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-us-central1}" --prompt "Region:")"
+
+  if [[ -z ${GCLOUD_REGION-} ]]; then
+    return 1
+  fi
+
+  _info "Region: ${GCLOUD_REGION}"
+
+  local REDIS_INSTANCE
+  REDIS_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" redis instances list --region "${GCLOUD_REGION}" --format json | jq --raw-output '.[] | .name + "@" + .host' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Instance:")"
+
+  if [[ -z ${REDIS_INSTANCE-} ]]; then
+    return 1
+  fi
+
+  local REDIS_NAME
+  REDIS_NAME="$(printf '%s' "${REDIS_INSTANCE}" | awk -F '@' '{ print $1 }')"
+
+  _info "Instance: ${REDIS_NAME}"
+
+  _info "\nConnect using: iredis -h $(printf '%s' "${REDIS_INSTANCE}" | awk -F '@' '{ print $2 }') -p 6379 -a $(gcloud --project "${GCLOUD_PROJECT}" redis instances get-auth-string "${REDIS_NAME}" --format 'value(authString)')\n"
 }
