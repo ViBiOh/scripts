@@ -103,7 +103,7 @@ gcloud_sql_proxy() {
         return 1
       fi
 
-      DATABASE_PORT="${POSSIBLE_PORTS:START_INDEX:4}"
+      DATABASE_PORT="${POSSIBLE_PORTS:${START_INDEX}:4}"
 
       START_INDEX=$((START_INDEX - 1))
     done
@@ -142,7 +142,7 @@ gcloud_sql_proxy() {
   if _confirm "Connect using Google IAM"; then
     SQL_USERNAME="$(gcloud config get account | head -1)"
     EXTRA_ARGS+=("-enable_iam_login")
-  elif _confirm "Connect using a impersonate of a service account"; then
+  elif _confirm "Connect using a service account impersonate"; then
     local SERVICE_ACCOUNT
     SERVICE_ACCOUNT="$(gcloud --project "${GCLOUD_PROJECT}" iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Service Account:")"
 
