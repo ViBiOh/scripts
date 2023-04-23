@@ -116,7 +116,7 @@ main() {
 
   local CO_AUTHOR=""
   http_request "https://api.github.com/repos/$(git_remote_repository)/contributors?per_page=100" || true
-  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq --raw-output '.[] | length' "${HTTP_OUTPUT}") -ne 0 ]]; then
+  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq --raw-output 'length' "${HTTP_OUTPUT}") -ne 0 ]]; then
     CO_AUTHOR="$(cat <(printf "None\n") <(jq --raw-output '.[] | .login' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Co-Author>')"
 
     if [[ ${CO_AUTHOR} == "None" ]]; then
@@ -124,7 +124,7 @@ main() {
     else
       http_request "https://api.github.com/users/${CO_AUTHOR}"
       if [[ ${HTTP_STATUS} == "200" ]]; then
-        CO_AUTHOR="\n\nCo-authored-by: $(jq --raw-output '.name + "<" + .email + ">"')"
+        CO_AUTHOR="\n\nCo-authored-by: $(jq --raw-output '.name + "<" + .email + ">"' "${HTTP_OUTPUT}")"
       else
         CO_AUTHOR=""
       fi
@@ -135,7 +135,7 @@ main() {
   local SAFE_MESSAGE
   SAFE_MESSAGE="$(printf "%s" "${MESSAGE}" | sed "s|'|\\\'|g")"
 
-  var_print_and_run git commit --signoff --message "\"$(printf "%s%s%s: %s%s%s%s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${SAFE_MESSAGE}" "${ISSUES}" "${CO_AUTHOR}")\"" "${@}"
+  var_print_and_run git commit --signoff --message "$(printf "%s%s%s: %s%s%s%s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${SAFE_MESSAGE}" "${ISSUES}" "${CO_AUTHOR}")" "${@}"
 }
 
 main "${@}"
