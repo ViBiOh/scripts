@@ -138,7 +138,7 @@ main() {
   local SAFE_MESSAGE
   SAFE_MESSAGE="$(printf "%s" "${MESSAGE}" | sed "s|'|\\\'|g")"
 
-  var_print_and_run git commit --signoff --message "$(printf "%s%s%s: %s%s%s%s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${SAFE_MESSAGE}" "${ISSUES}" "${CO_AUTHOR_STRING}")" "${@}"
+  var_print_and_run git commit --signoff --message "$(printf "%s%s%s: %s%b%s%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${SAFE_MESSAGE}" "${ISSUES}" "${CO_AUTHOR_STRING}")" "${@}"
 }
 
 main "${@}"
