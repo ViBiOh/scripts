@@ -103,6 +103,7 @@ main() {
 
   local ISSUES=""
   http_request "https://api.github.com/repos/$(git_remote_repository)/issues?per_page=100" || true
+
   if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq --raw-output '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -ne 0 ]]; then
     ISSUES="$(cat <(printf "None\n") <(jq --raw-output '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Issues closed>' | awk '{printf("Closes %s", $1)}')"
 
@@ -114,19 +115,21 @@ main() {
   fi
   rm "${HTTP_OUTPUT}"
 
-  local CO_AUTHOR=""
+  local CO_AUTHOR_STRING=""
   http_request "https://api.github.com/repos/$(git_remote_repository)/contributors?per_page=100" || true
-  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq --raw-output 'length' "${HTTP_OUTPUT}") -ne 0 ]]; then
-    CO_AUTHOR="$(cat <(printf "None\n") <(jq --raw-output '.[] | .login' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Co-Author>')"
 
-    if [[ ${CO_AUTHOR} == "None" ]]; then
-      CO_AUTHOR=""
-    else
-      http_request "https://api.github.com/users/${CO_AUTHOR}"
+  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq --raw-output 'length' "${HTTP_OUTPUT}") -ne 0 ]]; then
+    local CO_AUTHOR=""
+    CO_AUTHOR="$(cat <(printf "None\n") <(jq --raw-output '.[] | .login' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --prompt='Co-Author>')"
+
+    if [[ ${CO_AUTHOR} != "None" ]]; then
+      http_request "https://api.github.com/users/${CO_AUTHOR}/events?per_page=100"
       if [[ ${HTTP_STATUS} == "200" ]]; then
-        CO_AUTHOR="\n\nCo-authored-by: $(jq --raw-output '.name + "<" + .email + ">"' "${HTTP_OUTPUT}")"
-      else
-        CO_AUTHOR=""
+        CO_AUTHOR_EMAIL="$(jq --raw-output '.[] | select(.type == "PushEvent") | .payload.commits[] | .author.name + "<" + .author.email + ">"' "${HTTP_OUTPUT}" | sort | uniq | grep -v '\[bot\]' | fzf --height=20 --ansi --reverse --prompt='Email>')"
+
+        if [[ -n ${CO_AUTHOR_EMAIL} ]]; then
+          CO_AUTHOR_STRING="\n\nCo-authored-by: ${CO_AUTHOR_EMAIL}"
+        fi
       fi
     fi
   fi
@@ -135,7 +138,7 @@ main() {
   local SAFE_MESSAGE
   SAFE_MESSAGE="$(printf "%s" "${MESSAGE}" | sed "s|'|\\\'|g")"
 
-  var_print_and_run git commit --signoff --message "$(printf "%s%s%s: %s%s%s%s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${SAFE_MESSAGE}" "${ISSUES}" "${CO_AUTHOR}")" "${@}"
+  var_print_and_run git commit --signoff --message "$(printf "%s%s%s: %s%s%s%s" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${SAFE_MESSAGE}" "${ISSUES}" "${CO_AUTHOR_STRING}")" "${@}"
 }
 
 main "${@}"
