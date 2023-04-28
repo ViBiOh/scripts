@@ -61,7 +61,7 @@ EOF
 kubernetes_sql_forward() {
   _print_and_run() {
     printf -- "%b%s%b\n" "${YELLOW}" "${*}" "${RESET}" 1>&2
-    "${@}"
+    eval "${*}"
   }
 
   _info() {
