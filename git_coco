@@ -135,7 +135,7 @@ main() {
   fi
   rm "${HTTP_OUTPUT}"
 
-  var_print_and_run git commit --signoff --message "$(printf "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES}" "${CO_AUTHOR_STRING}")" "${@}"
+  var_print_and_run git commit --signoff --message \""$(printf "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES}" "${CO_AUTHOR_STRING}")"\" "${@}"
 }
 
 main "${@}"
