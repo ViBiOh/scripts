@@ -8,14 +8,14 @@ kubernetes_shell() {
   }
 
   local CONTEXT
-  CONTEXT="$(kubectl config get-contexts -o name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
+  CONTEXT="$(kubectl config get-contexts -o name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context: ")"
 
   if [[ -z ${CONTEXT-} ]]; then
     return 1
   fi
 
   local NAMESPACE
-  NAMESPACE="$(kubectl --context "${CONTEXT}" get namespaces --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Namespace:")"
+  NAMESPACE="$(kubectl --context "${CONTEXT}" get namespaces --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Namespace: ")"
 
   if [[ -z ${NAMESPACE-} ]]; then
     return 1
@@ -88,7 +88,7 @@ kubernetes_sql_forward() {
   }
 
   local CONTEXT
-  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
+  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context: ")"
 
   if [[ -z ${CONTEXT-} ]]; then
     return 1
@@ -97,7 +97,7 @@ kubernetes_sql_forward() {
   _info "Context: ${CONTEXT}"
 
   local POD
-  POD="$(kubectl --context "${CONTEXT}" get --all-namespaces pods --output yaml | yq eval '.items[] | select(.status.phase == "Running") | .metadata.namespace + "/" + .metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Pod:")"
+  POD="$(kubectl --context "${CONTEXT}" get --all-namespaces pods --output yaml | yq eval '.items[] | select(.status.phase == "Running") | .metadata.namespace + "/" + .metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Pod: ")"
 
   if [[ -z ${POD-} ]]; then
     return 1
@@ -133,14 +133,14 @@ kubernetes_postgres_backup() {
   shift || true
 
   local CONTEXT
-  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
+  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context: ")"
 
   if [[ -z ${CONTEXT-} ]]; then
     return 1
   fi
 
   local POSTGRES_POD
-  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
+  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod: ")"
 
   if [[ -z ${POSTGRES_POD-} ]]; then
     return 1
@@ -163,7 +163,7 @@ kubernetes_postgres_restore() {
   shift || true
 
   local CONTEXT
-  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context:")"
+  CONTEXT="$(kubectl config get-contexts --output name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context: ")"
 
   if [[ -z ${CONTEXT-} ]]; then
     return 1
@@ -182,7 +182,7 @@ kubernetes_postgres_restore() {
   fi
 
   local POSTGRES_POD
-  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod:")"
+  POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod: ")"
 
   if [[ -z ${POSTGRES_POD-} ]]; then
     return 1

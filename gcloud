@@ -116,7 +116,7 @@ gcloud_sql_proxy() {
   }
 
   local GCLOUD_PROJECT
-  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Project:")"
+  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Project: ")"
 
   if [[ -z ${GCLOUD_PROJECT-} ]]; then
     return 1
@@ -125,7 +125,7 @@ gcloud_sql_proxy() {
   _info "Project: ${GCLOUD_PROJECT}"
 
   local SQL_INSTANCE
-  SQL_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "SQL instance:")"
+  SQL_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" sql instances list --format json | jq --raw-output '.[] | .name + "@" + .connectionName' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "SQL instance: ")"
 
   if [[ -z ${SQL_INSTANCE-} ]]; then
     return 1
@@ -148,7 +148,7 @@ gcloud_sql_proxy() {
     EXTRA_ARGS+=("-enable_iam_login")
   elif _confirm "Connect using a service account impersonate"; then
     local SERVICE_ACCOUNT
-    SERVICE_ACCOUNT="$(gcloud --project "${GCLOUD_PROJECT}" iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Service Account:")"
+    SERVICE_ACCOUNT="$(gcloud --project "${GCLOUD_PROJECT}" iam service-accounts list --format json | jq --raw-output '.[] | select(.disabled == false) | .email' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Service Account: ")"
 
     if [[ -z ${SERVICE_ACCOUNT-} ]]; then
       return 1
@@ -180,7 +180,7 @@ gcloud_redis() {
   }
 
   local GCLOUD_PROJECT
-  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Project:")"
+  GCLOUD_PROJECT="$(gcloud projects list --format 'value(projectId)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Project: ")"
 
   if [[ -z ${GCLOUD_PROJECT-} ]]; then
     return 1
@@ -189,7 +189,7 @@ gcloud_redis() {
   _info "Project: ${GCLOUD_PROJECT}"
 
   local GCLOUD_REGION
-  GCLOUD_REGION="$(gcloud redis regions list --format 'value(locationId)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-us-central1}" --prompt "Region:")"
+  GCLOUD_REGION="$(gcloud redis regions list --format 'value(locationId)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-us-central1}" --prompt "Region: ")"
 
   if [[ -z ${GCLOUD_REGION-} ]]; then
     return 1
@@ -198,7 +198,7 @@ gcloud_redis() {
   _info "Region: ${GCLOUD_REGION}"
 
   local REDIS_INSTANCE
-  REDIS_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" redis instances list --region "${GCLOUD_REGION}" --format json | jq --raw-output '.[] | .name + "@" + .host' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Instance:")"
+  REDIS_INSTANCE="$(gcloud --project "${GCLOUD_PROJECT}" redis instances list --region "${GCLOUD_REGION}" --format json | jq --raw-output '.[] | .name + "@" + .host' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Instance: ")"
 
   if [[ -z ${REDIS_INSTANCE-} ]]; then
     return 1
