@@ -352,11 +352,6 @@ github_clean_subscription() {
   local page_size=50
   local count="${page_size}"
 
-  local scope="user"
-  if [[ -n ${GITHUB_ORGANIZATION} ]]; then
-    scope="orgs/${GITHUB_ORGANIZATION}"
-  fi
-
   while [[ count -eq ${page_size} ]]; do
     page=$((page + 1))
 
