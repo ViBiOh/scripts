@@ -41,6 +41,72 @@ guess_component() {
   printf "%s\n" "${COMPONENTS[@]}" | sort | uniq
 }
 
+get_issue() {
+  http_request "https://api.github.com/repos/$(git_remote_repository)/issues?per_page=100"
+
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to list issues"
+    if [[ ${NO_CHECK-} != "true" ]]; then
+      return 1
+    fi
+  fi
+
+  if [[ $(jq --raw-output '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -eq 0 ]]; then
+    rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  ISSUES="$(cat <(printf "None\n") <(jq --raw-output '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Closes> ' | awk '{printf("%s", $1)}')"
+  rm "${HTTP_OUTPUT}"
+
+  if [[ ${ISSUES} != "Closes None" ]]; then
+    printf "\n\nCloses %s" "${ISSUES}"
+  fi
+}
+
+get_co_author() {
+  http_request "https://api.github.com/repos/$(git_remote_repository)/contributors?per_page=100"
+
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to list contributors"
+    if [[ ${NO_CHECK-} != "true" ]]; then
+      return 1
+    fi
+  fi
+
+  if [[ $(jq --raw-output 'length' "${HTTP_OUTPUT}") -eq 0 ]]; then
+    rm "${HTTP_OUTPUT}"
+    return
+  fi
+
+  local CO_AUTHOR=""
+  CO_AUTHOR="$(cat <(printf "None\nOther\n") <(jq --raw-output '.[] | .login' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --prompt='Co-Author>')"
+  rm "${HTTP_OUTPUT}"
+
+  if [[ ${CO_AUTHOR} == "None" ]]; then
+    return
+  fi
+
+  if [[ ${CO_AUTHOR} == "Other" ]]; then
+    var_read "CO_AUTHOR"
+  fi
+
+  http_request "https://api.github.com/users/${CO_AUTHOR}/events?per_page=100"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to get user's events"
+    if [[ ${NO_CHECK-} != "true" ]]; then
+      return 1
+    fi
+  fi
+
+  CO_AUTHOR_EMAIL="$(jq --raw-output '.[] | select(.type == "PushEvent") | .payload.commits[] | .author.name + "<" + .author.email + ">"' "${HTTP_OUTPUT}" | sort | uniq | grep -v '\[bot\]' | fzf --height=20 --ansi --reverse --prompt='Email> ')"
+  rm "${HTTP_OUTPUT}"
+
+  if [[ -n ${CO_AUTHOR_EMAIL} ]]; then
+    printf "\n\nCo-authored-by: %s" "${CO_AUTHOR_EMAIL}"
+  fi
+}
+
 main() {
   source "$(script_dir)/meta" && meta_init "var" "git" "github" "pass" "http"
   var_color
@@ -102,38 +168,10 @@ main() {
   fi
 
   local ISSUES=""
-  http_request "https://api.github.com/repos/$(git_remote_repository)/issues?per_page=100" || true
-
-  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq --raw-output '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -ne 0 ]]; then
-    ISSUES="$(cat <(printf "None\n") <(jq --raw-output '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Issues closed>' | awk '{printf("Closes %s", $1)}')"
-
-    if [[ ${ISSUES} == "Closes None" ]]; then
-      ISSUES=""
-    else
-      ISSUES="\n\n${ISSUES}"
-    fi
-  fi
-  rm "${HTTP_OUTPUT}"
+  ISSUES="$(get_issue)"
 
   local CO_AUTHOR_STRING=""
-  http_request "https://api.github.com/repos/$(git_remote_repository)/contributors?per_page=100" || true
-
-  if [[ ${HTTP_STATUS} == "200" ]] && [[ $(jq --raw-output 'length' "${HTTP_OUTPUT}") -ne 0 ]]; then
-    local CO_AUTHOR=""
-    CO_AUTHOR="$(cat <(printf "None\n") <(jq --raw-output '.[] | .login' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --prompt='Co-Author>')"
-
-    if [[ ${CO_AUTHOR} != "None" ]]; then
-      http_request "https://api.github.com/users/${CO_AUTHOR}/events?per_page=100"
-      if [[ ${HTTP_STATUS} == "200" ]]; then
-        CO_AUTHOR_EMAIL="$(jq --raw-output '.[] | select(.type == "PushEvent") | .payload.commits[] | .author.name + "<" + .author.email + ">"' "${HTTP_OUTPUT}" | sort | uniq | grep -v '\[bot\]' | fzf --height=20 --ansi --reverse --prompt='Email>')"
-
-        if [[ -n ${CO_AUTHOR_EMAIL} ]]; then
-          CO_AUTHOR_STRING="\n\nCo-authored-by: ${CO_AUTHOR_EMAIL}"
-        fi
-      fi
-    fi
-  fi
-  rm "${HTTP_OUTPUT}"
+  CO_AUTHOR_STRING="$(get_co_author)"
 
   var_print_and_run git commit --signoff --message \""$(printf "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES}" "${CO_AUTHOR_STRING}")"\" "${@}"
 }
