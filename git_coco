@@ -59,7 +59,7 @@ get_issue() {
   ISSUES="$(cat <(printf "None\n") <(jq --raw-output '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Closes> ' | awk '{printf("%s", $1)}')"
   rm "${HTTP_OUTPUT}"
 
-  if [[ ${ISSUES} != "Closes None" ]]; then
+  if [[ ${ISSUES} != "None" ]]; then
     printf "\n\nCloses %s" "${ISSUES}"
   fi
 }
