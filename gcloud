@@ -144,7 +144,7 @@ gcloud_sql_proxy() {
   local EXTRA_ARGS=()
 
   if _confirm "Connect using Google IAM"; then
-    SQL_USERNAME="$(gcloud config get account | head -1)"
+    SQL_USERNAME="$(gcloud --project "${GCLOUD_PROJECT}" config get account | head -1)"
     EXTRA_ARGS+=("-enable_iam_login")
   elif _confirm "Connect using a service account impersonate"; then
     local SERVICE_ACCOUNT
@@ -158,7 +158,7 @@ gcloud_sql_proxy() {
 
     SQL_USERNAME="${SERVICE_ACCOUNT%.gserviceaccount.com}"
 
-    local TOKEN_GENERATOR="gcloud auth print-access-token --impersonate-service-account '${SERVICE_ACCOUNT}'"
+    local TOKEN_GENERATOR="gcloud --project ${GCLOUD_PROJECT} auth print-access-token --impersonate-service-account '${SERVICE_ACCOUNT}'"
 
     EXTRA_ARGS+=("-enable_iam_login" "-login_token" "\"\$(${TOKEN_GENERATOR})\"" "-token" "\"\$(${TOKEN_GENERATOR})\"")
   fi
@@ -189,7 +189,7 @@ gcloud_redis() {
   _info "Project: ${GCLOUD_PROJECT}"
 
   local GCLOUD_REGION
-  GCLOUD_REGION="$(gcloud redis regions list --format 'value(locationId)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-us-central1}" --prompt "Region: ")"
+  GCLOUD_REGION="$(gcloud --project "${GCLOUD_PROJECT}" redis regions list --format 'value(locationId)' | fzf --height=20 --ansi --reverse --select-1 --query="${2-us-central1}" --prompt "Region: ")"
 
   if [[ -z ${GCLOUD_REGION-} ]]; then
     return 1
