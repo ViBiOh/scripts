@@ -209,5 +209,5 @@ gcloud_redis() {
 
   _info "Instance: ${REDIS_NAME}"
 
-  _info "\nConnect using: iredis -h $(printf '%s' "${REDIS_INSTANCE}" | awk -F '@' '{ print $2 }') -p 6379 -a $(gcloud --project "${GCLOUD_PROJECT}" redis instances get-auth-string "${REDIS_NAME}" --format 'value(authString)')\n"
+  _info "\nConnect using: iredis -h $(printf '%s' "${REDIS_INSTANCE}" | awk -F '@' '{ print $2 }') -p 6379 --password $(gcloud --project "${GCLOUD_PROJECT}" redis instances get-auth-string "${REDIS_NAME}" --format 'value(authString)')\n"
 }
