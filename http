@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-HTTP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 http_urlencode() {
   local old_lc_collate="${LC_COLLATE-}"
   LC_COLLATE="C"
@@ -20,10 +18,7 @@ http_urlencode() {
 }
 
 http_handle_error() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${HTTP_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
-
+  meta_check "var" "var_color"
   var_color
 
   var_error "HTTP/${HTTP_STATUS}: ${1-}"

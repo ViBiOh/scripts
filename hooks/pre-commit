@@ -42,7 +42,7 @@ golang_check() {
   local GO_FILES
   GO_FILES=$(get_files "*.go")
 
-  if [[ -n ${GO_FILES:-} ]]; then
+  if [[ -n ${GO_FILES-} ]]; then
     var_info "Formating golang files"
     GO_FILES="${GO_FILES}" run_command make --silent format
 
@@ -62,7 +62,7 @@ npm_check() {
   local JS_FILES
   JS_FILES=$(get_files \*.js{,x})
 
-  if [[ -n ${PACKAGE_JSON:-} ]] || [[ -n ${JS_FILES:-} ]]; then
+  if [[ -n ${PACKAGE_JSON-} ]] || [[ -n ${JS_FILES-} ]]; then
     if command -v npm >/dev/null 2>&1; then
       var_info "Checking node_modules installation"
       run_command npm --silent install --no-audit --ignore-scripts
@@ -71,7 +71,7 @@ npm_check() {
     fi
   fi
 
-  if [[ -n ${JS_FILES:-} ]]; then
+  if [[ -n ${JS_FILES-} ]]; then
     if command -v npm >/dev/null 2>&1; then
       var_info "Formating javascript files"
       run_command npm --silent run --if-present format ${JS_FILES[@]}
@@ -140,7 +140,7 @@ tag_check() {
   local PREVIOUS_TAG
   PREVIOUS_TAG="$(git tag --sort=-creatordate | head -1)"
 
-  if [[ -z ${PREVIOUS_TAG:-} ]]; then
+  if [[ -z ${PREVIOUS_TAG-} ]]; then
     return
   fi
 
@@ -152,21 +152,9 @@ tag_check() {
   fi
 }
 
-script_dir() {
-  if [[ -L ${BASH_SOURCE[0]} ]]; then
-    dirname "$(readlink "${BASH_SOURCE[0]}")"
-  else
-    (
-      cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
-    )
-  fi
-}
-
 main() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(script_dir)"
+  meta_check "var" "var_color"
 
-  source "${SCRIPT_DIR}/../meta" && meta_init "var" "git"
   var_color
 
   local INITIAL_DIFF

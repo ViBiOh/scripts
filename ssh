@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-SSH_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SSH_ENV="${HOME}/.ssh/environment"
 
 ssh_forward_local() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${SSH_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
 
   var_color
 
@@ -25,9 +22,7 @@ ssh_forward_local() {
 }
 
 ssh_forward_remote() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${SSH_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
 
   var_color
 
@@ -46,7 +41,7 @@ ssh_forward_remote() {
 }
 
 ssh_agent_running() {
-  if ps -p "${SSH_AGENT_PID:-}" >/dev/null 2>&1; then
+  if ps -p "${SSH_AGENT_PID-}" >/dev/null 2>&1; then
     return 0
   fi
 
@@ -94,7 +89,7 @@ ssh_agent_init() {
 }
 
 ssh_init() {
-  if [[ -f ${SSH_ENV:-} ]]; then
+  if [[ -f ${SSH_ENV-} ]]; then
     source "${SSH_ENV}"
   fi
 

@@ -6,21 +6,8 @@ if [[ ${TRACE:-0} == "1" ]]; then
   set -o xtrace
 fi
 
-script_dir() {
-  if [[ -L ${BASH_SOURCE[0]} ]]; then
-    dirname "$(readlink "${BASH_SOURCE[0]}")"
-  else
-    (
-      cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
-    )
-  fi
-}
-
 main() {
-  local SCRIPT_DIR
-  SCRIPT_DIR="$(script_dir)"
-
-  source "${SCRIPT_DIR}/../meta" && meta_init "git"
+  meta_check "git" "git_conventionnal_commits"
   git_conventionnal_commits
 
   local BRANCH_NAME

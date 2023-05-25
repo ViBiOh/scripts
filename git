@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 
-GIT_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 git_conventionnal_commits() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
   var_color
 
   declare -gA CONVENTIONAL_COMMIT_SCOPES
@@ -120,9 +116,7 @@ git_is_valid_description() {
 }
 
 git_conventionnal_commit_guidelines() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
 
   var_color
   git_conventionnal_commits
@@ -142,9 +136,7 @@ git_conventionnal_commit_guidelines() {
 }
 
 git_valid_description_guideline() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
   var_color
 
   var_warning "\nYou have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters). Current size is ${#1}"
@@ -164,9 +156,7 @@ git_last_tag() {
 }
 
 git_changelog() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
 
   var_color
   git_conventionnal_commits
@@ -286,9 +276,7 @@ git_changelog() {
 }
 
 head_sync() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
 
   var_color
 
@@ -308,9 +296,7 @@ head_sync() {
 }
 
 git_sync() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GIT_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
 
   var_color
 
@@ -337,7 +323,7 @@ git_sync() {
     REMOTE_PATH_PREFIX="${REMOTE_PATH}"
   fi
 
-  if [[ $(printf "%s" "${DRY:-}" | tr "[:upper:]" "[:lower:]") == "dry" ]]; then
+  if [[ $(printf "%s" "${DRY-}" | tr "[:upper:]" "[:lower:]") == "dry" ]]; then
     DRY=true
   fi
 
@@ -402,7 +388,7 @@ git_sync() {
 }
 
 watch_sync() {
-  if [[ -z ${NO_HEAD_SYNC:-} ]]; then
+  if [[ -z ${NO_HEAD_SYNC-} ]]; then
     head_sync "${@}"
   fi
 

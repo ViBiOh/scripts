@@ -19,7 +19,7 @@ script_dir() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var"
+  meta_check "var" "var_color"
   var_color
 
   local ROTATE_DRY_RUN=0

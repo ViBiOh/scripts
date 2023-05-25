@@ -108,7 +108,11 @@ get_co_author() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "git" "github" "pass" "http"
+  meta_check "var" "var_color"
+  meta_check "git" "git_is_inside"
+  meta_check "github" "github_token"
+  meta_check "http" "http_init_client"
+
   var_color
 
   if ! git_is_inside; then

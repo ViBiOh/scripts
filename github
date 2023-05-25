@@ -3,11 +3,15 @@
 GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 github_token() {
+  meta_check "pass" "pass_get"
+
   pass_get "dev/github" "token"
 }
 
 github_rate_limit_wait() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http"
+  meta_check "var" "var_color"
+  meta_check "http" "http_init_client"
+
   var_color
 
   local WANTED_CALLS="${1:-10}"
@@ -34,7 +38,9 @@ github_rate_limit_wait() {
 }
 
 github_repo_pr_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
+  meta_check "var" "var_color"
+  meta_check "http" "http_init_client"
+
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -111,7 +117,9 @@ github_repo_pr_stats() {
 }
 
 github_repo_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
+  meta_check "var" "var_color"
+  meta_check "http" "http_init_client"
+
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -165,17 +173,19 @@ github_repo_stats() {
 }
 
 github_org_stats() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
+  meta_check "var" "var_color"
+  meta_check "http" "http_init_client"
+
   var_color
 
   if [[ ${#} -lt 1 ]]; then
-    var_red "Usage: github_org_stats GITHUB_ORGANIZATION [REPOSITORY_IGNORE_REGEX]"
+    var_red "Usage: github_org_stats GITHUB_ORGANIZATION [REPOSITORY_FILTER_REGEX]"
     return 1
   fi
 
   local GITHUB_ORGANIZATION="${1-}"
   shift
-  local REPOSITORY_IGNORE_REGEX="${1:-\$^}"
+  local REPOSITORY_FILTER_REGEX="${1:-.*}"
   shift || true
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
@@ -206,7 +216,7 @@ github_org_stats() {
     fi
 
     local REPOSITORIES
-    mapfile -t REPOSITORIES < <(jq --compact-output --raw-output --arg ignore "${REPOSITORY_IGNORE_REGEX}" '.[] | select(.full_name | test($ignore) | not) | .full_name' "${HTTP_OUTPUT}")
+    mapfile -t REPOSITORIES < <(jq --compact-output --raw-output --arg filter "${REPOSITORY_FILTER_REGEX}" '.[] | select(.full_name | test($filter)) | .full_name' "${HTTP_OUTPUT}")
     rm "${HTTP_OUTPUT}"
 
     for REPO in "${REPOSITORIES[@]}"; do
@@ -228,9 +238,7 @@ github_org_stats() {
 }
 
 github_org_stats_user() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
 
   var_color
 
@@ -252,7 +260,9 @@ github_org_stats_user() {
 }
 
 github_clone() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
+  meta_check "var" "var_color"
+  meta_check "http" "http_init_client"
+
   var_color
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
@@ -338,7 +348,9 @@ github_clone() {
 }
 
 github_clean_subscription() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
+  meta_check "var" "var_color"
+  meta_check "http" "http_init_client"
+
   var_color
 
   local GITHUB_ORGANIZATION="${1-}"
@@ -385,9 +397,7 @@ github_clean_subscription() {
 }
 
 github_compare_version() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
+  meta_check "var" "var_color"
 
   var_color
 
@@ -426,7 +436,9 @@ github_compare_version() {
 }
 
 github_configure() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
+  meta_check "var" "var_color"
+  meta_check "http" "http_init_client"
+
   var_color
 
   if [[ ${#} -ne 1 ]]; then
@@ -512,7 +524,9 @@ github_configure() {
 }
 
 github_pull_request() {
-  source "${GITHUB_SCRIPT_DIR}/meta" && meta_init "var" "http" "pass"
+  meta_check "var" "var_color"
+  meta_check "http" "http_init_client"
+
   var_color
 
   if [[ ${#} -ne 4 ]]; then

@@ -19,7 +19,9 @@ script_dir() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_init "var" "pass"
+  meta_check "var" "var_color"
+  meta_check "pass" "pass_get"
+
   var_color
 
   var_read DOCKER_OWNER "${1-}"

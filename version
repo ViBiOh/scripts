@@ -3,10 +3,7 @@
 VERSION_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 version_value() {
-  if [[ $(type -t "var_color") != "function" ]]; then
-    source "${VERSION_SCRIPT_DIR}/meta" && meta_init "var"
-  fi
-
+  meta_check "var" "var_color"
   var_color
 
   if [[ ${#} -lt 2 ]]; then
@@ -56,7 +53,8 @@ version_bump() {
 }
 
 version_semver() {
-  source "${VERSION_SCRIPT_DIR}/meta" && meta_init "var" "git"
+  meta_check "var" "var_color"
+  meta_check "git" "git_is_inside"
   var_color
 
   if ! git_is_inside; then

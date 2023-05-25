@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-KUBERNETES_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 kubernetes_shell() {
   _info() {
     printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
@@ -118,7 +116,7 @@ kubernetes_sql_forward() {
 }
 
 kubernetes_postgres_backup() {
-  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var"
+  meta_check "var" "var_shift_or_read"
 
   local POSTGRES_USER
   var_shift_or_read POSTGRES_USER "${1-}"
@@ -152,7 +150,7 @@ kubernetes_postgres_backup() {
 }
 
 kubernetes_postgres_restore() {
-  source "${KUBERNETES_SCRIPT_DIR}/meta" && meta_init "var"
+  meta_check "var" "var_shift_or_read"
 
   local POSTGRES_USER
   var_shift_or_read POSTGRES_USER "${1-}"
