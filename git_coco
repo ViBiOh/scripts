@@ -6,6 +6,10 @@ if [[ ${TRACE:-0} == "1" ]]; then
   set -o xtrace
 fi
 
+_git_coco_scripts_init() {
+  return 0
+}
+
 guess_component() {
   local COMPONENTS=()
 
