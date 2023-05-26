@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 
-META_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
+
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
+  fi
+}
+
+META_SCRIPT_DIR="$(script_dir)"
 
 meta_check() {
   if [[ ${#} -lt 1 ]]; then
@@ -32,6 +44,7 @@ meta_download_script() {
 meta_init() {
   local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/main/"
 
+  local CURRENT_DIR="${PWD@}"
   cd "${META_SCRIPT_DIR}" || return 1
 
   for dep in "${@}"; do
@@ -53,5 +66,5 @@ meta_init() {
     fi
   done
 
-  cd - >/dev/null || return 1
+  cd "${CURRENT_DIR}" >/dev/null || return 1
 }

@@ -6,10 +6,6 @@ if [[ ${TRACE:-0} == "1" ]]; then
   set -o xtrace
 fi
 
-_git_coco_scripts_init() {
-  return 0
-}
-
 guess_component() {
   local COMPONENTS=()
 
@@ -121,7 +117,6 @@ main() {
     return 1
   fi
 
-  git_conventionnal_commits
   git_is_valid_description "value"
 
   local REMAINING_LENGTH=$((COMMIT_MAX_LENGTH - 1))
