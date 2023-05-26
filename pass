@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+_pass_scripts_init() {
+  return 0
+}
+
 pass_get() {
   if ! command -v pass >/dev/null 2>&1; then
     return

@@ -3,6 +3,10 @@
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 export GOOGLE_CONTAINER_REGISTRIES=("gcr.io" "eu.gcr.io" "us.gcr.io")
 
+_gcloud_scripts_init() {
+  return 0
+}
+
 gcloud_auth() {
   gcloud auth login --update-adc
   gcloud config unset compute/region
@@ -107,7 +111,7 @@ gcloud_sql_proxy() {
         return 1
       fi
 
-      DATABASE_PORT="${POSSIBLE_PORTS:${START_INDEX}:4}"
+      DATABASE_PORT="${POSSIBLE_PORTS:START_INDEX:4}"
 
       START_INDEX=$((START_INDEX - 1))
     done

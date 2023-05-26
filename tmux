@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+_tmux_scripts_init() {
+  return 0
+}
+
 tmux_is_inside() {
   if [[ -z ${TMUX-} ]]; then
     return 1

@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-git_conventionnal_commits() {
-  meta_check "var" "var_color"
-  var_color
+_git_scripts_init() {
+  meta_check "var"
 
   declare -gA CONVENTIONAL_COMMIT_SCOPES
   CONVENTIONAL_COMMIT_SCOPES['build']='Changes that affect the build system or external dependencies'
@@ -91,7 +90,6 @@ git_is_commit_wip() {
 }
 
 git_is_conventional_commit() {
-  git_conventionnal_commits
 
   local SCOPES
   printf -v SCOPES "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"
@@ -116,10 +114,7 @@ git_is_valid_description() {
 }
 
 git_conventionnal_commit_guidelines() {
-  meta_check "var" "var_color"
-
-  var_color
-  git_conventionnal_commits
+  meta_check "var"
 
   var_warning "Guidelines for prefixing commit message from conventionalcommits.org\n"
 
@@ -136,8 +131,7 @@ git_conventionnal_commit_guidelines() {
 }
 
 git_valid_description_guideline() {
-  meta_check "var" "var_color"
-  var_color
+  meta_check "var"
 
   var_warning "\nYou have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters). Current size is ${#1}"
 }
@@ -156,10 +150,7 @@ git_last_tag() {
 }
 
 git_changelog() {
-  meta_check "var" "var_color"
-
-  var_color
-  git_conventionnal_commits
+  meta_check "var"
 
   if [[ ${*} =~ ^-?help$ ]]; then
     var_red "Usage: git_changelog [END_REF=HEAD] [START_REF=git_last_tag]"
@@ -276,9 +267,7 @@ git_changelog() {
 }
 
 head_sync() {
-  meta_check "var" "var_color"
-
-  var_color
+  meta_check "var"
 
   if [[ ${#} -ne 2 ]]; then
     var_red "Usage: head_sync REMOTE_SERVER REMOTE_PATH"
@@ -296,9 +285,7 @@ head_sync() {
 }
 
 git_sync() {
-  meta_check "var" "var_color"
-
-  var_color
+  meta_check "var"
 
   if [[ ${#} -lt 2 ]]; then
     var_red "Usage: git_sync REMOTE_SERVER REMOTE_PATH [DRY]?"

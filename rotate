@@ -6,21 +6,8 @@ if [[ ${TRACE:-0} == "1" ]]; then
   set -o xtrace
 fi
 
-script_dir() {
-  local FILE_SOURCE="${BASH_SOURCE[0]}"
-
-  if [[ -L ${FILE_SOURCE} ]]; then
-    dirname "$(readlink "${FILE_SOURCE}")"
-  else
-    (
-      cd "$(dirname "${FILE_SOURCE}")" && pwd
-    )
-  fi
-}
-
 main() {
-  meta_check "var" "var_color"
-  var_color
+  meta_check "var"
 
   local ROTATE_DRY_RUN=0
 

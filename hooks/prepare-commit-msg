@@ -7,8 +7,7 @@ if [[ ${TRACE:-0} == "1" ]]; then
 fi
 
 main() {
-  meta_check "git" "git_conventionnal_commits"
-  git_conventionnal_commits
+  meta_check "git"
 
   local BRANCH_NAME
   BRANCH_NAME=$(git branch --show-current)

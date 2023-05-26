@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+_var_scripts_init() {
+  export RED='\033[0;31m'
+  export GREEN='\033[0;32m'
+  export YELLOW='\033[33m'
+  export BLUE='\033[0;34m'
+  export PURPLE='\033[35m'
+  export RESET='\033[0m'
+}
+
 var_read() {
   if [[ ${#} -lt 1 ]]; then
     var_red "Usage: var_read VAR_NAME [VAR_DEFAULT] [VAR_SECRET]"
@@ -83,15 +92,6 @@ var_confirm() {
     return 1
     ;;
   esac
-}
-
-var_color() {
-  export RED='\033[0;31m'
-  export GREEN='\033[0;32m'
-  export YELLOW='\033[33m'
-  export BLUE='\033[0;34m'
-  export PURPLE='\033[35m'
-  export RESET='\033[0m'
 }
 
 var_log() {

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-VERSION_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_version_scripts_init() {
+  return 0
+}
 
 version_value() {
-  meta_check "var" "var_color"
-  var_color
+  meta_check "var"
 
   if [[ ${#} -lt 2 ]]; then
     var_red "Usage: version_value regex [files...]"
@@ -53,9 +54,7 @@ version_bump() {
 }
 
 version_semver() {
-  meta_check "var" "var_color"
-  meta_check "git" "git_is_inside"
-  var_color
+  meta_check "var" "git"
 
   if ! git_is_inside; then
     var_warning "not inside a git tree"

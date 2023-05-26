@@ -153,9 +153,7 @@ tag_check() {
 }
 
 main() {
-  meta_check "var" "var_color"
-
-  var_color
+  meta_check "var"
 
   local INITIAL_DIFF
   INITIAL_DIFF=$(get_diff)

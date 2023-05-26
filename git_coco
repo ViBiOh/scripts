@@ -6,16 +6,6 @@ if [[ ${TRACE:-0} == "1" ]]; then
   set -o xtrace
 fi
 
-script_dir() {
-  if [[ -L ${BASH_SOURCE[0]} ]]; then
-    dirname "$(readlink "${BASH_SOURCE[0]}")"
-  else
-    (
-      cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
-    )
-  fi
-}
-
 guess_component() {
   local COMPONENTS=()
 
@@ -108,12 +98,7 @@ get_co_author() {
 }
 
 main() {
-  meta_check "var" "var_color"
-  meta_check "git" "git_is_inside"
-  meta_check "github" "github_token"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "git" "github" "http"
 
   if ! git_is_inside; then
     var_error "not inside a git tree"

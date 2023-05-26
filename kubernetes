@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+_kubernetes_scripts_init() {
+  return 0
+}
+
 kubernetes_shell() {
   _info() {
     printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
@@ -116,7 +120,7 @@ kubernetes_sql_forward() {
 }
 
 kubernetes_postgres_backup() {
-  meta_check "var" "var_shift_or_read"
+  meta_check "var"
 
   local POSTGRES_USER
   var_shift_or_read POSTGRES_USER "${1-}"
@@ -150,7 +154,7 @@ kubernetes_postgres_backup() {
 }
 
 kubernetes_postgres_restore() {
-  meta_check "var" "var_shift_or_read"
+  meta_check "var"
 
   local POSTGRES_USER
   var_shift_or_read POSTGRES_USER "${1-}"

@@ -4,15 +4,12 @@ META_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 meta_check() {
   if [[ ${#} -lt 1 ]]; then
-    printf "Usage: meta_check DEPENDENCY_FILENAME FUNCTIONS_TO_CHECK...\n"
+    printf "Usage: meta_check DEPENDENCY_FILENAMES...\n"
     return 1
   fi
 
-  local DEPENDENCY_FILENAME="${1}"
-  shift
-
   for fn in "${@}"; do
-    if [[ $(type -t "${fn}") != "function" ]]; then
+    if [[ $(type -t "_${fn}_scripts_init") != "function" ]]; then
       meta_init "${DEPENDENCY_FILENAME}"
       return
     fi
@@ -50,6 +47,8 @@ meta_init() {
 
     if [[ $(grep -c "main()" "./${dep}") -eq 0 ]]; then
       source "./${dep}"
+    elif [[ $(grep -c "_${dep}_scripts_init" "./${dep}") -eq 0 ]]; then
+      "_${dep}_scripts_init"
     fi
   done
 

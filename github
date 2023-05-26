@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 
-GITHUB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_github_scripts_init() {
+  return 0
+}
 
 github_token() {
-  meta_check "pass" "pass_get"
+  meta_check "pass"
 
   pass_get "dev/github" "token"
 }
 
 github_rate_limit_wait() {
-  meta_check "var" "var_color"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "http"
 
   local WANTED_CALLS="${1:-10}"
   shift || true
@@ -38,10 +37,7 @@ github_rate_limit_wait() {
 }
 
 github_repo_pr_stats() {
-  meta_check "var" "var_color"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "http"
 
   if [[ ${#} -ne 1 ]]; then
     var_red "Usage: github_repo_pr_stats GITHUB_REPOSITORY"
@@ -117,10 +113,7 @@ github_repo_pr_stats() {
 }
 
 github_repo_stats() {
-  meta_check "var" "var_color"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "http"
 
   if [[ ${#} -ne 1 ]]; then
     var_red "Usage: github_repo_stats GITHUB_REPOSITORY"
@@ -173,10 +166,7 @@ github_repo_stats() {
 }
 
 github_org_stats() {
-  meta_check "var" "var_color"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "http"
 
   if [[ ${#} -lt 1 ]]; then
     var_red "Usage: github_org_stats GITHUB_ORGANIZATION [REPOSITORY_FILTER_REGEX]"
@@ -238,9 +228,7 @@ github_org_stats() {
 }
 
 github_org_stats_user() {
-  meta_check "var" "var_color"
-
-  var_color
+  meta_check "var"
 
   if [[ ${#} -ne 2 ]]; then
     var_red "Usage: github_org_stats_user github_org_stats.json GITHUB_USER"
@@ -260,10 +248,7 @@ github_org_stats_user() {
 }
 
 github_clone() {
-  meta_check "var" "var_color"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "http"
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
@@ -348,10 +333,7 @@ github_clone() {
 }
 
 github_clean_subscription() {
-  meta_check "var" "var_color"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "http"
 
   local GITHUB_ORGANIZATION="${1-}"
   shift || true
@@ -397,9 +379,7 @@ github_clean_subscription() {
 }
 
 github_compare_version() {
-  meta_check "var" "var_color"
-
-  var_color
+  meta_check "var"
 
   if [[ ${#} -lt 2 ]]; then
     var_red "Usage: github_compare_version GITHUB_REPOSITORY LATEST_VERSION [CURRENT_VERSION] [RELEASE_API_FILE]"
@@ -436,10 +416,7 @@ github_compare_version() {
 }
 
 github_configure() {
-  meta_check "var" "var_color"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "http"
 
   if [[ ${#} -ne 1 ]]; then
     var_red "Usage: github_configure GITHUB_REPOSITORY"
@@ -524,10 +501,7 @@ github_configure() {
 }
 
 github_pull_request() {
-  meta_check "var" "var_color"
-  meta_check "http" "http_init_client"
-
-  var_color
+  meta_check "var" "http"
 
   if [[ ${#} -ne 4 ]]; then
     var_red "Usage: github_pull_request GITHUB_REPOSITORY TITLE BASE HEAD"
