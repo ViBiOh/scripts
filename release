@@ -240,8 +240,20 @@ release_usage() {
   printf "clea,\n\tClean created output directory\n"
 }
 
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
+
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
+  fi
+}
+
 main() {
-  meta_check "var" "git" "github" "http" "pass" "version"
+  source "$(script_dir)/meta" && meta_check "var" "git" "github" "http" "pass" "version"
 
   local ROOT_DIR
   ROOT_DIR="$(git_root)"

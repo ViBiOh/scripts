@@ -19,7 +19,7 @@ script_dir() {
 }
 
 main() {
-  meta_check "var" "pass"
+  source "$(script_dir)/meta" && meta_check "var" "pass"
 
   var_read DOCKER_OWNER "${1-}"
   var_read DOCKER_USER "$(pass_get "dev/docker" "login")"

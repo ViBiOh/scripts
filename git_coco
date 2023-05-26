@@ -101,8 +101,20 @@ get_co_author() {
   fi
 }
 
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
+
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
+  fi
+}
+
 main() {
-  meta_check "var" "git" "github" "http"
+  source "$(script_dir)/meta" && meta_check "var" "git" "github" "http"
 
   if ! git_is_inside; then
     var_error "not inside a git tree"
