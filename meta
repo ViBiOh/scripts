@@ -8,9 +8,9 @@ meta_check() {
     return 1
   fi
 
-  for fn in "${@}"; do
-    if [[ $(type -t "_${fn}_scripts_init") != "function" ]]; then
-      meta_init "${DEPENDENCY_FILENAME}"
+  for dep in "${@}"; do
+    if [[ $(type -t "_${dep}_scripts_init") != "function" ]]; then
+      meta_init "${dep}"
       return
     fi
   done
