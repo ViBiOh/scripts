@@ -47,8 +47,10 @@ meta_init() {
 
     if [[ $(grep -c "main()" "./${dep}") -eq 0 ]]; then
       source "./${dep}"
-    elif [[ $(grep -c "_${dep}_scripts_init" "./${dep}") -eq 0 ]]; then
-      "_${dep}_scripts_init"
+
+      if [[ $(grep -c "_${dep}_scripts_init" "./${dep}") -eq 1 ]]; then
+        "_${dep}_scripts_init"
+      fi
     fi
   done
 
