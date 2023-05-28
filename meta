@@ -44,7 +44,7 @@ meta_download_script() {
 meta_init() {
   local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/main/"
 
-  local CURRENT_DIR="${PWD}"
+  local DIR_BEFORE_INIT="${PWD}"
   cd "${META_SCRIPT_DIR}" || return 1
 
   for dep in "${@}"; do
@@ -66,5 +66,5 @@ meta_init() {
     fi
   done
 
-  cd "${CURRENT_DIR}" >/dev/null || return 1
+  cd "${DIR_BEFORE_INIT}" >/dev/null || return 1
 }
