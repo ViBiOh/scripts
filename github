@@ -504,7 +504,7 @@ github_pull_request() {
   meta_check "var" "http"
 
   if [[ ${#} -ne 4 ]]; then
-    var_red "Usage: github_pull_request GITHUB_REPOSITORY TITLE BASE HEAD"
+    var_red "Usage: github_pull_request GITHUB_REPOSITORY TITLE BASE HEAD BODY?"
     return 1
   fi
 
@@ -520,6 +520,9 @@ github_pull_request() {
   local PR_HEAD="${1-}"
   shift
 
+  local PR_BODY="${1-}"
+  shift || true
+
   local GITHUB_TOKEN
   GITHUB_TOKEN="$(github_token)"
 
@@ -534,7 +537,8 @@ github_pull_request() {
         --arg title "${PR_TITLE}" \
         --arg base "${PR_BASE}" \
         --arg head "${PR_HEAD}" \
-        '{title: $title, base: $base, head: $head}'
+        --arg body "${PR_BODY}" \
+        '{title: $title, base: $base, head: $head, body: $body}'
     )"
   if [[ ${HTTP_STATUS} != "201" ]]; then
     http_handle_error "Unable to create pull request for ${PR_HEAD}"
