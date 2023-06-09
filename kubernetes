@@ -4,6 +4,89 @@ _kubernetes_scripts_init() {
   return 0
 }
 
+kubernetes_redis_cli() {
+  _info() {
+    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
+  }
+
+  local CONTEXT
+  CONTEXT="$(kubectl config get-contexts -o name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context: ")"
+
+  if [[ -z ${CONTEXT-} ]]; then
+    return 1
+  fi
+
+  _info "Context: ${CONTEXT}"
+
+  local NAMESPACE
+  NAMESPACE="$(kubectl --context "${CONTEXT}" get namespaces --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Namespace: ")"
+
+  if [[ -z ${NAMESPACE-} ]]; then
+    return 1
+  fi
+
+  _info "Namespace: ${NAMESPACE}"
+
+  local ENDPOINT
+  ENDPOINT="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get endpoints --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Endpoint: ")"
+
+  if [[ -z ${ENDPOINT-} ]]; then
+    return 1
+  fi
+
+  _info "Endpoint: ${ENDPOINT}"
+
+  local AUTH_SECRET
+  AUTH_SECRET="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get secrets --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Secret: ")"
+
+  _info "Secret: ${AUTH_SECRET}"
+
+  local AUTH_PASS
+
+  if [[ -n ${AUTH_SECRET-} ]]; then
+    AUTH_PASS="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get secrets "${AUTH_SECRET}" --output=yaml | yq eval '.data[] |= @base64d | .data' | fzf --height=20 --ansi --reverse --select-1 --prompt "Auth: " | awk '{print $2}')"
+
+    if [[ -z ${AUTH_PASS-} ]]; then
+      return 1
+    fi
+  fi
+
+  local POD_NAME="redis-cli"
+
+  if [[ $(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get pod "${POD_NAME}" 2>/dev/null | wc -l) -eq 0 ]]; then
+    _info "Creating a redis-cli pod"
+
+    cat <<EOF | kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${POD_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: kubernetes-redis-cli
+    app.kubernetes.io/instance: ${POD_NAME}
+spec:
+  containers:
+    - name: cli
+      image: dbcliorg/iredis
+      command:
+        - /bin/sh
+      args:
+        - "-c"
+        - "tail -f /dev/null"
+EOF
+
+    _info "Waiting for Running condition..."
+    kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" wait --for=jsonpath='{.status.phase}'=Running "pod/${POD_NAME}"
+  fi
+
+  _info "Connecting to the ${POD_NAME} pod..."
+  kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" exec "${POD_NAME}" --stdin --tty -- iredis -h "${ENDPOINT}" --password "${AUTH_PASS}" || true
+
+  _info "Deleting the ${POD_NAME} pod..."
+  kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" delete pod "${POD_NAME}"
+}
+
 kubernetes_shell() {
   _info() {
     printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
