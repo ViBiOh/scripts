@@ -99,12 +99,16 @@ kubernetes_shell() {
     return 1
   fi
 
+  _info "Context: ${CONTEXT}"
+
   local NAMESPACE
   NAMESPACE="$(kubectl --context "${CONTEXT}" get namespaces --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Namespace: ")"
 
   if [[ -z ${NAMESPACE-} ]]; then
     return 1
   fi
+
+  _info "Namespace: ${NAMESPACE}"
 
   local POD_NAME
   POD_NAME="$(whoami)-shell"
