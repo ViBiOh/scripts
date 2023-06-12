@@ -503,7 +503,7 @@ github_configure() {
 github_pull_request() {
   meta_check "var" "http"
 
-  if [[ ${#} -ne 4 ]]; then
+  if [[ ${#} -lt 4 ]]; then
     var_red "Usage: github_pull_request GITHUB_REPOSITORY TITLE BASE HEAD BODY?"
     return 1
   fi
