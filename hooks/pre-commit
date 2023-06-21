@@ -35,19 +35,25 @@ golang_check() {
     return
   fi
 
-  if [[ $(make -pqr 2>/dev/null | awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1,A,/ /);for(i in A)print A[i]}' | grep --invert-match "Makefile" | sort --unique | grep --count --regexp style --regexp format) -ne 2 ]]; then
-    return
-  fi
+  local MAKE_TARGETS
+  MAKE_TARGETS="$(make -pqr 2>/dev/null | awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1,A,/ /);for(i in A)print A[i]}' | grep --invert-match "Makefile" | sort --unique)"
 
   local GO_FILES
   GO_FILES=$(get_files "*.go")
 
   if [[ -n ${GO_FILES-} ]]; then
-    var_info "Formating golang files"
-    GO_FILES="${GO_FILES}" run_command make --silent format
+    if [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "format") -eq 1 ]]; then
+      var_info "Formating golang files"
+      GO_FILES="${GO_FILES}" run_command make --silent format
+    fi
 
-    var_info "Linting golang packages"
-    run_command make --silent style
+    if [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "style") -eq 1 ]]; then
+      var_info "Linting golang packages"
+      run_command make --silent style
+    elif [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "lint") -eq 1 ]]; then
+      var_info "Linting golang packages"
+      run_command make --silent lint
+    fi
   fi
 }
 
