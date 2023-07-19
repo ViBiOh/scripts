@@ -55,6 +55,17 @@ var_read() {
   fi
 }
 
+var_read_input() {
+  if [[ -n ${BASH_VERSION} ]]; then
+    read -r -p "${1}=" "${2}" </dev/tty
+  elif [[ -n ${ZSH_VERSION} ]]; then
+    read -r "${2}?${1}=" </dev/tty
+  else
+    var_error "Shell not supported for reading user input"
+    return 1
+  fi
+}
+
 var_shift_or_read() {
   local VAR_NAME="${1}"
   shift
@@ -73,15 +84,8 @@ var_shift_or_read() {
 }
 
 var_confirm() {
-  local VAR_CONFIRM_MESSAGE="${1:-Are you sure}"
-
-  if [[ -n ${BASH_VERSION} ]]; then
-    read -r -p "${VAR_CONFIRM_MESSAGE}? [y/N] " input </dev/tty
-  elif [[ -n ${ZSH_VERSION} ]]; then
-    read -r "input?${VAR_CONFIRM_MESSAGE}? [y/N] " </dev/tty
-  else
-    return 0
-  fi
+  local input
+  var_read_input "${1:-Are you sure}? [y/N] " input
 
   case "${input}" in
   [yY][eE][sS] | [yY])
