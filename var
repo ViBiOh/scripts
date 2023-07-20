@@ -57,9 +57,9 @@ var_read() {
 
 var_read_input() {
   if [[ -n ${BASH_VERSION} ]]; then
-    read -r -p "${1}=" "${2}" </dev/tty
+    read -r -p "${1}" "${2}" </dev/tty
   elif [[ -n ${ZSH_VERSION} ]]; then
-    read -r "${2}?${1}=" </dev/tty
+    read -r "${2}?${1}" </dev/tty
   else
     var_error "Shell not supported for reading user input"
     return 1
