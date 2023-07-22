@@ -84,16 +84,28 @@ var_shift_or_read() {
 }
 
 var_confirm() {
+  local DEFAULT_PROMPT="[y/N]"
+  local DEFAULT_RETURN=1
+
+  if [[ ${2:-} == "true" ]] || [[ ${2:-} == "0" ]]; then
+    DEFAULT_RETURN=0
+    DEFAULT_PROMPT="[Y/n]"
+  fi
+
   local input
-  var_read_input "${1:-Are you sure}? [y/N] " input
+  var_read_input "${1:-Are you sure}? ${DEFAULT_PROMPT} " input
 
   case "${input}" in
   [yY][eE][sS] | [yY])
     return 0
     ;;
 
-  *)
+  [nN][oO] | [nN])
     return 1
+    ;;
+
+  *)
+    return ${DEFAULT_RETURN}
     ;;
   esac
 }
