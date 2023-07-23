@@ -38,7 +38,7 @@ var_read() {
 
   if [[ -z ${!VAR_NAME-} ]]; then
     if [[ -z ${SCRIPTS_NO_INTERACTIVE-} ]]; then
-      read ${VAR_SECRET_ARG?} -r -p "${VAR_NAME}${VAR_DEFAULT_DISPLAY}=" READ_VALUE </dev/tty
+      var_read_input "${VAR_NAME}${VAR_DEFAULT_DISPLAY}=" "READ_VALUE" ${VAR_SECRET_ARG?}
     fi
 
     local VAR_SAFE_VALUE
@@ -56,10 +56,21 @@ var_read() {
 }
 
 var_read_input() {
+  if [[ ${#} -lt 2 ]]; then
+    var_red "Usage: var_read_input VAR_PROMPT VAR_NAME"
+    return 1
+  fi
+
+  local VAR_PROMPT="${1}"
+  shift
+
+  local VAR_NAME="${1}"
+  shift
+
   if [[ -n ${BASH_VERSION} ]]; then
-    read -r -p "${1}" "${2}" </dev/tty
+    read -r -p "${VAR_PROMPT}" "${@}" "${VAR_NAME}" </dev/tty
   elif [[ -n ${ZSH_VERSION} ]]; then
-    read -r "${2}?${1}" </dev/tty
+    read -r "${VAR_NAME}?${VAR_PROMPT}" "${@}" </dev/tty
   else
     var_error "Shell not supported for reading user input"
     return 1
