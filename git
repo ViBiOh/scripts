@@ -3,17 +3,19 @@
 _git_scripts_init() {
   meta_check "var"
 
-  declare -gA CONVENTIONAL_COMMIT_SCOPES
-  CONVENTIONAL_COMMIT_SCOPES['build']='Changes that affect the build system or external dependencies'
-  CONVENTIONAL_COMMIT_SCOPES['chore']='Changes in the core of the repository'
-  CONVENTIONAL_COMMIT_SCOPES['ci']='Changes in Continuous Integration configuration files and scripts'
-  CONVENTIONAL_COMMIT_SCOPES['docs']='Documentation only changes'
-  CONVENTIONAL_COMMIT_SCOPES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
-  CONVENTIONAL_COMMIT_SCOPES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
-  CONVENTIONAL_COMMIT_SCOPES['perf']=$(printf 'A performance improvement for user %b(production change)%b' "${RED}" "${RESET}")
-  CONVENTIONAL_COMMIT_SCOPES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
-  CONVENTIONAL_COMMIT_SCOPES['style']='A change that do not affect the meaning of the code'
-  CONVENTIONAL_COMMIT_SCOPES['test']='A new test or correcting existing tests'
+  if [[ ${BASH_VERSINFO:-3} -gt "3" ]]; then
+    declare -gA CONVENTIONAL_COMMIT_SCOPES
+    CONVENTIONAL_COMMIT_SCOPES['build']='Changes that affect the build system or external dependencies'
+    CONVENTIONAL_COMMIT_SCOPES['chore']='Changes in the core of the repository'
+    CONVENTIONAL_COMMIT_SCOPES['ci']='Changes in Continuous Integration configuration files and scripts'
+    CONVENTIONAL_COMMIT_SCOPES['docs']='Documentation only changes'
+    CONVENTIONAL_COMMIT_SCOPES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
+    CONVENTIONAL_COMMIT_SCOPES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
+    CONVENTIONAL_COMMIT_SCOPES['perf']=$(printf 'A performance improvement for user %b(production change)%b' "${RED}" "${RESET}")
+    CONVENTIONAL_COMMIT_SCOPES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
+    CONVENTIONAL_COMMIT_SCOPES['style']='A change that do not affect the meaning of the code'
+    CONVENTIONAL_COMMIT_SCOPES['test']='A new test or correcting existing tests'
+  fi
 }
 
 git_is_inside() {
