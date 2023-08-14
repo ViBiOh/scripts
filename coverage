@@ -16,7 +16,7 @@ main() {
     printf "%s\n" "${MODE}" >"${COVERAGE_OUTPUT}"
 
     for pkg in $(go list "${PACKAGES:-./...}"); do
-      go test -race -covermode="${COVER_MODE}" -coverprofile="${COVER_PROFILE}" "${pkg}"
+      go test -count=1 -race -covermode="${COVER_MODE}" -coverprofile="${COVER_PROFILE}" "${pkg}"
 
       if [[ -f ${COVER_PROFILE} ]]; then
         grep --invert-match "${MODE}" "${COVER_PROFILE}" >>"${COVERAGE_OUTPUT}" || true
