@@ -17,6 +17,10 @@ pass_get() {
   local PASS_NAME="${1}"
   shift
 
+  if ! [[ -e "${PASSWORD_STORE_DIR:-${HOME}/.password-store}/${PASS_NAME}" ]]; then
+    return
+  fi
+
   local PASS_FIELD="${1}"
   shift
 
