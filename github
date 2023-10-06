@@ -128,14 +128,25 @@ github_repo_stats() {
   http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
 
   local retry="true"
+  local retryCount=0
 
   while [[ ${retry} == "true" ]]; do
     github_rate_limit_wait
+
     http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/stats/contributors"
     if [[ ${HTTP_STATUS} == "202" ]]; then
       var_warning "Contributions are being compiled for ${GITHUB_REPOSITORY}, waiting 30 seconds"
       rm "${HTTP_OUTPUT}"
       sleep 30
+
+      retryCount=$((retryCount + 1))
+
+      if [[ ${retryCount} -gt 10 ]]; then
+        var_error "Contributions cannot be compiled, ignoring repo"
+
+        return 1
+      fi
+
       continue
     fi
 
