@@ -17,7 +17,7 @@ pass_get() {
   local PASS_NAME="${1}"
   shift
 
-  if ! [[ -e "${PASSWORD_STORE_DIR:-${HOME}/.password-store}/${PASS_NAME}" ]]; then
+  if ! [[ -e "${PASSWORD_STORE_DIR:-${HOME}/.password-store}/${PASS_NAME}.gpg" ]]; then
     return
   fi
 
