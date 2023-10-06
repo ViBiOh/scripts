@@ -55,8 +55,7 @@ github_repo_pr_stats() {
   local pr_page_size=100
   local pr_count="${pr_page_size}"
 
-  local pr
-  local prstats=""
+  mkdir -p "${GITHUB_REPOSITORY}"
 
   while [[ pr_count -eq ${pr_page_size} ]]; do
     pr_page=$((pr_page + 1))
@@ -83,33 +82,27 @@ github_repo_pr_stats() {
     github_rate_limit_wait "${pr_page_size}"
 
     for PR in "${PULL_REQUESTS[@]}"; do
-      local PR_NUMER
-      PR_NUMER="$(printf '%s' "${PR}" | awk -F ',' '{ print $1 }')"
+      local PR_NUMBER
+      PR_NUMBER="$(printf '%s' "${PR}" | awk -F ',' '{ print $1 }')"
       local PR_AUTHOR
       PR_AUTHOR="$(printf '%s' "${PR}" | awk -F ',' '{ print $2 }')"
 
-      http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMER}/reviews"
+      http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews"
       if [[ ${HTTP_STATUS} != "200" ]]; then
-        http_handle_error "Unable to fetch ${GITHUB_REPOSITORY}/pulls/${PR_NUMER} reviews"
+        http_handle_error "Unable to fetch ${GITHUB_REPOSITORY}/pulls/${PR_NUMBER} reviews"
         break
       fi
 
-      pr="$(jq --compact-output --raw-output --arg author "${PR_AUTHOR}" '[.[] | select(.user.login != null) | .user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}")"
-      rm "${HTTP_OUTPUT}"
-      if [[ -n ${pr-} ]]; then
-        if [[ -n ${prstats} ]]; then
-          prstats+=","
-        fi
-
-        prstats+="${pr}"
-      fi
+      jq --compact-output --raw-output --arg author "${PR_AUTHOR}" '[.[] | select(.user.login != null) | .user.login] | {$author, reviewers: .}' "${HTTP_OUTPUT}" >"${GITHUB_REPOSITORY}/${PR_NUMBER}.json"
     done
   done
 
-  printf "[%s]" "${prstats}" | jq --compact-output --raw-output '
+  jq --slurp --compact-output --raw-output '
     [group_by(.author) | .[] | { author: (.[0].author), opened: length }] +
     [ [.[].reviewers] | flatten | group_by(.) | .[] | { author: .[0], reviewed: length}] |
-    [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]]'
+    [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]]' "${GITHUB_REPOSITORY}/"*.json
+
+  rm -r "${GITHUB_REPOSITORY:?}/"
 }
 
 github_repo_stats() {
@@ -197,13 +190,13 @@ github_org_stats() {
   local repo_page_size=100
   local repo_count="${repo_page_size}"
 
-  local stat
-  local orgstats=""
+  mkdir -p "${GITHUB_ORGANIZATION}"
 
   while [[ repo_count -eq ${repo_page_size} ]]; do
     repo_page=$((repo_page + 1))
 
     github_rate_limit_wait
+
     http_request "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${repo_page_size}&page=${repo_page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${repo_page}"
@@ -222,20 +215,13 @@ github_org_stats() {
 
     for REPO in "${REPOSITORIES[@]}"; do
       var_info "Generating stats for ${REPO}"
-      stat="$(github_repo_stats "${REPO}")"
-
-      if [[ -n ${stat-} ]]; then
-        if [[ -n ${orgstats} ]]; then
-          orgstats+=","
-        fi
-
-        orgstats+="${stat}"
-      fi
+      github_repo_stats "${REPO}" >"${REPO}.json"
     done
   done
 
-  orgstats="[${orgstats}]"
-  printf "%s\n" "${orgstats}"
+  jq '.' --slurp "${GITHUB_ORGANIZATION}/"*.json >"${GITHUB_ORGANIZATION}.json"
+
+  rm -r "${GITHUB_ORGANIZATION}"
 }
 
 github_org_stats_user() {
