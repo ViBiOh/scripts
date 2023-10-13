@@ -25,7 +25,10 @@ http_handle_error() {
   meta_check "var"
 
   var_error "HTTP/${HTTP_STATUS}: ${1-}"
-  cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+
+  if [[ -e ${HTTP_OUTPUT} ]]; then
+    cat "${HTTP_OUTPUT}" 1>&2 && rm "${HTTP_OUTPUT}"
+  fi
 }
 
 http_init_client() {

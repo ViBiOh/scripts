@@ -368,7 +368,7 @@ github_clean_subscription() {
       http_request --request DELETE --header "Accept: application/vnd.github+json" "${THREAD}/subscription"
       if [[ ${HTTP_STATUS} != "204" ]]; then
         http_handle_error "Unable to delete subscription for thread ${THREAD}"
-        break
+        continue
       fi
       rm "${HTTP_OUTPUT}"
     done
