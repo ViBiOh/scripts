@@ -116,6 +116,9 @@ kubernetes_shell() {
   if [[ $(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get pod "${POD_NAME}" 2>/dev/null | wc -l) -eq 0 ]]; then
     _info "Creating a shell pod"
 
+    local IMAGE
+    IMAGE="$(printf "alpine\nubuntu\nnode\npython" | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Image: ")"
+
     cat <<EOF | kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" apply -f -
 apiVersion: v1
 kind: Pod
@@ -124,11 +127,12 @@ metadata:
   namespace: ${NAMESPACE}
   labels:
     app.kubernetes.io/name: kubernetes-shell
+    app.kubernetes.io/owner: $(whoami)
     app.kubernetes.io/instance: ${POD_NAME}
 spec:
   containers:
     - name: shell
-      image: alpine
+      image: ${IMAGE}
       command:
         - /bin/sh
       args:
