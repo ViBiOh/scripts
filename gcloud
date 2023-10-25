@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-export GOOGLE_CONTAINER_REGISTRIES=("gcr.io" "eu.gcr.io" "us.gcr.io")
+export GOOGLE_CONTAINER_REGISTRIES=("gcr.io" "eu.gcr.io" "us.gcr.io" "us-docker.pgk.dev")
 
 _gcloud_scripts_init() {
   return 0
