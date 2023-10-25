@@ -142,7 +142,11 @@ kubernetes_shell() {
     IMAGE="$(printf "alpine\nubuntu\nnode\npython\nother" | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Image: ")"
 
     if [[ -w ${IMAGE:-} ]] || [[ ${IMAGE:-} == "other" ]]; then
-      _read_input "Image name: " IMAGE
+      IMAGE="${4-}"
+
+      if [[ -w ${IMAGE:-} ]]; then
+        _read_input "Image name: " IMAGE
+      fi
     fi
 
     cat <<EOF | kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" apply -f -
