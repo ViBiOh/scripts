@@ -375,6 +375,79 @@ github_clean_subscription() {
   done
 }
 
+github_release() {
+  meta_check "var" "git" "http" "version"
+
+  if ! git_is_inside; then
+    var_warning "not inside a git tree"
+    return 1
+  fi
+
+  var_info "Identifying semver"
+
+  local LAST_TAG
+  LAST_TAG="$(git_last_tag)"
+
+  local VERSION_REF
+  local PREVIOUS_REF
+
+  if [[ -n ${LAST_TAG-} ]]; then
+    VERSION_REF="$(git log --no-merges --invert-grep --grep "\[skip ci\] Automated" --color --pretty=format:'%Cred%h%Creset%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' "HEAD...${LAST_TAG}" | fzf --height=20 --ansi --reverse | awk '{printf("%s", $1)}')"
+    var_read PREVIOUS_REF "$(git tag --sort=-creatordate | grep --invert-match "${VERSION_REF}" | head -1)"
+  else
+    PREVIOUS_REF="HEAD^1"
+    VERSION_REF="HEAD"
+  fi
+
+  local CHANGELOG
+  CHANGELOG=$(git_changelog "${VERSION_REF}" "${PREVIOUS_REF}")
+  printf "%bCHANGELOG:%b\n\n%s%b\n\n" "${YELLOW}" "${GREEN}" "${CHANGELOG}" "${RESET}"
+
+  local VERSION_TYPE="patch"
+  if [[ ${CHANGELOG} =~ \#\ BREAKING\ CHANGES ]]; then
+    VERSION_TYPE="major"
+  elif [[ ${CHANGELOG} =~ \#\ Features ]]; then
+    VERSION_TYPE="minor"
+  fi
+
+  printf "%bRelease seems to be a %b%s%b\n" "${BLUE}" "${YELLOW}" "${VERSION_TYPE}" "${RESET}"
+  var_info "Specify explicit git tag or major|minor|patch for semver increment"
+  local VERSION
+  VERSION="$(printf "%bpatch\n%bminor\n%bmajor" "${GREEN}" "${YELLOW}" "${RED}" | fzf --height=20 --ansi --reverse)"
+
+  local GIT_TAG
+  GIT_TAG="$(version_semver "${VERSION}" "${VERSION_REF}" "quiet")"
+
+  local GITHUB_TOKEN
+  GITHUB_TOKEN="$(github_token)"
+
+  var_read GITHUB_TOKEN "" "secret"
+  var_read GITHUB_REPOSITORY "$(git_remote_repository)"
+  var_read RELEASE_NAME "${GIT_TAG}"
+
+  var_info "Creating release ${RELEASE_NAME} for ${GITHUB_REPOSITORY}..."
+
+  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+  HTTP_CLIENT_ARGS+=("--max-time" "120")
+
+  local PAYLOAD
+  PAYLOAD="$(jq --compact-output --null-input \
+    --arg tag "${RELEASE_NAME}" \
+    --arg target "$(git rev-parse "${VERSION_REF}")" \
+    --arg name "${RELEASE_NAME}" \
+    --arg body "${CHANGELOG}" \
+    '{tag_name: $tag, target_commitish: $target, name: $name, body: $body}')"
+
+  http_request --header "Content-Type: application/json" --request "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" --data "${PAYLOAD}"
+  if [[ ${HTTP_STATUS} != "201" ]]; then
+    http_handle_error "Unable to create release"
+    return 1
+  fi
+  rm "${HTTP_OUTPUT}"
+
+  var_success "${GITHUB_REPOSITORY}@${RELEASE_NAME} created!"
+}
+
 github_compare_version() {
   meta_check "var"
 
