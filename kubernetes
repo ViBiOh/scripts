@@ -141,10 +141,10 @@ kubernetes_shell() {
     local IMAGE
     IMAGE="$(printf "alpine\nubuntu\nnode\npython\nother" | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Image: ")"
 
-    if [[ -w ${IMAGE:-} ]] || [[ ${IMAGE:-} == "other" ]]; then
+    if [[ -z ${IMAGE:-} ]] || [[ ${IMAGE:-} == "other" ]]; then
       IMAGE="${4-}"
 
-      if [[ -w ${IMAGE:-} ]]; then
+      if [[ -z ${IMAGE:-} ]]; then
         _read_input "Image name: " IMAGE
       fi
     fi
