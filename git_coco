@@ -31,6 +31,14 @@ guess_component() {
   printf "%s\n" "${COMPONENTS[@]}" | sort | uniq
 }
 
+is_github() {
+  if [[ "$(git remote get-url --push "$(git remote show | head -1)")" =~ ^.*@github.com:(.*)/(.*)$ ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 get_issue() {
   http_request "https://api.github.com/repos/$(git_remote_repository)/issues?per_page=100"
 
@@ -158,22 +166,24 @@ main() {
   printf "%d characters remaining\n" "${REMAINING_LENGTH}"
   var_read MESSAGE
 
-  http_init_client
+  local ISSUES_STRING=""
+  local CO_AUTHOR_STRING=""
 
-  local GITHUB_TOKEN
-  GITHUB_TOKEN="$(github_token)"
+  if is_github; then
+    http_init_client
 
-  if [[ -n ${GITHUB_TOKEN} ]]; then
-    HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
+    local GITHUB_TOKEN
+    GITHUB_TOKEN="$(github_token)"
+
+    if [[ -n ${GITHUB_TOKEN} ]]; then
+      HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
+    fi
+
+    ISSUES_STRING="$(get_issue)"
+    CO_AUTHOR_STRING="$(get_co_author)"
   fi
 
-  local ISSUES=""
-  ISSUES="$(get_issue)"
-
-  local CO_AUTHOR_STRING=""
-  CO_AUTHOR_STRING="$(get_co_author)"
-
-  var_print_and_run git commit --signoff --message \""$(printf "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES}" "${CO_AUTHOR_STRING}")"\" "${@}"
+  var_print_and_run git commit --signoff --message \""$(printf "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES_STRING}" "${CO_AUTHOR_STRING}")"\" "${@}"
 }
 
 main "${@}"
