@@ -5,10 +5,6 @@ _pass_scripts_init() {
 }
 
 pass_get() {
-  if ! command -v pass >/dev/null 2>&1; then
-    return
-  fi
-
   if [[ ${#} -lt 2 ]]; then
     var_red "Usage: passget PASS_NAME PASS_FIELD"
     return 1
@@ -17,12 +13,23 @@ pass_get() {
   local PASS_NAME="${1}"
   shift
 
-  if ! [[ -e "${PASSWORD_STORE_DIR:-${HOME}/.password-store}/${PASS_NAME}.gpg" ]]; then
-    return
-  fi
-
   local PASS_FIELD="${1}"
   shift
 
-  pass show "${PASS_NAME}" | awk -v "field=${PASS_FIELD}" -F': ' '$1 == field {printf("%s", $2)}'
+  if command -v pass >/dev/null 2>&1; then
+    if ! [[ -e "${PASSWORD_STORE_DIR:-${HOME}/.password-store}/${PASS_NAME}.gpg" ]]; then
+      return
+    fi
+
+    if [[ ${PASS_FIELD} == "password" ]]; then
+      pass show "${PASS_NAME}" | head -1
+    else
+      pass show "${PASS_NAME}" | awk -v "field=${PASS_FIELD}" -F': ' '$1 == field {printf("%s", $2)}'
+    fi
+
+    return
+  fi
+
+  var_red "No password manager found"
+  return 1
 }

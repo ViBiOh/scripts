@@ -23,7 +23,7 @@ main() {
 
   var_read DOCKER_OWNER "${1-}"
   var_read DOCKER_USER "$(pass_get "dev/docker" "login")"
-  var_read DOCKER_PASSWORD "$(pass show "dev/docker" | head -1)" "secret"
+  var_read DOCKER_PASSWORD "$(pass_get "dev/docker" "password")" "secret"
 
   for repo in $(registry-cleaner -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -owner "${DOCKER_OWNER}" -list); do
     registry-cleaner -username "${DOCKER_USER}" -password "${DOCKER_PASSWORD}" -image "${repo}" -delete -grep '^[a-f0-9]{7}($|-)'
