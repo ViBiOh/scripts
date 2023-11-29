@@ -16,6 +16,12 @@ pass_get() {
   local PASS_FIELD="${1}"
   shift
 
+  if command -v op >/dev/null 2>&1; then
+    op item get --vault Private "${PASS_NAME}" --field "${PASS_FIELD}"
+
+    return
+  fi
+
   if command -v pass >/dev/null 2>&1; then
     if ! [[ -e "${PASSWORD_STORE_DIR:-${HOME}/.password-store}/${PASS_NAME}.gpg" ]]; then
       return

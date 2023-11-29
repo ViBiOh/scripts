@@ -3,6 +3,10 @@
 SSH_ENV="${HOME}/.ssh/environment"
 
 _ssh_scripts_init() {
+  if [[ ${SSH_INIT_FROM_FILE:-} == "true" ]]; then
+    ssh_init
+  fi
+
   return 0
 }
 
