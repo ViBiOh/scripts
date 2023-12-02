@@ -446,6 +446,9 @@ github_release() {
   rm "${HTTP_OUTPUT}"
 
   var_success "${GITHUB_REPOSITORY}@${RELEASE_NAME} created!"
+
+  unset GITHUB_REPOSITORY
+  unset RELEASE_NAME
 }
 
 github_compare_version() {
