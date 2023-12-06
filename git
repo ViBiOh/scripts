@@ -18,6 +18,25 @@ _git_scripts_init() {
   fi
 }
 
+git_hooks_toogle_config() {
+  if ! git_is_inside; then
+    return
+  fi
+
+  local CONFIG_NAME="${1}"
+  shift
+
+  if [[ $(git config "${CONFIG_NAME}") == "true" ]]; then
+    git config --unset "${CONFIG_NAME}"
+  else
+    git config "${CONFIG_NAME}" "true"
+  fi
+}
+
+git_hooks_no_yaml_format() {
+  git_hooks_toogle_config "hooks.noYamlFormat"
+}
+
 git_is_inside() {
   if [[ $(git rev-parse --is-inside-work-tree 2>&1) == "true" ]]; then
     return 0

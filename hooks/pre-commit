@@ -112,11 +112,13 @@ yaml_check() {
   YAML_FILES=$(get_files \*.y{,a}ml ':(exclude)*/fixtures/*')
 
   if [[ -n ${YAML_FILES} ]]; then
-    if command -v npx >/dev/null 2>&1; then
-      var_info "Formating yaml files"
-      run_command npx prettier --write ${YAML_FILES[@]}
-    else
-      var_warning "cannot format yaml files: prettier not found. Skipping."
+    if [[ $(git config "hooks.noYamlFormat") != "true" ]]; then
+      if command -v npx >/dev/null 2>&1; then
+        var_info "Formating yaml files"
+        run_command npx prettier --write ${YAML_FILES[@]}
+      else
+        var_warning "cannot format yaml files: prettier not found. Skipping."
+      fi
     fi
 
     if command -v yamllint >/dev/null 2>&1; then
