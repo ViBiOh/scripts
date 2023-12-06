@@ -44,9 +44,7 @@ get_issue() {
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to list issues"
-    if [[ ${NO_CHECK-} != "true" ]]; then
-      return 1
-    fi
+    return
   fi
 
   if [[ $(jq --raw-output '[.[] | select(.pull_request | not)] | length' "${HTTP_OUTPUT}") -eq 0 ]]; then
@@ -67,9 +65,7 @@ get_co_author() {
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to list contributors"
-    if [[ ${NO_CHECK-} != "true" ]]; then
-      return 1
-    fi
+    return
   fi
 
   if [[ $(jq --raw-output 'length' "${HTTP_OUTPUT}") -eq 0 ]]; then
@@ -92,9 +88,7 @@ get_co_author() {
   http_request "https://api.github.com/users/${CO_AUTHOR}/events?per_page=100"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to get user's events"
-    if [[ ${NO_CHECK-} != "true" ]]; then
-      return 1
-    fi
+    return
   fi
 
   CO_AUTHOR_EMAIL="$(jq --raw-output '.[] | select(.type == "PushEvent") | .payload.commits[] | .author.name + "<" + .author.email + ">"' "${HTTP_OUTPUT}" | sort | uniq | grep -v '\[bot\]' | fzf --height=20 --ansi --reverse --prompt='Email> ')"
