@@ -37,6 +37,10 @@ git_hooks_no_yaml_format() {
   git_hooks_toogle_config "hooks.noYamlFormat"
 }
 
+git_hooks_no_md_format() {
+  git_hooks_toogle_config "hooks.noMarkdownFormat"
+}
+
 git_is_inside() {
   if [[ $(git rev-parse --is-inside-work-tree 2>&1) == "true" ]]; then
     return 0
