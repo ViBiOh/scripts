@@ -27,8 +27,10 @@ git_hooks_toogle_config() {
   shift
 
   if [[ $(git config "${CONFIG_NAME}") == "true" ]]; then
+    var_info "Enabling ${CONFIG_NAME}"
     git config --unset "${CONFIG_NAME}"
   else
+    var_info "Disabling ${CONFIG_NAME}"
     git config "${CONFIG_NAME}" "true"
   fi
 }
