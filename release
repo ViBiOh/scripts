@@ -111,6 +111,7 @@ docker_build() {
 
   var_read DOCKER_IMAGE
   var_read IMAGE_VERSION
+  var_read GIT_SHA
   var_read DOCKERFILE "Dockerfile"
 
   export DOCKER_CLI_EXPERIMENTAL="enabled"
@@ -123,6 +124,7 @@ docker_build() {
     --file "${DOCKERFILE}" \
     --tag "${BUILT_IMAGE}" \
     --build-arg "VERSION=${IMAGE_VERSION}" \
+    --build-arg "GIT_SHA=${GIT_SHA}" \
     -o "type=registry,oci-mediatypes=true,compression=estargz,force-compression=true" \
     .
 }
