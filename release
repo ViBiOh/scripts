@@ -74,6 +74,7 @@ docker_dependencies() {
   docker run -v "$(pwd):/tmp/" --rm "alpine" /bin/sh -c 'apk --update add tzdata ca-certificates zip && cd /usr/share/zoneinfo/ && zip -q -r -0 /tmp/zoneinfo.zip . && cp /etc/ssl/certs/ca-certificates.crt /tmp/ca-certificates.crt'
 
   if [[ ${RELEASE_NEED_WAIT-} == "true" ]]; then
+    # renovate: datasource=github-releases depName=ViBiOh/wait
     local WAIT_VERSION="0.0.2"
 
     for platform in ${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}; do
