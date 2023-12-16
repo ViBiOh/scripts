@@ -75,7 +75,7 @@ docker_dependencies() {
 
   if [[ ${RELEASE_NEED_WAIT-} == "true" ]]; then
     # renovate: datasource=github-releases depName=ViBiOh/wait
-    local WAIT_VERSION="0.0.2"
+    local WAIT_VERSION="v0.0.3"
 
     for platform in ${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}; do
       local BUILD_GOOS
