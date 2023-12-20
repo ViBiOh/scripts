@@ -120,7 +120,7 @@ yaml_check() {
         var_warning "cannot format yaml files: prettier not found. Skipping."
       fi
     else
-      var_info 'No formatting of yaml files. Toggle with `git_hooks_no_yaml_format`'
+      var_green 'No formatting of yaml files. Toggle with `git_hooks_no_yaml_format`'
     fi
 
     if command -v yamllint >/dev/null 2>&1; then
@@ -145,7 +145,7 @@ markdown_check() {
         var_warning "cannot format markdown files: npx not found. Skipping."
       fi
     else
-      var_info 'No formatting of markdown files. Toggle with `git_hooks_no_md_format`'
+      var_green 'No formatting of markdown files. Toggle with `git_hooks_no_md_format`'
     fi
   fi
 }
