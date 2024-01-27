@@ -201,6 +201,10 @@ main() {
       fi
       ;;
 
+    "make")
+      make build
+      ;;
+
     "docker")
       docker_dependencies
       docker_build
