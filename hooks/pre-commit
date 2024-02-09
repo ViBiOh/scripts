@@ -179,6 +179,10 @@ script_dir() {
 }
 
 main() {
+  if [[ ${SCRIPTS_NO_GIT_HOOKS:-} == "true" ]]; then
+    return 0
+  fi
+
   source "$(script_dir)/../meta" && meta_check "var"
 
   local INITIAL_DIFF
