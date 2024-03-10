@@ -43,7 +43,7 @@ golang_check() {
 
   if [[ -n ${GO_FILES-} ]]; then
     if [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "format") -eq 1 ]]; then
-      var_info "Formating golang files"
+      var_info "Formatting golang files"
       GO_FILES="${GO_FILES}" run_command make --silent format
     fi
 
@@ -79,7 +79,7 @@ npm_check() {
 
   if [[ -n ${JS_FILES-} ]]; then
     if command -v npm >/dev/null 2>&1; then
-      var_info "Formating javascript files"
+      var_info "Formatting javascript files"
       run_command npm --silent run --if-present format ${JS_FILES[@]}
 
       var_info "Linting javascript files"
@@ -96,7 +96,7 @@ terraform_check() {
 
   if [[ -n ${TERRAFORM_FILES} ]]; then
     if command -v terraform >/dev/null 2>&1; then
-      var_info "Formating terraform files"
+      var_info "Formatting terraform files"
 
       for file in ${TERRAFORM_FILES}; do
         run_command terraform fmt "$(dirname "${file}")"
@@ -114,7 +114,7 @@ yaml_check() {
   if [[ -n ${YAML_FILES} ]]; then
     if [[ $(git config "hooks.noYamlFormat") != "true" ]]; then
       if command -v npx >/dev/null 2>&1; then
-        var_info "Formating yaml files"
+        var_info "Formatting yaml files"
         run_command npx prettier --write ${YAML_FILES[@]}
       else
         var_warning "cannot format yaml files: prettier not found. Skipping."
@@ -139,7 +139,7 @@ markdown_check() {
   if [[ -n ${MARKDOWN_FILES} ]]; then
     if [[ $(git config "hooks.noMarkdownFormat") != "true" ]]; then
       if command -v npx >/dev/null 2>&1; then
-        var_info "Formating markdown files"
+        var_info "Formatting markdown files"
         run_command npx prettier --write ${MARKDOWN_FILES[@]}
       else
         var_warning "cannot format markdown files: npx not found. Skipping."

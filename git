@@ -18,7 +18,7 @@ _git_scripts_init() {
   fi
 }
 
-git_hooks_toogle_config() {
+git_hooks_toggle_config() {
   if ! git_is_inside; then
     return
   fi
@@ -36,11 +36,11 @@ git_hooks_toogle_config() {
 }
 
 git_hooks_no_yaml_format() {
-  git_hooks_toogle_config "hooks.noYamlFormat"
+  git_hooks_toggle_config "hooks.noYamlFormat"
 }
 
 git_hooks_no_md_format() {
-  git_hooks_toogle_config "hooks.noMarkdownFormat"
+  git_hooks_toggle_config "hooks.noMarkdownFormat"
 }
 
 git_is_inside() {
@@ -140,7 +140,7 @@ git_is_valid_description() {
   return 0
 }
 
-git_conventionnal_commit_guidelines() {
+git_conventional_commit_guidelines() {
   meta_check "var"
 
   var_warning "Guidelines for prefixing commit message from conventionalcommits.org\n"
