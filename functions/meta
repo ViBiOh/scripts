@@ -54,7 +54,7 @@ meta_init() {
       continue
     fi
 
-    local DEPENDENCY_NAME
+    local DEPENDENCY_NAME="${dep}"
 
     if [[ ${dep} =~ .sh$ ]]; then
       DEPENDENCY_NAME="executables/${dep}"
