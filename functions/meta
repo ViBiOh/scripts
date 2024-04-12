@@ -78,10 +78,6 @@ meta_init() {
     if [[ ${DEPENDENCY_NAME} =~ ^executables/ ]]; then
       chmod +x "${dep}"
     fi
-
-    if [[ ${DEPENDENCY_NAME} =~ ^hooks/ ]]; then
-      chmod +x "${dep}"
-    fi
   done
 
   cd "${DIR_BEFORE_INIT}" >/dev/null || return 1

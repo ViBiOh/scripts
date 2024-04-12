@@ -29,6 +29,8 @@ install() {
         BASENAME="$(basename "${file}")"
 
         ln -s -f "${HOOKS_SOURCE_DIR}/${BASENAME}" "${HOOKS_TARGET_DIR}/${BASENAME}"
+        chmod +x "${HOOKS_TARGET_DIR}/${BASENAME}"
+
         var_success "${BASENAME} hook installed!"
       done < <(find . -type f -print0)
     )
