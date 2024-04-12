@@ -28,17 +28,19 @@ meta_check() {
 }
 
 meta_download_script() {
-  if [[ ${#} -ne 1 ]]; then
-    printf "Usage: meta_download_script DEPENDENCY_FILENAME\n"
+  if [[ ${#} -ne 2 ]]; then
+    printf "Usage: meta_download_script LOCAL_NAME REMOTE_NAME\n"
     return 1
   fi
 
-  local DEPENDENCY_FILENAME="${1}"
+  local LOCAL_NAME="${1}"
   shift
 
-  mkdir -p "$(dirname "${DEPENDENCY_FILENAME}")"
-  curl --disable --silent --show-error --location --max-time 30 --output "${DEPENDENCY_FILENAME}" -- "${REMOTE_DEPENDENCIES_URL}/${DEPENDENCY_FILENAME}"
-  chmod +x "${DEPENDENCY_FILENAME}"
+  local REMOTE_NAME="${1}"
+  shift
+
+  mkdir -p "$(dirname "${LOCAL_NAME}")"
+  curl --disable --silent --show-error --location --max-time 30 --output "${LOCAL_NAME}" -- "${REMOTE_DEPENDENCIES_URL}/${REMOTE_NAME}"
 }
 
 meta_init() {
@@ -52,17 +54,33 @@ meta_init() {
       continue
     fi
 
-    if ! [[ -e "./${dep}" ]]; then
-      printf 1>&2 "Downloading script %s...\n" "${dep}"
-      meta_download_script "${dep}"
+    local DEPENDENCY_NAME
+
+    if [[ ${dep} =~ .sh$ ]]; then
+      DEPENDENCY_NAME="executables/${DEPENDENCY_NAME}"
+    elif ! [[ ${dep} =~ ^hooks/ ]]; then
+      DEPENDENCY_NAME="functions/${DEPENDENCY_NAME}"
     fi
 
-    if [[ $(grep -c "main()" "./${dep}") -eq 0 ]]; then
+    if ! [[ -e "./${dep}" ]]; then
+      printf 1>&2 "Downloading script %s...\n" "${DEPENDENCY_NAME}"
+      meta_download_script "${dep}" "${DEPENDENCY_NAME}"
+    fi
+
+    if [[ ${DEPENDENCY_NAME} =~ ^functions/ ]]; then
       source "./${dep}"
 
       if [[ $(grep -c "_${dep}_scripts_init" "./${dep}") -eq 1 ]]; then
         "_${dep}_scripts_init"
       fi
+    fi
+
+    if [[ ${DEPENDENCY_NAME} =~ ^executables/ ]]; then
+      chmod +x "${dep}"
+    fi
+
+    if [[ ${DEPENDENCY_NAME} =~ ^hooks/ ]]; then
+      chmod +x "${dep}"
     fi
   done
 

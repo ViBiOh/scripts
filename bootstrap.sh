@@ -42,7 +42,7 @@ main() {
   (
     cd "${SCRIPTS_PATH}"
 
-    curl --disable --silent --show-error --location --max-time 30 --output "./meta" -- "${REMOTE_DEPENDENCIES_URL}/meta.sh"
+    curl --disable --silent --show-error --location --max-time 30 --output "./meta" -- "${REMOTE_DEPENDENCIES_URL}/functions/meta"
     source "./meta" && meta_init "${@}"
   )
 }
