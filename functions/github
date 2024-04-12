@@ -321,9 +321,6 @@ github_clone() {
       else
         var_info "Cloning ${REPO_NAME}"
         git clone "${REPO_SSH_URL}" "${REPO_NAME}"
-        (
-          cd "${REPO_NAME}" && git config branch.default "$(git remote show origin | grep 'HEAD branch:' | awk '{printf("%s", $3)}')"
-        )
       fi
     done
   done
