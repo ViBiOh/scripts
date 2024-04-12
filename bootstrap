@@ -42,8 +42,7 @@ main() {
   (
     cd "${SCRIPTS_PATH}"
 
-    curl --disable --silent --show-error --location --max-time 30 --output "./meta" -- "${REMOTE_DEPENDENCIES_URL}/meta"
-    chmod +x "./meta"
+    curl --disable --silent --show-error --location --max-time 30 --output "./meta" -- "${REMOTE_DEPENDENCIES_URL}/meta.sh"
     source "./meta" && meta_init "${@}"
   )
 }
