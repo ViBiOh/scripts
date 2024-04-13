@@ -56,7 +56,7 @@ meta_init() {
 
     local DEPENDENCY_NAME="${dep}"
 
-    if [[ ${dep} =~ .sh$ ]]; then
+    if [[ ${dep} =~ \.sh$ ]]; then
       DEPENDENCY_NAME="executables/${dep}"
     elif ! [[ ${dep} =~ ^hooks/ ]]; then
       DEPENDENCY_NAME="functions/${dep}"
