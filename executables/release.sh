@@ -36,9 +36,9 @@ golang_build() {
       local NAME
       NAME="$(basename "${main}")"
 
-      if [[ -n ${DD_API_KEY} ]] && [[ -n ${DD_APP_KEY} ]] && [[ -n ${DD_SERVICE_NAME} ]] && [[ -n ${DD_ENV_NAME} ]]; then
-        var_info "Using PGO for 'service:${DD_SERVICE_NAME} env:${DD_ENV_NAME}'"
-        go run "github.com/DataDog/datadog-pgo@latest" "service:${DD_SERVICE_NAME} env:${DD_ENV_NAME}" "${main}/default.pgo"
+      if [[ -n ${DD_API_KEY} ]] && [[ -n ${DD_APP_KEY} ]] && [[ -n ${DD_SERVICE} ]] && [[ -n ${DD_ENV} ]]; then
+        var_info "Using PGO for 'service:${DD_SERVICE} env:${DD_ENV}'"
+        go run "github.com/DataDog/datadog-pgo@latest" "service:${DD_SERVICE} env:${DD_ENV}" "${main}/default.pgo"
       fi
 
       local LDFLAGS="-s -w"
