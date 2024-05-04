@@ -36,6 +36,11 @@ golang_build() {
       local NAME
       NAME="$(basename "${main}")"
 
+      if [[ -n ${DD_API_KEY} ]] && [[ -n ${DD_APP_KEY} ]] && [[ -n ${DD_SERVICE_NAME} ]] && [[ -n ${DD_ENV_NAME} ]]; then
+        var_info "Using PGO for 'service:${DD_SERVICE_NAME} env:${DD_ENV_NAME}'"
+        go run "github.com/DataDog/datadog-pgo@latest" "service:${DD_SERVICE_NAME} env:${DD_ENV_NAME}" "${main}/default.pgo"
+      fi
+
       local LDFLAGS="-s -w"
       if [[ -n ${GIT_TAG-} ]] && [[ -n ${GO_VERSION_PATH-} ]]; then
         LDFLAGS+=" -X '${GO_VERSION_PATH}=${GIT_TAG}'"
