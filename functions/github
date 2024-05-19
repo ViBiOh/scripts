@@ -10,13 +10,17 @@ github_token() {
   pass_get "dev/github" "token"
 }
 
-github_rate_limit_wait() {
+github_http_init() {
   meta_check "var" "http"
 
+  http_init_client --header "Authorization: Bearer ${GITHUB_TOKEN:=$(github_token)}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+}
+
+github_rate_limit_wait() {
   local WANTED_CALLS="${1:-10}"
   shift || true
 
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+  github_http_init
 
   while true; do
     http_request "https://api.github.com/rate_limit"
@@ -37,7 +41,7 @@ github_rate_limit_wait() {
 }
 
 github_repo_pr_stats() {
-  meta_check "var" "http"
+  meta_check "var"
 
   if [[ ${#} -ne 1 ]]; then
     var_red "Usage: github_repo_pr_stats GITHUB_REPOSITORY"
@@ -48,8 +52,7 @@ github_repo_pr_stats() {
   shift
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
-
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+  github_http_init
 
   local pr_page=0
   local pr_page_size=100
@@ -117,8 +120,7 @@ github_repo_stats() {
   shift
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
-
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+  github_http_init
 
   local retry="true"
   local retryCount=0
@@ -183,8 +185,7 @@ github_org_stats() {
   shift || true
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
-
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+  github_http_init
 
   local repo_page=0
   local repo_page_size=100
@@ -248,7 +249,7 @@ github_clone() {
   meta_check "var" "http"
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+  github_http_init
 
   http_request "https://api.github.com/user/orgs"
   if [[ ${HTTP_STATUS} != "200" ]]; then
@@ -333,8 +334,7 @@ github_clean_subscription() {
   shift || true
 
   var_read GITHUB_TOKEN "$(github_token)" "secret"
-
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+  github_http_init
 
   local page=0
   local page_size=50
@@ -495,10 +495,7 @@ github_configure() {
 
   local GITHUB_REPOSITORY="${1-}"
 
-  local GITHUB_TOKEN
-  GITHUB_TOKEN="$(github_token)"
-
-  http_init_client --header "Authorization: Bearer ${GITHUB_TOKEN}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+  github_http_init
 
   github_rate_limit_wait
   http_request --request "PATCH" "https://api.github.com/repos/${GITHUB_REPOSITORY}" --data '{
@@ -593,10 +590,7 @@ github_pull_request() {
   local PR_BODY="${1-}"
   shift || true
 
-  local GITHUB_TOKEN
-  GITHUB_TOKEN="$(github_token)"
-
-  http_init_client --header "Authorization: Bearer ${GITHUB_TOKEN}" --header "Accept: application/vnd.github+json" --header "X-GitHub-Api-Version: 2022-11-28"
+  github_http_init
 
   http_request \
     --request "POST" \
