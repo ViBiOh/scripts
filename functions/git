@@ -18,6 +18,16 @@ _git_scripts_init() {
   fi
 }
 
+git_hooks_toggle() {
+  if [[ ${SCRIPTS_NO_GIT_HOOKS:-} == "true" ]]; then
+    var_info "Git hooks enabled"
+    unset SCRIPTS_NO_GIT_HOOKS
+  else
+    var_info "Git hooks disabled"
+    export SCRIPTS_NO_GIT_HOOKS="true"
+  fi
+}
+
 git_hooks_toggle_config() {
   if ! git_is_inside; then
     return
