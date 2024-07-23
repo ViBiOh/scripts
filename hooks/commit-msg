@@ -34,6 +34,8 @@ main() {
 
   if ! git_is_conventional_commit "${FIRST_LINE}"; then
     git_conventional_commit_guidelines
+
+    var_warning "To disable, use 'git commit -n' or SCRIPTS_NO_GIT_HOOKS=true"
     exit 1
   fi
 
