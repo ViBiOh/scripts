@@ -17,7 +17,7 @@ pass_get() {
   shift
 
   if command -v op >/dev/null 2>&1 && op item get --vault Private "${PASS_NAME}" --field "${PASS_FIELD}" >/dev/null 2>&1; then
-    op item get --vault Private "${PASS_NAME}" --field "${PASS_FIELD}"
+    op item get --vault Private "${PASS_NAME}" --field "${PASS_FIELD}" --reveal
 
     return
   fi
