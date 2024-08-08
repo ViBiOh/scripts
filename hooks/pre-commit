@@ -31,6 +31,20 @@ diff_check() {
 }
 
 golang_check() {
+  local GO_FILES
+  GO_FILES=$(get_files "*.go")
+
+  if [[ -z ${GO_FILES-} ]]; then
+    return
+  fi
+
+  if command -v goimports >/dev/null 2>&1 && command -v gofumpt >/dev/null 2>&1; then
+    goimports -w ${GO_FILES[@]}
+    gofumpt -w ${GO_FILES[@]}
+  else
+    var_warning "cannot format golang files: goimports or gofumpt not found. Skipping."
+  fi
+
   if ! [[ -e "Makefile" ]]; then
     return
   fi
@@ -38,22 +52,12 @@ golang_check() {
   local MAKE_TARGETS
   MAKE_TARGETS="$(make -pqr 2>/dev/null | awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1,A,/ /);for(i in A)print A[i]}' | grep --invert-match "Makefile" | sort --unique)"
 
-  local GO_FILES
-  GO_FILES=$(get_files "*.go")
-
-  if [[ -n ${GO_FILES-} ]]; then
-    if [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "format") -eq 1 ]]; then
-      var_info "Formatting golang files"
-      GO_FILES="${GO_FILES}" run_command make --silent format
-    fi
-
-    if [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "style") -eq 1 ]]; then
-      var_info "Linting golang packages"
-      run_command make --silent style
-    elif [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "lint") -eq 1 ]]; then
-      var_info "Linting golang packages"
-      run_command make --silent lint
-    fi
+  if [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "style") -eq 1 ]]; then
+    var_info "Linting golang packages"
+    run_command make --silent style
+  elif [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "lint") -eq 1 ]]; then
+    var_info "Linting golang packages"
+    run_command make --silent lint
   fi
 }
 
@@ -68,13 +72,15 @@ npm_check() {
   local JS_FILES
   JS_FILES=$(get_files \*.js{,x})
 
-  if [[ -n ${PACKAGE_JSON-} ]] || [[ -n ${JS_FILES-} ]]; then
-    if command -v npm >/dev/null 2>&1; then
-      var_info "Checking node_modules installation"
-      run_command npm --silent install --no-audit --ignore-scripts
-    else
-      var_warning "cannot check node_modules lock file: npm not found. Skipping."
-    fi
+  if [[ -z ${PACKAGE_JSON-} ]] && [[ -z ${JS_FILES-} ]]; then
+    return
+  fi
+
+  if command -v npm >/dev/null 2>&1; then
+    var_info "Checking node_modules installation"
+    run_command npm --silent install --no-audit --ignore-scripts
+  else
+    var_warning "cannot check node_modules lock file: npm not found. Skipping."
   fi
 
   if [[ -n ${JS_FILES-} ]]; then
@@ -90,20 +96,39 @@ npm_check() {
   fi
 }
 
+python_check() {
+  local PYTHON_FILES
+  PYTHON_FILES=$(get_files \*.py)
+
+  if [[ -z ${PYTHON_FILES-} ]]; then
+    return
+  fi
+
+  if command -v isort >/dev/null 2>&1 && command -v black >/dev/null 2>&1; then
+    var_info "Formatting python files"
+    run_command isort --quiet ${PYTHON_FILES[@]}
+    run_command black --quiet ${PYTHON_FILES[@]}
+  else
+    var_warning "cannot format python files: isort or black not found. Skipping."
+  fi
+}
+
 terraform_check() {
   local TERRAFORM_FILES
   TERRAFORM_FILES=$(get_files "*.tf")
 
-  if [[ -n ${TERRAFORM_FILES} ]]; then
-    if command -v terraform >/dev/null 2>&1; then
-      var_info "Formatting terraform files"
+  if [[ -z ${TERRAFORM_FILES} ]]; then
+    return
+  fi
 
-      for file in ${TERRAFORM_FILES}; do
-        run_command terraform fmt "$(dirname "${file}")"
-      done
-    else
-      var_warning "cannot format terraform files: terraform not found. Skipping."
-    fi
+  if command -v terraform >/dev/null 2>&1; then
+    var_info "Formatting terraform files"
+
+    for file in ${TERRAFORM_FILES}; do
+      run_command terraform fmt "$(dirname "${file}")"
+    done
+  else
+    var_warning "cannot format terraform files: terraform not found. Skipping."
   fi
 }
 
@@ -111,24 +136,26 @@ yaml_check() {
   local YAML_FILES
   YAML_FILES=$(get_files \*.y{,a}ml ':(exclude)*/fixtures/*')
 
-  if [[ -n ${YAML_FILES} ]]; then
-    if [[ $(git config "hooks.noYamlFormat") != "true" ]]; then
-      if command -v npx >/dev/null 2>&1; then
-        var_info "Formatting yaml files"
-        run_command npx prettier --write ${YAML_FILES[@]}
-      else
-        var_warning "cannot format yaml files: prettier not found. Skipping."
-      fi
-    else
-      var_green 'No formatting of yaml files. Toggle with `git_hooks_no_yaml_format`'
-    fi
+  if [[ -z ${YAML_FILES} ]]; then
+    return
+  fi
 
-    if command -v yamllint >/dev/null 2>&1; then
-      var_info "Linting yaml files"
-      run_command yamllint -d "{rules: {line-length: disable}}" ${YAML_FILES[@]}
+  if [[ $(git config "hooks.noYamlFormat") != "true" ]]; then
+    if command -v npx >/dev/null 2>&1; then
+      var_info "Formatting yaml files"
+      run_command npx prettier --write ${YAML_FILES[@]}
     else
-      var_warning "cannot lint yaml files: yamllint not found. Skipping."
+      var_warning "cannot format yaml files: prettier not found. Skipping."
     fi
+  else
+    var_green 'No formatting of yaml files. Toggle with `git_hooks_no_yaml_format`'
+  fi
+
+  if command -v yamllint >/dev/null 2>&1; then
+    var_info "Linting yaml files"
+    run_command yamllint -d "{rules: {line-length: disable}}" ${YAML_FILES[@]}
+  else
+    var_warning "cannot lint yaml files: yamllint not found. Skipping."
   fi
 }
 
@@ -136,17 +163,19 @@ markdown_check() {
   local MARKDOWN_FILES
   MARKDOWN_FILES=$(get_files "*.md")
 
-  if [[ -n ${MARKDOWN_FILES} ]]; then
-    if [[ $(git config "hooks.noMarkdownFormat") != "true" ]]; then
-      if command -v npx >/dev/null 2>&1; then
-        var_info "Formatting markdown files"
-        run_command npx prettier --write ${MARKDOWN_FILES[@]}
-      else
-        var_warning "cannot format markdown files: npx not found. Skipping."
-      fi
+  if [[ -z ${MARKDOWN_FILES} ]]; then
+    return
+  fi
+
+  if [[ $(git config "hooks.noMarkdownFormat") != "true" ]]; then
+    if command -v npx >/dev/null 2>&1; then
+      var_info "Formatting markdown files"
+      run_command npx prettier --write ${MARKDOWN_FILES[@]}
     else
-      var_green 'No formatting of markdown files. Toggle with `git_hooks_no_md_format`'
+      var_warning "cannot format markdown files: npx not found. Skipping."
     fi
+  else
+    var_green 'No formatting of markdown files. Toggle with `git_hooks_no_md_format`'
   fi
 }
 
@@ -190,6 +219,7 @@ main() {
 
   golang_check
   npm_check
+  python_check
   terraform_check
   yaml_check
   markdown_check
