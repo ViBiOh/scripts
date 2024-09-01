@@ -173,8 +173,13 @@ main() {
       HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
     fi
 
-    ISSUES_STRING="$(get_issue)"
-    CO_AUTHOR_STRING="$(get_co_author)"
+    if var_confirm "Link issue"; then
+      ISSUES_STRING="$(get_issue)"
+    fi
+
+    if var_confirm "Define co-author"; then
+      CO_AUTHOR_STRING="$(get_co_author)"
+    fi
   fi
 
   var_print_and_run git commit --signoff --message \""$(printf "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES_STRING}" "${CO_AUTHOR_STRING}")"\" "${@}"
