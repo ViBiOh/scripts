@@ -26,7 +26,7 @@ get_diff() {
 diff_check() {
   if [[ ${1} != $(get_diff) ]]; then
     var_error "Pre-commit has changed files"
-    printf "%bConsider adding updated file with %bgit add --interactive && git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}" 1>&2
+    printf -- "%bConsider adding updated file with %bgit add --interactive && git commit --amend%b\n" "${RED}" "${BLUE}" "${RESET}" 1>&2
   fi
 }
 
@@ -58,10 +58,10 @@ golang_check() {
   local MAKE_TARGETS
   MAKE_TARGETS="$(make -pqr 2>/dev/null | awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1,A,/ /);for(i in A)print A[i]}' | grep --invert-match "Makefile" | sort --unique)"
 
-  if [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "style") -eq 1 ]]; then
+  if [[ $(printf -- "%s" "${MAKE_TARGETS}" | grep --count "style") -eq 1 ]]; then
     var_info "Linting golang packages"
     run_command make --silent style
-  elif [[ $(printf "%s" "${MAKE_TARGETS}" | grep --count "lint") -eq 1 ]]; then
+  elif [[ $(printf -- "%s" "${MAKE_TARGETS}" | grep --count "lint") -eq 1 ]]; then
     var_info "Linting golang packages"
     run_command make --silent lint
   fi

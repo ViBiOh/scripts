@@ -40,7 +40,7 @@ main() {
 
     if [[ ! ${FIRST_LINE} =~ ${PREFIX} ]]; then
       if git_is_conventional_commit "${FIRST_LINE}"; then
-        perl -pi'' -e "s|^(revert:\ )?($(printf "%s\|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"))(\(.+\))?(\!?):|\1\2\3\4: ${PREFIX}|" "${1}"
+        perl -pi'' -e "s|^(revert:\ )?($(printf -- "%s\|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"))(\(.+\))?(\!?):|\1\2\3\4: ${PREFIX}|" "${1}"
       else
         perl -pi'' -e "s|^|${PREFIX} |" "${1}"
       fi

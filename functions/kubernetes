@@ -139,7 +139,7 @@ kubernetes_shell() {
     _info "Creating a shell pod"
 
     local IMAGE
-    IMAGE="$(printf "alpine\nubuntu\nnode\npython\nother" | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Image: ")"
+    IMAGE="$(printf -- "alpine\nubuntu\nnode\npython\nother" | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Image: ")"
 
     if [[ -z ${IMAGE:-} ]] || [[ ${IMAGE:-} == "other" ]]; then
       IMAGE="${4-}"
@@ -207,7 +207,7 @@ kubernetes_sql_forward() {
       START_INDEX=$((START_INDEX - 1))
     done
 
-    printf "%s" "${DATABASE_PORT}"
+    printf -- "%s" "${DATABASE_PORT}"
   }
 
   local CONTEXT

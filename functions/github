@@ -164,7 +164,7 @@ github_repo_stats() {
     local prs
     prs="$(github_repo_pr_stats "${GITHUB_REPOSITORY}")"
 
-    printf "%s\n%s" "${stats}" "${prs}" | jq --compact-output --raw-output --slurp '{
+    printf -- "%s\n%s" "${stats}" "${prs}" | jq --compact-output --raw-output --slurp '{
       repository: .[0].repository,
       contributors: ((.[0] | .contributors) + .[1] | [reduce .[] as $o ({}; .[$o["author"] | tostring] += $o ) | .[]] | sort_by(.author))
     }'
@@ -241,8 +241,8 @@ github_org_stats_user() {
   local GITHUB_USER_STATS
   GITHUB_USER_STATS="$(jq --compact-output --raw-output --arg user "${GITHUB_USER}" '[.[] | {repository, contribution: .contributors[] | select(.author == $user)}] | sort_by(.contribution.ratio)' "${FILENAME}")"
 
-  printf "%s\n" "${GITHUB_USER_STATS}"
-  printf "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits)), opened: (reduce .[].contribution as $contrib (0; . + $contrib.opened)), reviewed: (reduce .[].contribution as $contrib (0; . + $contrib.reviewed))} | {added: .added, deleted: .deleted, commits: .commits, opened: .opened, reviewed: .reviewed, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / ([.commits, 1] | max)) | floor}'
+  printf -- "%s\n" "${GITHUB_USER_STATS}"
+  printf -- "%s" "${GITHUB_USER_STATS}" | jq '{added: (reduce .[].contribution as $contrib (0; . + $contrib.added)), deleted: (reduce .[].contribution as $contrib (0; . + $contrib.deleted)), commits: (reduce .[].contribution as $contrib (0; . + $contrib.commits)), opened: (reduce .[].contribution as $contrib (0; . + $contrib.opened)), reviewed: (reduce .[].contribution as $contrib (0; . + $contrib.reviewed))} | {added: .added, deleted: .deleted, commits: .commits, opened: .opened, reviewed: .reviewed, ratio: (.added - .deleted), mean_by_commit: ((.added - .deleted) / ([.commits, 1] | max)) | floor}'
 }
 
 github_clone() {
@@ -271,10 +271,10 @@ github_clone() {
   USERNAME="$(jq --raw-output '.login' "${HTTP_OUTPUT}")"
   rm "${HTTP_OUTPUT}"
 
-  USER_ORGANIZATIONS="$(printf "%s\n%s" "${USER_ORGANIZATIONS}" "${USERNAME}")"
+  USER_ORGANIZATIONS="$(printf -- "%s\n%s" "${USER_ORGANIZATIONS}" "${USERNAME}")"
 
   local GITHUB_ORGANIZATION
-  GITHUB_ORGANIZATION="$(printf "%s" "${USER_ORGANIZATIONS}" | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt="Organization:")"
+  GITHUB_ORGANIZATION="$(printf -- "%s" "${USER_ORGANIZATIONS}" | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt="Organization:")"
 
   local page=0
   local page_size=100
@@ -398,7 +398,7 @@ github_release() {
 
   local CHANGELOG
   CHANGELOG=$(git_changelog "${VERSION_REF}" "${PREVIOUS_REF}")
-  printf "%bCHANGELOG:%b\n\n%s%b\n\n" "${YELLOW}" "${GREEN}" "${CHANGELOG}" "${RESET}"
+  printf -- "%bCHANGELOG:%b\n\n%s%b\n\n" "${YELLOW}" "${GREEN}" "${CHANGELOG}" "${RESET}"
 
   local VERSION_TYPE="patch"
   if [[ ${CHANGELOG} =~ \#\ BREAKING\ CHANGES ]]; then
@@ -407,10 +407,10 @@ github_release() {
     VERSION_TYPE="minor"
   fi
 
-  printf "%bRelease seems to be a %b%s%b\n" "${BLUE}" "${YELLOW}" "${VERSION_TYPE}" "${RESET}"
+  printf -- "%bRelease seems to be a %b%s%b\n" "${BLUE}" "${YELLOW}" "${VERSION_TYPE}" "${RESET}"
   var_info "Specify explicit git tag or major|minor|patch for semver increment"
   local VERSION
-  VERSION="$(printf "%bpatch\n%bminor\n%bmajor" "${GREEN}" "${YELLOW}" "${RED}" | fzf --height=20 --ansi --reverse)"
+  VERSION="$(printf -- "%bpatch\n%bminor\n%bmajor" "${GREEN}" "${YELLOW}" "${RED}" | fzf --height=20 --ansi --reverse)"
 
   local GIT_TAG
   GIT_TAG="$(version_semver "${VERSION}" "${VERSION_REF}" "quiet")"
@@ -466,7 +466,7 @@ github_compare_version() {
   shift || true
 
   if [[ -z ${CURRENT_VERSION} ]]; then
-    printf "%s" "${LATEST_VERSION}"
+    printf -- "%s" "${LATEST_VERSION}"
     rm "${RELEASE_API_FILE}"
     return
   fi
@@ -481,8 +481,8 @@ github_compare_version() {
   RELEASE_NOTES="$(jq --raw-output .body "${RELEASE_API_FILE}")"
   rm "${RELEASE_API_FILE}"
 
-  printf "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${GITHUB_REPOSITORY}" "${BLUE}" "${RED}" "${CURRENT_VERSION}" "${BLUE}" "${YELLOW}" "${LATEST_VERSION}" "${GREEN}" "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${LATEST_VERSION}" "${RESET}"
-  printf "%s\n" "${RELEASE_NOTES}"
+  printf -- "%b%s%b: current version is %b%s%b, new version is %b%s%b %s%b\n" "${GREEN}" "${GITHUB_REPOSITORY}" "${BLUE}" "${RED}" "${CURRENT_VERSION}" "${BLUE}" "${YELLOW}" "${LATEST_VERSION}" "${GREEN}" "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${LATEST_VERSION}" "${RESET}"
+  printf -- "%s\n" "${RELEASE_NOTES}"
 }
 
 github_configure() {

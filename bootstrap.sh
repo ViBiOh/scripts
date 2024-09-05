@@ -10,7 +10,7 @@ main() {
   local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/main/"
   local SCRIPTS_PATH="./scripts"
 
-  printf "Bootstrapping to %s\n" "${SCRIPTS_PATH}"
+  printf -- "Bootstrapping to %s\n" "${SCRIPTS_PATH}"
 
   local SCRIPTS_CLEAN
 
@@ -21,11 +21,11 @@ main() {
       SCRIPTS_CLEAN="true"
       ;;
     :)
-      printf "option -%s requires a value\n" "${OPTARG}" >&2
+      printf -- "option -%s requires a value\n" "${OPTARG}" >&2
       return 1
       ;;
     \?)
-      printf "option -%s is invalid\n" "${OPTARG}" >&2
+      printf -- "option -%s is invalid\n" "${OPTARG}" >&2
       return 2
       ;;
     esac

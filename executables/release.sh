@@ -168,12 +168,12 @@ release_upload() {
 }
 
 release_usage() {
-  printf "Usage of %s\n" "${0}"
-  printf "clean\n\tClean output dir %s\n" "${OUTPUT_DIR}"
-  printf "build\n\tBuild artifacts\n"
-  printf "docker\n\tBuild docker images\n"
-  printf "assets\n\tUpload output dir content to GitHub release\n"
-  printf "clea,\n\tClean created output directory\n"
+  printf -- "Usage of %s\n" "${0}"
+  printf -- "clean\n\tClean output dir %s\n" "${OUTPUT_DIR}"
+  printf -- "build\n\tBuild artifacts\n"
+  printf -- "docker\n\tBuild docker images\n"
+  printf -- "assets\n\tUpload output dir content to GitHub release\n"
+  printf -- "clea,\n\tClean created output directory\n"
 }
 
 script_dir() {

@@ -120,6 +120,6 @@ version_semver() {
     git tag -m "${NEW_VERSION}" "${GIT_REF}"
     var_green "New version is: ${NEW_VERSION}"
   else
-    printf "%s" "${NEW_VERSION}"
+    printf -- "%s" "${NEW_VERSION}"
   fi
 }

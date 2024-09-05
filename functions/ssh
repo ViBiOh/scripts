@@ -68,7 +68,7 @@ ssh_agent_stop() {
 }
 
 ssh_agent_start() {
-  printf "Initializing new SSH agent...\n"
+  printf -- "Initializing new SSH agent...\n"
 
   touch "${SSH_ENV}"
   chmod 600 "${SSH_ENV}"

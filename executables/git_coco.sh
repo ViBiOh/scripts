@@ -11,7 +11,7 @@ guess_component() {
 
   add_part() {
     local WORDS=()
-    read -r -a WORDS <<<"$(printf "%s" "${1}" | sed 's|_| |g;s|-| |g;s|\.| |g')"
+    read -r -a WORDS <<<"$(printf -- "%s" "${1}" | sed 's|_| |g;s|-| |g;s|\.| |g')"
 
     COMPONENTS=("${COMPONENTS[@]}" "${WORDS[@]}")
   }
@@ -28,7 +28,7 @@ guess_component() {
     done
   done
 
-  printf "%s\n" "${COMPONENTS[@]}" | sort | uniq
+  printf -- "%s\n" "${COMPONENTS[@]}" | sort | uniq
 }
 
 is_github() {
@@ -52,11 +52,11 @@ get_issue() {
     return
   fi
 
-  ISSUES="$(cat <(printf "None\n") <(jq --raw-output '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Closes> ' | awk '{printf("%s", $1)}')"
+  ISSUES="$(cat <(printf -- "None\n") <(jq --raw-output '.[] | select(.pull_request | not) | "#" + (.number | tostring) + " " + .title' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --multi --prompt='Closes> ' | awk '{printf("%s", $1)}')"
   rm "${HTTP_OUTPUT}"
 
   if [[ ${ISSUES} != "None" ]]; then
-    printf "\n\nCloses %s" "${ISSUES}"
+    printf -- "\n\nCloses %s" "${ISSUES}"
   fi
 }
 
@@ -74,7 +74,7 @@ get_co_author() {
   fi
 
   local CO_AUTHOR=""
-  CO_AUTHOR="$(cat <(printf "None\nOther\n") <(jq --raw-output '.[] | .login' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --prompt='Co-Author>')"
+  CO_AUTHOR="$(cat <(printf -- "None\nOther\n") <(jq --raw-output '.[] | .login' "${HTTP_OUTPUT}") | fzf --height=20 --ansi --reverse --prompt='Co-Author>')"
   rm "${HTTP_OUTPUT}"
 
   if [[ ${CO_AUTHOR} == "None" ]]; then
@@ -95,7 +95,7 @@ get_co_author() {
   rm "${HTTP_OUTPUT}"
 
   if [[ -n ${CO_AUTHOR_EMAIL} ]]; then
-    printf "\n\nCo-authored-by: %s" "${CO_AUTHOR_EMAIL}"
+    printf -- "\n\nCo-authored-by: %s" "${CO_AUTHOR_EMAIL}"
   fi
 }
 
@@ -124,24 +124,24 @@ main() {
   local REMAINING_LENGTH=$((COMMIT_MAX_LENGTH - 1))
 
   local SCOPE
-  SCOPE="$(for i in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do printf "%b%s%b %s\n" "${GREEN}" "${i}" "${RESET}" "${CONVENTIONAL_COMMIT_SCOPES[${i}]}"; done | fzf --height=20 --ansi --reverse --prompt "Scope: " | awk '{printf("%s", $1)}')"
+  SCOPE="$(for i in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do printf -- "%b%s%b %s\n" "${GREEN}" "${i}" "${RESET}" "${CONVENTIONAL_COMMIT_SCOPES[${i}]}"; done | fzf --height=20 --ansi --reverse --prompt "Scope: " | awk '{printf("%s", $1)}')"
 
   if [[ -z ${SCOPE} ]]; then
     return 1
   fi
 
-  printf "SCOPE=%s\n" "${SCOPE}"
+  printf -- "SCOPE=%s\n" "${SCOPE}"
   REMAINING_LENGTH=$((REMAINING_LENGTH - ${#SCOPE}))
 
   local COMPONENT=""
-  COMPONENT="$(cat <(guess_component) <(printf "None") | fzf --height=20 --ansi --reverse --prompt='Component:')"
+  COMPONENT="$(cat <(guess_component) <(printf -- "None") | fzf --height=20 --ansi --reverse --prompt='Component:')"
 
   if [[ ${COMPONENT} == "None" ]]; then
     COMPONENT=""
   else
-    COMPONENT="$(printf "(%s)" "${COMPONENT}")"
+    COMPONENT="$(printf -- "(%s)" "${COMPONENT}")"
   fi
-  printf "COMPONENT=%s\n" "${COMPONENT}"
+  printf -- "COMPONENT=%s\n" "${COMPONENT}"
   REMAINING_LENGTH=$((REMAINING_LENGTH - ${#COMPONENT}))
 
   local SKIP_CI=""
@@ -157,7 +157,7 @@ main() {
   fi
 
   local MESSAGE=""
-  printf "%d characters remaining\n" "${REMAINING_LENGTH}"
+  printf -- "%d characters remaining\n" "${REMAINING_LENGTH}"
   var_read MESSAGE
 
   local ISSUES_STRING=""
@@ -182,7 +182,7 @@ main() {
     fi
   fi
 
-  var_print_and_run git commit --signoff --message \""$(printf "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES_STRING}" "${CO_AUTHOR_STRING}")"\" "${@}"
+  var_print_and_run git commit --signoff --message \""$(printf -- "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES_STRING}" "${CO_AUTHOR_STRING}")"\" "${@}"
 }
 
 main "${@}"

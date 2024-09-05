@@ -13,7 +13,7 @@ main() {
   local MODE="mode: ${COVER_MODE}"
 
   (
-    printf "%s\n" "${MODE}" >"${COVERAGE_OUTPUT}"
+    printf -- "%s\n" "${MODE}" >"${COVERAGE_OUTPUT}"
 
     for pkg in $(go list "${PACKAGES:-./...}"); do
       go test -count=1 -race -covermode="${COVER_MODE}" -coverprofile="${COVER_PROFILE}" "${pkg}"

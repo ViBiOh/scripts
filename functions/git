@@ -97,7 +97,7 @@ git_remote_repository() {
   REMOTE_URL="$(git remote get-url --push "$(git remote show | head -1)")"
 
   if [[ ${REMOTE_URL} =~ ^.*@.*:(.*)\/([^\.]*)(.git)?$ ]]; then
-    printf "%s/%s" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+    printf -- "%s/%s" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
   fi
 }
 
@@ -156,15 +156,15 @@ git_conventional_commit_guidelines() {
   var_warning "Guidelines for prefixing commit message from conventionalcommits.org\n"
 
   for prefix in "${!CONVENTIONAL_COMMIT_SCOPES[@]}"; do
-    printf "%b%s%b(component)%b:%b\n" "${GREEN}" "${prefix}" "${BLUE}" "${GREEN}" "${RESET}"
-    printf "\t%s\n" "${CONVENTIONAL_COMMIT_SCOPES[${prefix}]}"
+    printf -- "%b%s%b(component)%b:%b\n" "${GREEN}" "${prefix}" "${BLUE}" "${GREEN}" "${RESET}"
+    printf -- "\t%s\n" "${CONVENTIONAL_COMMIT_SCOPES[${prefix}]}"
   done
 
   var_warning "\n\nYou can add '!' before ':', for indicating breaking change"
-  printf "\n\t%bfeat%b(api)%b!%b:%b Adding mandatory parameter on signup\n\n" "${GREEN}" "${BLUE}" "${RED}" "${GREEN}" "${RESET}"
+  printf -- "\n\t%bfeat%b(api)%b!%b:%b Adding mandatory parameter on signup\n\n" "${GREEN}" "${BLUE}" "${RED}" "${GREEN}" "${RESET}"
 
   var_warning "\nYou can prefix with 'revert:' for indicating revert change"
-  printf "\n\t%brevert: %bfeat%b(api)%b:%b Adding mandatory parameter on signup\n\n" "${RED}" "${GREEN}" "${BLUE}" "${GREEN}" "${RESET}"
+  printf -- "\n\t%brevert: %bfeat%b(api)%b:%b Adding mandatory parameter on signup\n\n" "${RED}" "${GREEN}" "${BLUE}" "${GREEN}" "${RESET}"
 }
 
 git_valid_description_guideline() {
@@ -287,19 +287,19 @@ git_changelog() {
   done
 
   if [[ ${#FEATURES[@]} -gt 0 ]]; then
-    printf "# Features\n\n%s\n\n" "$(printf "%s\n" "${FEATURES[@]}")"
+    printf -- "# Features\n\n%s\n\n" "$(printf -- "%s\n" "${FEATURES[@]}")"
   fi
 
   if [[ ${#FIXES[@]} -gt 0 ]]; then
-    printf "# Fixes\n\n%s\n\n" "$(printf "%s\n" "${FIXES[@]}")"
+    printf -- "# Fixes\n\n%s\n\n" "$(printf -- "%s\n" "${FIXES[@]}")"
   fi
 
   if [[ ${#MISC[@]} -gt 0 ]]; then
-    printf "# Miscellaneous\n\n%s\n\n" "$(printf "%s\n" "${MISC[@]}")"
+    printf -- "# Miscellaneous\n\n%s\n\n" "$(printf -- "%s\n" "${MISC[@]}")"
   fi
 
   if [[ ${#BREAKING[@]} -gt 0 ]]; then
-    printf "# BREAKING CHANGES\n\n%s\n\n" "$(printf "%s\n" "${BREAKING[@]}")"
+    printf -- "# BREAKING CHANGES\n\n%s\n\n" "$(printf -- "%s\n" "${BREAKING[@]}")"
   fi
 }
 
@@ -347,7 +347,7 @@ git_sync() {
     REMOTE_PATH_PREFIX="${REMOTE_PATH}"
   fi
 
-  if [[ $(printf "%s" "${DRY-}" | tr "[:upper:]" "[:lower:]") == "dry" ]]; then
+  if [[ $(printf -- "%s" "${DRY-}" | tr "[:upper:]" "[:lower:]") == "dry" ]]; then
     DRY=true
   fi
 
@@ -376,9 +376,9 @@ git_sync() {
 
     "R")
       local originFile
-      originFile="$(printf "%s" "${gitFile}" | awk '{printf("%s", $2)}')"
+      originFile="$(printf -- "%s" "${gitFile}" | awk '{printf("%s", $2)}')"
       local destinationFile
-      destinationFile="$(printf "%s" "${gitFile}" | awk '{printf("%s", $4)}')"
+      destinationFile="$(printf -- "%s" "${gitFile}" | awk '{printf("%s", $4)}')"
 
       toDelete+=("${REMOTE_PATH_PREFIX}/${originFile}")
       toSync+=("${destinationFile}")

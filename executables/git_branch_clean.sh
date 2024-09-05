@@ -30,7 +30,7 @@ main() {
   IFS=$'\n'
 
   for commit in $(git log --pretty=format:'%s' "${BASE}..${HEAD}"); do
-    printf "%bAnalyzing %b%s%b\n" "${BLUE}" "${YELLOW}" "${commit}" "${RESET}"
+    printf -- "%bAnalyzing %b%s%b\n" "${BLUE}" "${YELLOW}" "${commit}" "${RESET}"
 
     if git_is_merge_commit "${commit}"; then
       var_warning "\tmerge commit, ignoring"
@@ -44,12 +44,12 @@ main() {
     fi
 
     if ! git_is_conventional_commit "${commit}"; then
-      printf "\t%bnot a conventional commit, please reword according to %bconventionalcommits.org/en/v1.0.0/%b\n" "${RED}" "${GREEN}" "${RESET}" 1>&2
+      printf -- "\t%bnot a conventional commit, please reword according to %bconventionalcommits.org/en/v1.0.0/%b\n" "${RED}" "${GREEN}" "${RESET}" 1>&2
       UNCLEAR="true"
     fi
 
     if ! git_is_valid_description "${commit}"; then
-      printf "\t%btoo long, please reword below %b%s characters%b, currently %d%b\n" "${RED}" "${GREEN}" "${COMMIT_MAX_LENGTH:-70}" "${YELLOW}" "${#commit}" "${RESET}" 1>&2
+      printf -- "\t%btoo long, please reword below %b%s characters%b, currently %d%b\n" "${RED}" "${GREEN}" "${COMMIT_MAX_LENGTH:-70}" "${YELLOW}" "${#commit}" "${RESET}" 1>&2
       UNCLEAR="true"
     fi
   done

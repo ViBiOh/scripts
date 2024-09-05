@@ -31,11 +31,11 @@ main() {
       DATE_VERSION="${OPTARG}"
       ;;
     :)
-      printf "option -%s requires a value\n" "${OPTARG}" >&2
+      printf -- "option -%s requires a value\n" "${OPTARG}" >&2
       return 1
       ;;
     \?)
-      printf "option -%s is invalid\n" "${OPTARG}" >&2
+      printf -- "option -%s is invalid\n" "${OPTARG}" >&2
       return 2
       ;;
     esac

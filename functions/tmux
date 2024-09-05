@@ -14,7 +14,7 @@ tmux_is_inside() {
 
 tmux_split_cmd() (
   if ! tmux_is_inside; then
-    printf "not inside a tmux\n"
+    printf -- "not inside a tmux\n"
     return 1
   fi
 
@@ -43,11 +43,11 @@ tmux_batch() {
       QUIET="true"
       ;;
     :)
-      printf "option -%s requires a value\n" "${OPTARG}" >&2
+      printf -- "option -%s requires a value\n" "${OPTARG}" >&2
       return 1
       ;;
     \?)
-      printf "option -%s is invalid\n" "${OPTARG}" >&2
+      printf -- "option -%s is invalid\n" "${OPTARG}" >&2
       return 2
       ;;
     esac
@@ -56,8 +56,8 @@ tmux_batch() {
   shift $((OPTIND - 1))
 
   if [[ ${#ITEMS[@]} -ne 0 ]]; then
-    ITEMS_LIST="$(printf "\t- %s\n" "${ITEMS[@]}")"
-    printf "%bItems are:\n%b%s%b\n" "${BLUE}" "${YELLOW}" "${ITEMS_LIST}" "${RESET}"
+    ITEMS_LIST="$(printf -- "\t- %s\n" "${ITEMS[@]}")"
+    printf -- "%bItems are:\n%b%s%b\n" "${BLUE}" "${YELLOW}" "${ITEMS_LIST}" "${RESET}"
 
     for item in "${ITEMS[@]}"; do
       ${BATCH_ACTION} "${item}"

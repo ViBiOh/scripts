@@ -116,7 +116,7 @@ gcloud_sql_proxy() {
       START_INDEX=$((START_INDEX - 1))
     done
 
-    printf "%s" "${DATABASE_PORT}"
+    printf -- "%s" "${DATABASE_PORT}"
   }
 
   local GCLOUD_PROJECT

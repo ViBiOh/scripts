@@ -19,12 +19,12 @@ main() {
 
   local SMART_PLUG_ID="8ae318c4-e170-4ca0-ba7d-1cc85e343a1a"
 
-  printf "Internet seems unreachable, turning off smart plug..."
+  printf -- "Internet seems unreachable, turning off smart plug..."
   curl --disable --silent --show-error --location --max-time 30 --request POST "http://127.0.0.1/api/groups/${SMART_PLUG_ID}" --data state=off --data method=PATCH >/dev/null
 
   sleep 30
 
-  printf "Turning on smart plug..."
+  printf -- "Turning on smart plug..."
   curl --disable --silent --show-error --location --max-time 30 --request POST "http://127.0.0.1/api/groups/${SMART_PLUG_ID}" --data state=off --data method=PATCH >/dev/null
 }
 
