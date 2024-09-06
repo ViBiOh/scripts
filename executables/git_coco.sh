@@ -111,6 +111,17 @@ script_dir() {
   fi
 }
 
+init_github_client() {
+  http_init_client
+
+  local GITHUB_TOKEN
+  GITHUB_TOKEN="$(github_token)"
+
+  if [[ -n ${GITHUB_TOKEN} ]]; then
+    HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
+  fi
+}
+
 main() {
   source "$(script_dir)/meta" && meta_check "var" "git" "github" "http"
 
@@ -164,20 +175,13 @@ main() {
   local CO_AUTHOR_STRING=""
 
   if is_github; then
-    http_init_client
-
-    local GITHUB_TOKEN
-    GITHUB_TOKEN="$(github_token)"
-
-    if [[ -n ${GITHUB_TOKEN} ]]; then
-      HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
-    fi
-
     if var_confirm "Link issue"; then
+      init_github_client
       ISSUES_STRING="$(get_issue)"
     fi
 
     if var_confirm "Define co-author"; then
+      init_github_client
       CO_AUTHOR_STRING="$(get_co_author)"
     fi
   fi
