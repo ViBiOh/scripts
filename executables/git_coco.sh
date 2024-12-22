@@ -32,7 +32,14 @@ guess_component() {
 }
 
 is_github() {
-  if [[ "$(git remote get-url --push "$(git remote show | head -1)")" =~ ^.*@github.com:(.*)/(.*)$ ]]; then
+  local GIT_REMOTE
+  GIT_REMOTE="$(git remote show | head -1)"
+
+  if [[ -z ${GIT_REMOTE:-} ]]; then
+    return 1
+  fi
+
+  if [[ "$(git remote get-url --push "${GIT_REMOTE}")" =~ ^.*@github.com:(.*)/(.*)$ ]]; then
     return 0
   else
     return 1
