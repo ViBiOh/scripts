@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-scw_ssh_allow_ip() {
+scw_allow_ip() {
   meta_check "var" "http"
 
   if [[ ${#} -ne 2 ]]; then
-    var_red "Usage: scw_ssh_allow_ip SECURITY_GROUP_NAME RULE_PORT ZONE?"
+    var_red "Usage: scw_allow_ip SECURITY_GROUP_NAME RULE_PORT ZONE?"
     return 1
   fi
 
