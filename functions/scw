@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+scw_ssh_allow_ip() {
+  meta_check "var" "http"
+
+  http_init_client --header "X-Auth-Token: $(pass_get "dev/scaleway" "secret_key")"
+
+  http_request "https://ifconfig.me"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to get public IP"
+    return 1
+  fi
+
+  local PUBLIC_IP
+  PUBLIC_IP="$(cat "${HTTP_OUTPUT}")"
+
+  printf "Public IP is %s\n" "${PUBLIC_IP}"
+
+  http_request "https://api.scaleway.com/instance/v1/zones/fr-par-2/security_groups/"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to find security group id"
+    return 1
+  fi
+
+  local SECURITY_GROUP_ID
+  SECURITY_GROUP_ID="$(jq -r '.security_groups[] | select(.name == "tunnel") | .id' "${HTTP_OUTPUT}")"
+  rm "${HTTP_OUTPUT}"
+
+  http_request "https://api.scaleway.com/instance/v1/zones/fr-par-2/security_groups/${SECURITY_GROUP_ID}/rules"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to find security rule id"
+    return 1
+  fi
+
+  local SECURITY_GROUP_RULE_ID
+  SECURITY_GROUP_RULE_ID="$(jq -r '.rules[] | select(.dest_port_from == 9876) | .id' "${HTTP_OUTPUT}")"
+  rm "${HTTP_OUTPUT}"
+
+  http_request --request PATCH --header "Content-Type: application/json" "https://api.scaleway.com/instance/v1/zones/fr-par-2/security_groups/${SECURITY_GROUP_ID}/rules/${SECURITY_GROUP_RULE_ID}" \
+    --data "$(json "{ip_range: \"${PUBLIC_IP}/32\"}")"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to update security rule"
+    return 1
+  fi
+
+  rm "${HTTP_OUTPUT}"
+}
