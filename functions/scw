@@ -3,6 +3,19 @@
 scw_ssh_allow_ip() {
   meta_check "var" "http"
 
+  if [[ ${#} -ne 2 ]]; then
+    var_red "Usage: scw_ssh_allow_ip SECURITY_GROUP_NAME RULE_PORT ZONE?"
+    return 1
+  fi
+
+  local SECURITY_GROUP_NAME="${1}"
+  shift 1
+
+  local RULE_PORT="${1}"
+  shift 1
+
+  local ZONE="${1:-fr-par-2}"
+
   http_init_client --header "X-Auth-Token: $(pass_get "dev/scaleway" "secret_key")"
 
   http_request "https://ifconfig.me"
@@ -16,27 +29,31 @@ scw_ssh_allow_ip() {
 
   printf "Public IP is %s\n" "${PUBLIC_IP}"
 
-  http_request "https://api.scaleway.com/instance/v1/zones/fr-par-2/security_groups/"
+  http_request "https://api.scaleway.com/instance/v1/zones/${ZONE}/security_groups/"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to find security group id"
     return 1
   fi
 
   local SECURITY_GROUP_ID
-  SECURITY_GROUP_ID="$(jq -r '.security_groups[] | select(.name == "tunnel") | .id' "${HTTP_OUTPUT}")"
+  SECURITY_GROUP_ID="$(jq --raw-output --arg secGroupName "${SECURITY_GROUP_NAME}" '.security_groups[] | select(.name == $secGroupName) | .id' "${HTTP_OUTPUT}")"
   rm "${HTTP_OUTPUT}"
 
-  http_request "https://api.scaleway.com/instance/v1/zones/fr-par-2/security_groups/${SECURITY_GROUP_ID}/rules"
+  printf "Security group ID %s\n" "${SECURITY_GROUP_ID}"
+
+  http_request "https://api.scaleway.com/instance/v1/zones/${ZONE}/security_groups/${SECURITY_GROUP_ID}/rules"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to find security rule id"
     return 1
   fi
 
   local SECURITY_GROUP_RULE_ID
-  SECURITY_GROUP_RULE_ID="$(jq -r '.rules[] | select(.dest_port_from == 9876) | .id' "${HTTP_OUTPUT}")"
+  SECURITY_GROUP_RULE_ID="$(jq --raw-output --argjson port "${RULE_PORT}" '.rules[] | select(.dest_port_from == $port) | .id' "${HTTP_OUTPUT}")"
   rm "${HTTP_OUTPUT}"
 
-  http_request --request PATCH --header "Content-Type: application/json" "https://api.scaleway.com/instance/v1/zones/fr-par-2/security_groups/${SECURITY_GROUP_ID}/rules/${SECURITY_GROUP_RULE_ID}" \
+  printf "Security rule ID %s\n" "${SECURITY_GROUP_RULE_ID}"
+
+  http_request --request PATCH --header "Content-Type: application/json" "https://api.scaleway.com/instance/v1/zones/${ZONE}/security_groups/${SECURITY_GROUP_ID}/rules/${SECURITY_GROUP_RULE_ID}" \
     --data "$(json "{ip_range: \"${PUBLIC_IP}/32\"}")"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to update security rule"
