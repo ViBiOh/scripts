@@ -53,6 +53,10 @@ git_hooks_no_md_format() {
   git_hooks_toggle_config "hooks.noMarkdownFormat"
 }
 
+git_hooks_bazelle_gazelle() {
+  git_hooks_toggle_config "hooks.bazelleGazelle"
+}
+
 git_is_inside() {
   if [[ $(git rev-parse --is-inside-work-tree 2>&1) == "true" ]]; then
     return 0

@@ -68,6 +68,10 @@ golang_check() {
 }
 
 bazel_check() {
+  if [[ $(git config "hooks.bazelleGazelle") != "true" ]]; then
+    return
+  fi
+
   if ! command -v bzl >/dev/null 2>&1; then
     return
   fi
