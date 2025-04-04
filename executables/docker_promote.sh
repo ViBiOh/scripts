@@ -18,6 +18,25 @@ script_dir() {
   fi
 }
 
+dockerhub_auth() {
+  var_read DOCKER_USER
+  var_read DOCKER_PASS "" "secret"
+  var_read DOCKER_AUTH_TOKEN_URL "https://auth.docker.io/token?service=registry.docker.io"
+
+  var_info "Getting token from ${DOCKER_AUTH_TOKEN_URL} for pulling and pushing to ${1}..."
+
+  http_request --request GET "${DOCKER_AUTH_TOKEN_URL}&scope=repository:${1}:pull,push" --user "${DOCKER_USER}:${DOCKER_PASS}"
+  unset DOCKER_PASS
+
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to retrieve token for ${1}"
+    return 1
+  fi
+
+  HTTP_CLIENT_ARGS+=("--header" "Authorization: Bearer $(jq --raw-output .token "${HTTP_OUTPUT}")")
+  rm "${HTTP_OUTPUT}"
+}
+
 main() {
   source "$(script_dir)/meta" && meta_check "var" "http"
 
@@ -55,25 +74,12 @@ main() {
   local VERSION_TARGET="${1:-latest}"
   shift || true
 
-  var_read DOCKER_REGISTRY "https://registry-1.docker.io/v2"
-  var_read DOCKER_AUTH_TOKEN "https://auth.docker.io/token?service=registry.docker.io"
-  var_read DOCKER_USER
-  var_read DOCKER_PASS "" "secret"
-
   http_init_client
 
-  var_info "Getting token from ${DOCKER_AUTH_TOKEN} for pulling and pushing to ${DOCKER_IMAGE}..."
-
-  http_request --request GET "${DOCKER_AUTH_TOKEN}&scope=repository:${DOCKER_IMAGE}:pull,push" --user "${DOCKER_USER}:${DOCKER_PASS}"
-  unset DOCKER_PASS
-
-  if [[ ${HTTP_STATUS} != "200" ]]; then
-    http_handle_error "Unable to retrieve token for ${DOCKER_IMAGE}"
-    return 1
+  var_read DOCKER_REGISTRY "https://registry-1.docker.io/v2"
+  if [[ ${DOCKER_REGISTRY} == "https://registry-1.docker.io/v2" ]]; then
+    dockerhub_auth "${DOCKER_IMAGE}"
   fi
-
-  HTTP_CLIENT_ARGS+=("--header" "Authorization: Bearer $(jq --raw-output .token "${HTTP_OUTPUT}")")
-  rm "${HTTP_OUTPUT}"
 
   var_info "Tagging image ${DOCKER_IMAGE} from ${IMAGE_VERSION} to ${VERSION_TARGET}..."
 
