@@ -16,7 +16,7 @@ scw_allow_ip() {
 
   local ZONE="${1:-fr-par-2}"
 
-  http_init_client --header "X-Auth-Token: $(pass_get "dev/scaleway" "secret_key")"
+  http_init_client --header "X-Auth-Token: $(pass_get "dev/scaleway" "secret_key")" -4
 
   http_request "https://ifconfig.me"
   if [[ ${HTTP_STATUS} != "200" ]]; then
