@@ -84,41 +84,71 @@ dockerhub_promote() {
   done
 }
 
-registry_promote() {
-  # Getting manifest
-  http_request --request GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}"
+scw_login() {
+  var_read SCW_ACCESS_KEY
+  var_read SCW_SECRET_KEY "" "secret"
+  var_read SCW_REGION "fr-par"
+
+  var_info "Getting token for pulling and pushing to ${1}..."
+
+  http_request \
+    --request GET \
+    --user "${SCW_ACCESS_KEY}:${SCW_SECRET_KEY}" \
+    "https://api.scaleway.com/registry-internal/v1/regions/${SCW_REGION}/tokens?service=registry&scope=repository:${1}:pull,push"
+  unset SCW_SECRET_KEY
+
   if [[ ${HTTP_STATUS} != "200" ]]; then
-    http_handle_error "Unable to retrieve manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}"
+    http_handle_error "Unable to retrieve token for ${1}"
     exit 1
   fi
 
-  local MANIFEST_PAYLOAD
-  MANIFEST_PAYLOAD="$(cat "${HTTP_OUTPUT}")"
+  HTTP_CLIENT_ARGS+=("--header" "Authorization: Bearer $(jq --raw-output .token "${HTTP_OUTPUT}")")
   rm "${HTTP_OUTPUT}"
+}
 
-  # Promoting image
-  http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
-    --data "${MANIFEST_PAYLOAD}"
-  if [[ ${HTTP_STATUS} != "201" ]]; then
-    http_handle_error "Unable to promote manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}"
-    exit 1
-  fi
+registry_promote() {
+  local MANIFEST_ACCEPT=("application/vnd.oci.image.index.v1+json" "application/vnd.docker.distribution.manifest.v2+json")
 
-  var_success "Image promoted to ${VERSION_TARGET}!"
-  rm "${HTTP_OUTPUT}"
-
-  if [[ -n ${DATE_VERSION-} ]]; then
-    # Tagging image with timestamp
-    http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${DATE_VERSION}" \
-      --data "${MANIFEST_PAYLOAD}"
-    if [[ ${HTTP_STATUS} != "201" ]]; then
-      http_handle_error "Unable to tag date manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${DATE_VERSION}"
-      exit 1
+  for manifest in "${MANIFEST_ACCEPT[@]}"; do
+    # Getting manifest
+    http_request --request GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" --header "Accept: ${manifest}"
+    if [[ ${HTTP_STATUS} != "200" ]]; then
+      http_handle_error "Unable to retrieve manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}"
+      continue
     fi
 
-    var_success "Image tagged ${DATE_VERSION}!"
+    local MANIFEST_PAYLOAD
+    MANIFEST_PAYLOAD="$(cat "${HTTP_OUTPUT}")"
     rm "${HTTP_OUTPUT}"
-  fi
+
+    # Promoting image
+    http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
+      --header "Content-Type: ${manifest}" \
+      --data "${MANIFEST_PAYLOAD}"
+    if [[ ${HTTP_STATUS} != "201" ]]; then
+      http_handle_error "Unable to promote manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}"
+      continue
+    fi
+
+    var_success "Image promoted to ${VERSION_TARGET}!"
+    rm "${HTTP_OUTPUT}"
+
+    if [[ -n ${DATE_VERSION-} ]]; then
+      # Tagging image with timestamp
+      http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${DATE_VERSION}" \
+        --header "Content-Type: ${manifest}" \
+        --data "${MANIFEST_PAYLOAD}"
+      if [[ ${HTTP_STATUS} != "201" ]]; then
+        http_handle_error "Unable to tag date manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${DATE_VERSION}"
+        continue
+      fi
+
+      var_success "Image tagged ${DATE_VERSION}!"
+      rm "${HTTP_OUTPUT}"
+    fi
+
+    return
+  done
 }
 
 main() {
@@ -162,13 +192,23 @@ main() {
 
   var_info "Tagging image ${DOCKER_IMAGE} from ${IMAGE_VERSION} to ${VERSION_TARGET}..."
 
-  var_read DOCKER_REGISTRY "https://registry-1.docker.io/v2"
-  if [[ ${DOCKER_REGISTRY} == "https://registry-1.docker.io/v2" ]]; then
+  var_read DOCKER_REGISTRY "dockerhub"
+
+  case "${DOCKER_REGISTRY}" in
+  "dockerhub")
     dockerhub_auth "${DOCKER_IMAGE}"
     dockerhub_promote
-  else
+    ;;
+
+  "scw")
+    scw_login "${DOCKER_IMAGE}"
+    DOCKER_REGISTRY="$(printf "https://rg.%s.scw.cloud/v2" "${SCW_REGION}")"
     registry_promote
-  fi
+    ;;
+  *)
+    var_red "Unhandled registry ${DOCKER_REGISTRY}"
+    ;;
+  esac
 }
 
 main "${@}"
