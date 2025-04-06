@@ -21,11 +21,13 @@ script_dir() {
 dockerhub_auth() {
   var_read DOCKER_USER
   var_read DOCKER_PASS "" "secret"
-  var_read DOCKER_AUTH_TOKEN_URL "https://auth.docker.io/token?service=registry.docker.io"
 
-  var_info "Getting token from ${DOCKER_AUTH_TOKEN_URL} for pulling and pushing to ${1}..."
+  var_info "Getting token for pulling and pushing to ${1}..."
 
-  http_request --request GET "${DOCKER_AUTH_TOKEN_URL}&scope=repository:${1}:pull,push" --user "${DOCKER_USER}:${DOCKER_PASS}"
+  http_request \
+    --request GET \
+    --user "${DOCKER_USER}:${DOCKER_PASS}" \
+    "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${1}:pull,push"
   unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
@@ -35,53 +37,6 @@ dockerhub_auth() {
 
   HTTP_CLIENT_ARGS+=("--header" "Authorization: Bearer $(jq --raw-output .token "${HTTP_OUTPUT}")")
   rm "${HTTP_OUTPUT}"
-}
-
-dockerhub_promote() {
-  local MANIFEST_ACCEPT=("application/vnd.oci.image.index.v1+json" "application/vnd.docker.distribution.manifest.list.v2+json" "application/vnd.docker.distribution.manifest.v2+json")
-
-  for manifest in "${MANIFEST_ACCEPT[@]}"; do
-    var_warning "Trying with manifest ${manifest}"
-
-    # Getting manifest
-    http_request --request GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" --header "Accept: ${manifest}"
-    if [[ ${HTTP_STATUS} != "200" ]]; then
-      http_handle_error "Unable to retrieve manifest for ${DOCKER_IMAGE}"
-      continue
-    fi
-
-    local MANIFEST_PAYLOAD
-    MANIFEST_PAYLOAD="$(cat "${HTTP_OUTPUT}")"
-    rm "${HTTP_OUTPUT}"
-
-    # Promoting image
-    http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
-      --header "Content-Type: ${manifest}" \
-      --data "${MANIFEST_PAYLOAD}"
-    if [[ ${HTTP_STATUS} != "201" ]]; then
-      http_handle_error "Unable to promote manifest for ${DOCKER_IMAGE}"
-      continue
-    fi
-
-    var_success "Image promoted to ${VERSION_TARGET}!"
-    rm "${HTTP_OUTPUT}"
-
-    if [[ -n ${DATE_VERSION-} ]]; then
-      # Tagging image with timestamp
-      http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${DATE_VERSION}" \
-        --header "Content-Type: ${manifest}" \
-        --data "${MANIFEST_PAYLOAD}"
-      if [[ ${HTTP_STATUS} != "201" ]]; then
-        http_handle_error "Unable to tag date manifest for ${DOCKER_IMAGE}"
-        continue
-      fi
-
-      var_success "Image tagged ${DATE_VERSION}!"
-      rm "${HTTP_OUTPUT}"
-    fi
-
-    return
-  done
 }
 
 scw_login() {
@@ -106,10 +61,12 @@ scw_login() {
   rm "${HTTP_OUTPUT}"
 }
 
-registry_promote() {
-  local MANIFEST_ACCEPT=("application/vnd.oci.image.index.v1+json" "application/vnd.docker.distribution.manifest.v2+json")
+promote() {
+  local MANIFEST_ACCEPT=("application/vnd.oci.image.index.v1+json" "application/vnd.docker.distribution.manifest.list.v2+json" "application/vnd.docker.distribution.manifest.v2+json")
 
   for manifest in "${MANIFEST_ACCEPT[@]}"; do
+    var_warning "Trying with manifest ${manifest}"
+
     # Getting manifest
     http_request --request GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" --header "Accept: ${manifest}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
@@ -192,23 +149,18 @@ main() {
 
   var_info "Tagging image ${DOCKER_IMAGE} from ${IMAGE_VERSION} to ${VERSION_TARGET}..."
 
-  var_read DOCKER_REGISTRY "dockerhub"
+  var_read DOCKER_REGISTRY "https://registry-1.docker.io/v2"
 
-  case "${DOCKER_REGISTRY}" in
-  "dockerhub")
+  if [[ ${DOCKER_REGISTRY} =~ docker.io ]]; then
     dockerhub_auth "${DOCKER_IMAGE}"
-    dockerhub_promote
-    ;;
-
-  "scw")
+  elif [[ ${DOCKER_REGISTRY} =~ scw.cloud ]]; then
     scw_login "${DOCKER_IMAGE}"
-    DOCKER_REGISTRY="$(printf "https://rg.%s.scw.cloud/v2" "${SCW_REGION}")"
-    registry_promote
-    ;;
-  *)
+  else
     var_red "Unhandled registry ${DOCKER_REGISTRY}"
-    ;;
-  esac
+    exit 1
+  fi
+
+  promote
 }
 
 main "${@}"
