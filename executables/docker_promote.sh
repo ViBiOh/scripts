@@ -106,6 +106,8 @@ promote() {
 
     return
   done
+
+  exit 1
 }
 
 main() {
