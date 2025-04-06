@@ -68,9 +68,9 @@ promote() {
     var_warning "Trying with manifest ${manifest}"
 
     # Getting manifest
-    http_request --request GET "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" --header "Accept: ${manifest}"
+    http_request --request GET "https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}" --header "Accept: ${manifest}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
-      http_handle_error "Unable to retrieve manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}"
+      http_handle_error "Unable to retrieve manifest for https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/manifests/${IMAGE_VERSION}"
       continue
     fi
 
@@ -79,11 +79,11 @@ promote() {
     rm "${HTTP_OUTPUT}"
 
     # Promoting image
-    http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
+    http_request --request PUT "https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}" \
       --header "Content-Type: ${manifest}" \
       --data "${MANIFEST_PAYLOAD}"
     if [[ ${HTTP_STATUS} != "201" ]]; then
-      http_handle_error "Unable to promote manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}"
+      http_handle_error "Unable to promote manifest for https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/manifests/${VERSION_TARGET}"
       continue
     fi
 
@@ -92,11 +92,11 @@ promote() {
 
     if [[ -n ${DATE_VERSION-} ]]; then
       # Tagging image with timestamp
-      http_request --request PUT "${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${DATE_VERSION}" \
+      http_request --request PUT "https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/manifests/${DATE_VERSION}" \
         --header "Content-Type: ${manifest}" \
         --data "${MANIFEST_PAYLOAD}"
       if [[ ${HTTP_STATUS} != "201" ]]; then
-        http_handle_error "Unable to tag date manifest for ${DOCKER_REGISTRY}/${DOCKER_IMAGE}/manifests/${DATE_VERSION}"
+        http_handle_error "Unable to tag date manifest for https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/manifests/${DATE_VERSION}"
         continue
       fi
 
@@ -149,7 +149,7 @@ main() {
 
   var_info "Tagging image ${DOCKER_IMAGE} from ${IMAGE_VERSION} to ${VERSION_TARGET}..."
 
-  var_read DOCKER_REGISTRY "https://registry-1.docker.io/v2"
+  var_read DOCKER_REGISTRY "registry-1.docker.io"
 
   if [[ ${DOCKER_REGISTRY} =~ docker.io ]]; then
     dockerhub_auth "${DOCKER_IMAGE}"
