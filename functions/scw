@@ -98,8 +98,8 @@ scw_registry_clean() {
       return 1
     fi
 
-    local LAST_TIMESTAMP
-    local LAST_TIMESTAMP_ID
+    local LAST_TIMESTAMP=""
+    local LAST_TIMESTAMP_ID=""
 
     while IFS=, read -r tagID tagName; do
       if [[ ${tagName} =~ ^[a-f0-9]{7,8}($|-) ]]; then
