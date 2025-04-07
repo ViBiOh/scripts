@@ -18,7 +18,7 @@ script_dir() {
   fi
 }
 
-dockerhub_auth() {
+auth_token() {
   var_read DOCKER_USER
   var_read DOCKER_PASS "" "secret"
 
@@ -27,7 +27,7 @@ dockerhub_auth() {
   http_request \
     --request GET \
     --user "${DOCKER_USER}:${DOCKER_PASS}" \
-    "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${1}:pull,push"
+    "${DOCKER_AUTH_TOKEN_URL}&scope=repository:${1}:pull,push"
   unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
@@ -153,12 +153,10 @@ main() {
 
   var_read DOCKER_REGISTRY "registry-1.docker.io"
 
-  if [[ ${DOCKER_REGISTRY} =~ docker.io ]]; then
-    dockerhub_auth "${DOCKER_IMAGE}"
+  if [[ ${DOCKER_REGISTRY} =~ docker.io ]] || [[ -n ${DOCKER_AUTH_TOKEN:-} ]]; then
+    auth_token "${DOCKER_IMAGE}"
   elif [[ ${DOCKER_REGISTRY} =~ scw.cloud ]]; then
     scw_login "${DOCKER_IMAGE}"
-  elif [[ ${DOCKER_REGISTRY} =~ registry.gitlab.com ]]; then
-    printf "Already logged in\n"
   else
     var_red "Unhandled registry ${DOCKER_REGISTRY}"
     exit 1
