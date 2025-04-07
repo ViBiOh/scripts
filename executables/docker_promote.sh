@@ -157,6 +157,8 @@ main() {
     dockerhub_auth "${DOCKER_IMAGE}"
   elif [[ ${DOCKER_REGISTRY} =~ scw.cloud ]]; then
     scw_login "${DOCKER_IMAGE}"
+  elif [[ ${DOCKER_REGISTRY} =~ registry.gitlab.com ]]; then
+    printf "Already logged in\n"
   else
     var_red "Unhandled registry ${DOCKER_REGISTRY}"
     exit 1
