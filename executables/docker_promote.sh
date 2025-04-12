@@ -153,7 +153,7 @@ main() {
 
   var_read DOCKER_REGISTRY "registry-1.docker.io"
 
-  if [[ ${DOCKER_REGISTRY} =~ docker.io ]] || [[ -n ${DOCKER_AUTH_TOKEN:-} ]]; then
+  if [[ ${DOCKER_REGISTRY} =~ docker.io ]] || [[ -n ${DOCKER_AUTH_TOKEN_URL:-} ]]; then
     auth_token "${DOCKER_IMAGE}"
   elif [[ ${DOCKER_REGISTRY} =~ scw.cloud ]]; then
     scw_login "${DOCKER_IMAGE}"
