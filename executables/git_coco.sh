@@ -157,7 +157,7 @@ main() {
   if [[ ${COMPONENT} == "None" ]]; then
     COMPONENT=""
   else
-    COMPONENT="$(printf -- "(%s)" "${COMPONENT}")"
+    printf -v COMPONENT -- "(%s)" "${COMPONENT}"
   fi
   printf -- "COMPONENT=%s\n" "${COMPONENT}"
   REMAINING_LENGTH=$((REMAINING_LENGTH - ${#COMPONENT}))
