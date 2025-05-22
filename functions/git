@@ -70,6 +70,10 @@ git_hooks_bazelle_gazelle() {
   git_hooks_toggle_config "hooks.bazelleGazelle" "true"
 }
 
+git_hooks_json_sort() {
+  git_hooks_toggle_config "hooks.jsonSort" "true"
+}
+
 git_is_inside() {
   if [[ $(git rev-parse --is-inside-work-tree 2>&1) == "true" ]]; then
     return 0

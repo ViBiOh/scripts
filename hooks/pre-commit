@@ -196,9 +196,10 @@ yaml_check() {
   if [[ $(git config "hooks.noYamlFormat") != "true" ]]; then
     if command -v npx >/dev/null 2>&1; then
       var_info "Formatting yaml files"
+
       run_command npx prettier --write ${YAML_FILES[@]}
     else
-      var_warning "cannot format yaml files: prettier not found. Skipping."
+      var_warning "cannot format yaml files: npx not found. Skipping."
     fi
   else
     var_green 'No formatting of yaml files. Toggle with `git_hooks_no_yaml_format`'
@@ -206,9 +207,37 @@ yaml_check() {
 
   if command -v yamllint >/dev/null 2>&1; then
     var_info "Linting yaml files"
+
     run_command yamllint -d "{rules: {line-length: disable}}" ${YAML_FILES[@]}
   else
     var_warning "cannot lint yaml files: yamllint not found. Skipping."
+  fi
+}
+
+json_check() {
+  if [[ $(git config "hooks.jsonSort") != "true" ]]; then
+    return
+  fi
+
+  local JSON_FILES
+  JSON_FILES=$(get_files \*.json)
+
+  if [[ -z ${JSON_FILES} ]]; then
+    return
+  fi
+
+  if command -v jq >/dev/null 2>&1; then
+    var_info "Sorting JSON files"
+
+    for file in ${JSON_FILES}; do
+      local TEMP_FILE
+      TEMP_FILE=$(mktemp)
+
+      run_command jq --sort-keys . "${file}" >"${TEMP_FILE}"
+      mv -- "${TEMP_FILE}" "${file}"
+    done
+  else
+    var_warning "cannot format json files: jq not found. Skipping."
   fi
 }
 
