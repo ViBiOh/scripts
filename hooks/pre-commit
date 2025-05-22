@@ -220,7 +220,7 @@ json_check() {
   fi
 
   local JSON_FILES
-  JSON_FILES=$(get_files \*.json)
+  JSON_FILES=$(get_files "*.json")
 
   if [[ -z ${JSON_FILES} ]]; then
     return
@@ -304,6 +304,7 @@ main() {
   npm_check
   python_check
   terraform_check
+  json_check
   yaml_check
   markdown_check
 
