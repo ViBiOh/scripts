@@ -154,6 +154,6 @@ var_info() {
 
 var_print_and_run() {
   printf -- "%b%s%b\n" "${YELLOW}" "${*}" "${RESET}" 1>&2
-  history -s "${@}"
+  history -s "${*}"
   eval "${*}"
 }
