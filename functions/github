@@ -321,7 +321,7 @@ github_clone() {
         var_success "${REPO_NAME} already cloned!"
       else
         var_info "Cloning ${REPO_NAME}"
-        git clone "${REPO_SSH_URL}" "${REPO_NAME}"
+        var_print_and_run git clone "${REPO_SSH_URL}" "${REPO_NAME}"
       fi
     done
   done
