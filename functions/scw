@@ -3,18 +3,8 @@
 scw_allow_ip() {
   meta_check "var" "http"
 
-  if [[ ${#} -ne 2 ]]; then
-    var_red "Usage: scw_allow_ip SECURITY_GROUP_NAME RULE_PORT ZONE?"
-    return 1
-  fi
-
-  local SECURITY_GROUP_NAME="${1}"
-  shift 1
-
-  local RULE_PORT="${1}"
-  shift 1
-
   local ZONE="${1:-fr-par-2}"
+  shift 1 || true
 
   http_init_client --header "X-Auth-Token: $(pass_get "dev/scaleway" "secret_key")" -4
 
@@ -36,7 +26,8 @@ scw_allow_ip() {
   fi
 
   local SECURITY_GROUP_ID
-  SECURITY_GROUP_ID="$(jq --raw-output --arg secGroupName "${SECURITY_GROUP_NAME}" '.security_groups[] | select(.name == $secGroupName) | .id' "${HTTP_OUTPUT}")"
+  SECURITY_GROUP_ID="$(jq --raw-output '.security_groups[] | .name + " - " +  .id' "${HTTP_OUTPUT}" | fzf --prompt="Security Group: " --query "${1:-}" --select-1 | awk '{print $3}')"
+
   rm "${HTTP_OUTPUT}"
 
   printf "Security group ID %s\n" "${SECURITY_GROUP_ID}"
@@ -48,7 +39,7 @@ scw_allow_ip() {
   fi
 
   local SECURITY_GROUP_RULE_ID
-  SECURITY_GROUP_RULE_ID="$(jq --raw-output --argjson port "${RULE_PORT}" '.rules[] | select(.dest_port_from == $port) | .id' "${HTTP_OUTPUT}")"
+  SECURITY_GROUP_RULE_ID="$(jq --raw-output '.rules[] | (.dest_port_from | tostring) + " - " +  .id' "${HTTP_OUTPUT}" | fzf --prompt="Port: " --query "${1:-}" --select-1 | awk '{print $3}')"
   rm "${HTTP_OUTPUT}"
 
   printf "Security rule ID %s\n" "${SECURITY_GROUP_RULE_ID}"
