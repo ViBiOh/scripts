@@ -105,8 +105,20 @@ git_browse() {
   done < <(find . -type d -maxdepth 1 -print0)
 }
 
+git_refresh() {
+  if [[ ${#} -gt 0 ]]; then
+    cd "${1}" || return 1
+  fi
+
+  git default --quiet
+  git pull --quiet
+  git sweep
+}
+
+export -f git_refresh
+
 git_pull_all() {
-  git_browse 'git default && git pull && git sweep'
+  parallel --bar git_refresh ::: *
 }
 
 git_remote_repository() {
