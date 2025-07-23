@@ -100,7 +100,8 @@ git_browse() {
       fi
 
       var_info "Running command in ${dir}"
-      eval "${*} && var_success ${dir} &"
+      eval "${*}"
+      var_success "${dir}"
     )
   done < <(find . -type d -maxdepth 1 -print0)
 }
@@ -108,6 +109,10 @@ git_browse() {
 git_refresh() {
   if [[ ${#} -gt 0 ]]; then
     cd "${1}" || return 1
+  fi
+
+  if ! git_is_inside || [[ $(readlink -f "$(pwd)") != $(git_root) ]]; then
+    return
   fi
 
   git default --quiet
