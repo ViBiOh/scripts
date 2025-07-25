@@ -101,7 +101,6 @@ git_browse() {
 
       var_info "Running command in ${dir}"
       eval "${*}"
-      var_success "${dir}"
     )
   done < <(find . -type d -maxdepth 1 -print0)
 }
