@@ -119,6 +119,8 @@ git_refresh() {
   git sweep
 }
 
+export -f git_is_inside
+export -f git_root
 export -f git_refresh
 
 git_pull_all() {
