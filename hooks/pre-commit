@@ -108,8 +108,8 @@ bazel_check() {
     COMMON_PREFIX="${PREFIX}"
   done
 
-  if [[ -n ${COMMON_PREFIX:-} ]]; then
-    var_info "Checking Bazel Gazelle for ${COMMON_PREFIX}"
+  if [[ ${COMMON_PREFIX:-.} != "." ]]; then
+    var_info "Checking Bazel Gazelle for ${COMMON_PREFIX}/"
     run_command bzl run --ui_event_filters=-info,-stdout,-stderr --show_progress=false --color=no //:gazelle -- fix "${COMMON_PREFIX}/"
   fi
 }
