@@ -147,7 +147,7 @@ main() {
   local VERSION_TARGET="${1:-latest}"
   shift || true
 
-  http_init_client "--max-time" "30"
+  http_init_client "--max-time" "30" "--retry" "3"
 
   var_info "Tagging image ${DOCKER_IMAGE} from ${IMAGE_VERSION} to ${VERSION_TARGET}..."
 
