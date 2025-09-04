@@ -50,10 +50,7 @@ main() {
   local ORGANIZATION=${1}
   shift
 
-  local GITHUB_TOKEN
-  GITHUB_TOKEN="$(github_token)"
-
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json"
+  http_init_client --header "Authorization: token $(github_token)" -H "Accept: application/vnd.github.v3+json"
 
   http_request "https://api.github.com/user"
   if [[ ${HTTP_STATUS} != "200" ]]; then

@@ -121,11 +121,8 @@ script_dir() {
 init_github_client() {
   http_init_client
 
-  local GITHUB_TOKEN
-  GITHUB_TOKEN="$(github_token)"
-
-  if [[ -n ${GITHUB_TOKEN} ]]; then
-    HTTP_CLIENT_ARGS+=("--header" "Authorization: token ${GITHUB_TOKEN}")
+  if [[ -n "$(github_token)" ]]; then
+    HTTP_CLIENT_ARGS+=("--header" "Authorization: token $(github_token)")
   fi
 }
 
