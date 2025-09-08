@@ -315,3 +315,29 @@ kubernetes_postgres_restore() {
     kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
   fi
 }
+
+docker_postgres_restore() {
+  meta_check "var"
+
+  local POSTGRES_USER
+  var_shift_or_read POSTGRES_USER "${1-}"
+  shift || true
+
+  local POSTGRES_DB
+  var_shift_or_read POSTGRES_DB "${1-}"
+  shift || true
+
+  local BACKUP_FILE
+  BACKUP_FILE="$(
+    if command -v rg >/dev/null 2>&1; then
+      export FZF_DEFAULT_COMMAND='rg --files --sortr path 2> /dev/null'
+    fi
+    fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
+  )"
+
+  if [[ -z ${BACKUP_FILE-} ]]; then
+    return 1
+  fi
+
+  var_print_and_run "docker exec --interactive postgres -- pg_restore --format=c --user '${POSTGRES_USER}' --dbname '${POSTGRES_DB}' <'${BACKUP_FILE}'"
+}
