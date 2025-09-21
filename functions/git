@@ -105,26 +105,8 @@ git_browse() {
   done < <(find . -type d -maxdepth 1 -print0)
 }
 
-git_refresh() {
-  if [[ ${#} -gt 0 ]]; then
-    cd "${1}" || return 1
-  fi
-
-  if ! git_is_inside || [[ $(readlink -f "$(pwd)") != $(git_root) ]]; then
-    return
-  fi
-
-  git default --quiet
-  git pull --quiet
-  git sweep
-}
-
-export -f git_is_inside
-export -f git_root
-export -f git_refresh
-
 git_pull_all() {
-  parallel --bar git_refresh ::: *
+  git_browse 'git default --quiet && git pull --quiet && git sweep'
 }
 
 git_remote_repository() {
