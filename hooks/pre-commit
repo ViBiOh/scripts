@@ -86,29 +86,22 @@ bazel_check() {
   local DIRNAMES=()
 
   for file in ${CHANGED_FILES}; do
-    local DIRNAME_OF_FILE
-    DIRNAME_OF_FILE="$(dirname "${file}")"
-
-    if [[ -e "${DIRNAME_OF_FILE}/BUILD.bazel" ]]; then
-      DIRNAMES+=("${DIRNAME_OF_FILE}")
-    fi
+    DIRNAMES+=("$(dirname "${file}")")
   done
 
   local COMMON_PREFIX
+  COMMON_PREFIX="${DIRNAMES[0]}"
 
-  # Find most common prefix
-  for ((i = 1; i <= ${#DIRNAMES[0]}; i++)); do
-    for ((j = 0; j < ${#DIRNAMES[@]}; j++)); do
-      PREFIX="${DIRNAMES%"${DIRNAMES[0]:i}"}"
-      if [[ ${DIRNAMES[$j]#${PREFIX}} == "${DIRNAMES[$j]}" ]]; then
-        break 2
+  for ((i = 1; i < ${#DIRNAMES[@]}; i++)); do
+    while [[ ${DIRNAMES[i]} != "${COMMON_PREFIX}"* ]]; do
+      COMMON_PREFIX=$(dirname "${COMMON_PREFIX}")
+      if [[ ${COMMON_PREFIX} == "/" ]] || [[ ${COMMON_PREFIX} == "." ]]; then
+        break
       fi
     done
-
-    COMMON_PREFIX="${PREFIX}"
   done
 
-  if [[ ${COMMON_PREFIX:-.} != "." ]]; then
+  if [[ ${COMMON_PREFIX} != "/" ]] && [[ ${COMMON_PREFIX} != "." ]]; then
     var_info "Checking Bazel Gazelle for ${COMMON_PREFIX}/"
     run_command bzl run --ui_event_filters=-info,-stdout,-stderr --show_progress=false --color=no //:gazelle -- fix "${COMMON_PREFIX}/"
   fi
