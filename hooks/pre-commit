@@ -86,7 +86,12 @@ bazel_check() {
   local DIRNAMES=()
 
   for file in ${CHANGED_FILES}; do
-    DIRNAMES+=("$(dirname "${file}")")
+    local CHANGED_DIRNAME
+    CHANGED_DIRNAME="$(dirname "${file}")"
+
+    if [[ -e "${CHANGED_DIRNAME}/BUILD.bazel" ]]; then
+      DIRNAMES+=("${CHANGED_DIRNAME}")
+    fi
   done
 
   local COMMON_PREFIX
