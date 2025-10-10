@@ -173,7 +173,7 @@ release_usage() {
   printf -- "build\n\tBuild artifacts\n"
   printf -- "docker\n\tBuild docker images\n"
   printf -- "assets\n\tUpload output dir content to GitHub release\n"
-  printf -- "clea,\n\tClean created output directory\n"
+  printf -- "clean\n\tClean created output directory\n"
 }
 
 script_dir() {

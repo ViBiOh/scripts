@@ -28,6 +28,8 @@ auth_token() {
     --request GET \
     --user "${DOCKER_USER}:${DOCKER_PASS}" \
     "${DOCKER_AUTH_TOKEN_URL}&scope=repository:${1}:pull,push"
+
+  DOCKER_PASS=""
   unset DOCKER_PASS
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
@@ -50,6 +52,8 @@ scw_login() {
     --request GET \
     --user "${SCW_ACCESS_KEY}:${SCW_SECRET_KEY}" \
     "https://api.scaleway.com/registry-internal/v1/regions/${SCW_REGION}/tokens?service=registry&scope=repository:${1}:pull,push"
+
+  SCW_SECRET_KEY=""
   unset SCW_SECRET_KEY
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
