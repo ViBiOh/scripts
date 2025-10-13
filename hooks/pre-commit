@@ -94,6 +94,10 @@ bazel_check() {
     fi
   done
 
+  if [[ ${#DIRNAMES[@]} -eq 0 ]]; then
+    return
+  fi
+
   local COMMON_PREFIX
   COMMON_PREFIX="${DIRNAMES[0]}"
 
