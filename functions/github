@@ -326,9 +326,6 @@ github_clone() {
 github_clean_subscription() {
   meta_check "var" "http"
 
-  local GITHUB_ORGANIZATION="${1-}"
-  shift || true
-
   github_http_init
 
   local page=0
