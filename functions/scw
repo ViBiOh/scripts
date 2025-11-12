@@ -6,13 +6,14 @@ scw_allow_ip() {
   local ZONE="${1:-fr-par-2}"
   shift 1 || true
 
-  http_init_client --header "X-Auth-Token: $(pass_get "dev/scaleway" "secret_key")" -4
-
-  http_request "https://ifconfig.me"
+  http_init_client
+  http_request "https://ifconfig.co/ip"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to get public IP"
     return 1
   fi
+
+  http_init_client --header "X-Auth-Token: $(pass_get "dev/scaleway" "secret_key")" -4
 
   local PUBLIC_IP
   PUBLIC_IP="$(cat "${HTTP_OUTPUT}")"
