@@ -153,7 +153,17 @@ var_info() {
 }
 
 var_print_and_run() {
-  printf -- "%b%s%b\n" "${YELLOW}" "${*}" "${RESET}" 1>&2
-  history -s "${*}"
-  eval "${*}"
+  declare ARGS=()
+
+  for arg in "${@}"; do
+    if [[ ${arg} =~ ^[_[:alnum:]\/-]+$ ]]; then
+      ARGS+=("${arg}")
+    else
+      ARGS+=("'${arg}'")
+    fi
+  done
+
+  printf -- "%b%s%b\n" "${YELLOW}" "${ARGS[*]}" "${RESET}" 1>&2
+  history -s "${ARGS[*]}"
+  eval "${ARGS[*]}"
 }
