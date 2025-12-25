@@ -190,7 +190,7 @@ main() {
     fi
   fi
 
-  var_print_and_run git commit --signoff --message \""$(printf -- "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES_STRING}" "${CO_AUTHOR_STRING}")"\" "${@}"
+  var_print_and_run git commit --signoff --message "$(printf -- "%s%s%s: %s%b%b%b" "${SCOPE}" "${COMPONENT}" "${BREAKING}" "${SKIP_CI}" "${MESSAGE}" "${ISSUES_STRING}" "${CO_AUTHOR_STRING}")" "${@}"
 }
 
 main "${@}"
