@@ -159,7 +159,7 @@ var_print_and_run() {
     if [[ ${arg} =~ ^[_[:alnum:]\/-]+$ ]]; then
       ARGS+=("${arg}")
     else
-      ARGS+=("'${arg}'")
+      ARGS+=("'${arg//\'/\'\"\'\"\'}'")
     fi
   done
 
