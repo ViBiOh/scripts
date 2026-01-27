@@ -52,7 +52,18 @@ golang_check() {
   fi
 
   if ! [[ -e "Makefile" ]]; then
-    return
+    if command -v golangci-lint >/dev/null 2>&1; then
+      declare -A DIRNAMES
+
+      for file in ${GO_FILES}; do
+        DIRNAMES["$(dirname "${file}")"]="true"
+      done
+
+      var_info "Linting Golang packages..."
+      for dirname in "${!DIRNAMES[@]}"; do
+        golangci-lint run --fix --show-stats=false --allow-parallel-runners "${dirname}"
+      done
+    fi
   fi
 
   local MAKE_TARGETS
@@ -64,17 +75,6 @@ golang_check() {
   elif [[ $(printf -- "%s" "${MAKE_TARGETS}" | grep --count "lint") -eq 1 ]]; then
     var_info "Linting Golang packages..."
     run_command make --silent lint
-  elif command -v golangci-lint >/dev/null 2>&1; then
-    declare -A DIRNAMES
-
-    for file in ${GO_FILES}; do
-      DIRNAMES["$(dirname "${file}")"]="true"
-    done
-
-    var_info "Linting Golang packages..."
-    for dirname in "${!DIRNAMES[@]}"; do
-      golangci-lint run --fix --show-stats=false --allow-parallel-runners "${dirname}"
-    done
   fi
 }
 
