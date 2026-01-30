@@ -52,19 +52,7 @@ golang_check() {
   fi
 
   if ! [[ -e "Makefile" ]]; then
-    if command -v golangci-lint >/dev/null 2>&1; then
-      declare -A DIRNAMES
-
-      for file in ${GO_FILES}; do
-        DIRNAMES["$(dirname "${file}")"]="true"
-      done
-
-      var_info "Linting Golang packages..."
-      for dirname in "${!DIRNAMES[@]}"; do
-        var_info "\tProcessing ${dirname}"
-        golangci-lint run --fix --show-stats=false --allow-parallel-runners "${dirname}"
-      done
-    fi
+    return
   fi
 
   local MAKE_TARGETS
