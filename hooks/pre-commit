@@ -61,6 +61,7 @@ golang_check() {
 
       var_info "Linting Golang packages..."
       for dirname in "${!DIRNAMES[@]}"; do
+        var_info "\tProcessing ${dirname}"
         golangci-lint run --fix --show-stats=false --allow-parallel-runners "${dirname}"
       done
     fi
