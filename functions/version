@@ -37,7 +37,7 @@ version_bump() {
         continue
       fi
 
-      if [[ -n ${REGEX_FILTER} ]] && ! [[ ${dep} =~ ${REGEX_FILTER} ]]; then
+      if [[ -n ${REGEX_FILTER:-} ]] && ! [[ ${dep} =~ ${REGEX_FILTER} ]]; then
         continue
       fi
 
@@ -69,7 +69,7 @@ version_semver() {
   local CURRENT_VERSION
   CURRENT_VERSION="$(git describe --tags --abbrev=0 2>/dev/null)"
 
-  if [[ -n ${CURRENT_VERSION} ]]; then
+  if [[ -n ${CURRENT_VERSION:-} ]]; then
     if ! [[ ${CURRENT_VERSION} =~ ([a-zA-Z]*)([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
       var_error "cannot parse existing version: ${CURRENT_VERSION}"
       return 2

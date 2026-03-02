@@ -42,7 +42,7 @@ golang_build() {
       fi
 
       local LDFLAGS="-s -w"
-      if [[ -n ${GIT_TAG-} ]] && [[ -n ${GO_VERSION_PATH-} ]]; then
+      if [[ -n ${GIT_TAG:-} ]] && [[ -n ${GO_VERSION_PATH:-} ]]; then
         LDFLAGS+=" -X '${GO_VERSION_PATH}=${GIT_TAG}'"
       fi
 
@@ -66,7 +66,7 @@ golang_build() {
           var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
           go build "-ldflags=${LDFLAGS}" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
 
-          if [[ -n ${GPG_FINGERPRINT-} ]]; then
+          if [[ -n ${GPG_FINGERPRINT:-} ]]; then
             gpg --no-tty --batch --detach-sign --armor --local-user "${GPG_FINGERPRINT}" "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}"
           fi
         )

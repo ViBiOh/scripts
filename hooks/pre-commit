@@ -138,7 +138,7 @@ npm_check() {
     var_warning "cannot check node_modules lock file: npm not found. Skipping."
   fi
 
-  if [[ -n ${JS_FILES-} ]]; then
+  if [[ -n ${JS_FILES:-} ]]; then
     if command -v npm >/dev/null 2>&1; then
       var_info "Formatting javascript files"
       run_command npm --silent run --if-present format ${JS_FILES[@]}

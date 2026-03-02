@@ -101,7 +101,7 @@ get_co_author() {
   CO_AUTHOR_EMAIL="$(jq --raw-output '.[] | select(.type == "PushEvent") | .payload.commits[] | .author.name + "<" + .author.email + ">"' "${HTTP_OUTPUT}" | sort | uniq | grep -v '\[bot\]' | fzf --height=20 --ansi --reverse --prompt='Email> ')"
   rm "${HTTP_OUTPUT}"
 
-  if [[ -n ${CO_AUTHOR_EMAIL} ]]; then
+  if [[ -n ${CO_AUTHOR_EMAIL:-} ]]; then
     printf -- "\n\nCo-authored-by: %s" "${CO_AUTHOR_EMAIL}"
   fi
 }

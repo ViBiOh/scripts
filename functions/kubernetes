@@ -43,7 +43,7 @@ kubernetes_redis_cli() {
 
   local AUTH_PASS
 
-  if [[ -n ${AUTH_SECRET-} ]]; then
+  if [[ -n ${AUTH_SECRET:-} ]]; then
     AUTH_PASS="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get secrets "${AUTH_SECRET}" --output=yaml | yq eval '.data[] |= @base64d | .data' | fzf --height=20 --ansi --reverse --select-1 --prompt "Auth: " | awk '{print $2}')"
 
     if [[ -z ${AUTH_PASS-} ]]; then
@@ -269,7 +269,7 @@ kubernetes_postgres_backup() {
     return 1
   fi
 
-  if [[ -n ${POSTGRES_POD} ]]; then
+  if [[ -n ${POSTGRES_POD:-} ]]; then
     kubectl --context "${CONTEXT}" exec --tty "${POSTGRES_POD}" -- pg_dump --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" >"${BACKUP_FILE}"
   fi
 }
@@ -307,11 +307,11 @@ kubernetes_postgres_restore() {
   local POSTGRES_POD
   POSTGRES_POD="$(kubectl --context "${CONTEXT}" get pods --output name | fzf --height=20 --ansi --reverse --prompt "Pod: ")"
 
-  if [[ -z ${POSTGRES_POD-} ]]; then
+  if [[ -z ${POSTGRES_POD:-} ]]; then
     return 1
   fi
 
-  if [[ -n ${POSTGRES_POD} ]]; then
+  if [[ -n ${POSTGRES_POD:-} ]]; then
     kubectl --context "${CONTEXT}" exec --tty --stdin "${POSTGRES_POD}" -- pg_restore --format=c --user "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <"${BACKUP_FILE}"
   fi
 }

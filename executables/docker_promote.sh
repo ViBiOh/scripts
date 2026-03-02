@@ -94,7 +94,7 @@ promote() {
     var_success "Image promoted to ${VERSION_TARGET}!"
     rm "${HTTP_OUTPUT}"
 
-    if [[ -n ${DATE_VERSION-} ]]; then
+    if [[ -n ${DATE_VERSION:-} ]]; then
       # Tagging image with timestamp
       http_request --request PUT "https://${DOCKER_REGISTRY}/v2/${DOCKER_IMAGE}/manifests/${DATE_VERSION}" \
         --header "Content-Type: ${manifest}" \

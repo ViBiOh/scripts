@@ -258,18 +258,18 @@ git_changelog() {
 
         VERSION_MESSAGE="*"
 
-        if [[ -n ${REVERT} ]]; then
+        if [[ -n ${REVERT:-} ]]; then
           VERSION_MESSAGE+=" **reverted**"
         fi
 
-        if [[ -n ${COMPONENT} ]]; then
+        if [[ -n ${COMPONENT:-} ]]; then
           VERSION_MESSAGE+=" *${COMPONENT}*"
         fi
 
         VERSION_MESSAGE+=" ${CONTENT}"
       fi
 
-      if [[ -z ${VERSION_MESSAGE} ]]; then
+      if [[ -z ${VERSION_MESSAGE:-} ]]; then
         break
       fi
 
@@ -288,8 +288,8 @@ git_changelog() {
       fi
     done
 
-    if [[ -n ${VERSION_MESSAGE} ]]; then
-      if [[ -n ${HASH} ]]; then
+    if [[ -n ${VERSION_MESSAGE:-} ]]; then
+      if [[ -n ${HASH:-} ]]; then
         VERSION_MESSAGE+=" ${HASH}"
       fi
 

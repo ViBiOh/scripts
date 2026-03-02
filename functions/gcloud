@@ -23,7 +23,7 @@ gcloud_account() {
   local GCLOUD_ACCOUNT
   GCLOUD_ACCOUNT="$(gcloud auth list --format 'value(account)' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}")"
 
-  if [[ -n ${GCLOUD_ACCOUNT} ]]; then
+  if [[ -n ${GCLOUD_ACCOUNT:-} ]]; then
     gcloud config set account "${GCLOUD_ACCOUNT}"
   fi
 }
@@ -32,7 +32,7 @@ gcloud_kube_import() {
   local GCLOUD_PROJECT
   GCLOUD_PROJECT="$(gcloud projects list --format json | gcloud projects list --format json | jq --raw-output '.[] | .projectId + " " + .name' | fzf --height=20 --ansi --reverse --select-1 --query="${1-}")"
 
-  if [[ -z ${GCLOUD_PROJECT-} ]]; then
+  if [[ -z ${GCLOUD_PROJECT:-} ]]; then
     return 1
   fi
 
@@ -54,11 +54,11 @@ gcloud_kube_import() {
   local CLUSTER_ZONE
   CLUSTER_ZONE="$(printf '%s' "${GCLOUD_CLUSTER}" | awk -F '@' '{ print $2 }')"
 
-  if [[ -n ${CLUSTER_NAME-} ]]; then
+  if [[ -n ${CLUSTER_NAME:-} ]]; then
     gcloud --project "${GCLOUD_PROJECT_ID}" container clusters get-credentials "${CLUSTER_NAME}" --zone "${CLUSTER_ZONE}"
     kubectl config rename-context "$(kubectl config current-context)" "${GCLOUD_PROJECT_NAME}_${CLUSTER_NAME}"
 
-    if [[ -n ${2-} ]]; then
+    if [[ -n ${2:-} ]]; then
       kubectl config set-context --current --namespace "${3:-default}"
     fi
   fi
