@@ -104,9 +104,9 @@ kubernetes_shell() {
     local VAR_NAME="${1}"
     shift
 
-    if [[ -n ${BASH_VERSION} ]]; then
+    if [[ -n ${BASH_VERSION:-} ]]; then
       read -r -p "${VAR_PROMPT}" "${@}" "${VAR_NAME}" </dev/tty
-    elif [[ -n ${ZSH_VERSION} ]]; then
+    elif [[ -n ${ZSH_VERSION:-} ]]; then
       read -r "${VAR_NAME}?${VAR_PROMPT}" "${@}" </dev/tty
     else
       var_error "Shell not supported for reading user input"
