@@ -101,7 +101,9 @@ ssh_agent_init() {
         ssh_agent_start
       fi
 
-      ssh-add -k "${key%.pub}"
+      if [[ -e ${key%.pub} ]]; then
+        ssh-add -k "${key%.pub}"
+      fi
     done < <(find "${HOME}/.ssh" -type f -name '*.pub' -print0)
   fi
 }

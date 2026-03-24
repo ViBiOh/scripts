@@ -112,7 +112,7 @@ bazel_check() {
 
   if [[ ${COMMON_PREFIX} != "/" ]] && [[ ${COMMON_PREFIX} != "." ]]; then
     var_info "Checking Bazel Gazelle for ${COMMON_PREFIX}/"
-    run_command bzl run --ui_event_filters=-info,-stdout,-stderr --show_progress=false --color=no //:gazelle -- fix "${COMMON_PREFIX}/"
+    run_command bzl run --ui_event_filters=-INFO,-DEBUG --show_progress=false --color=no //:gazelle -- fix "${COMMON_PREFIX}/"
   fi
 }
 
