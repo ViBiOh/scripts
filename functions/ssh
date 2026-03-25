@@ -61,11 +61,7 @@ ssh_proxy() {
 }
 
 ssh_agent_running() {
-  if ps -p "${SSH_AGENT_PID-}" >/dev/null 2>&1; then
-    return 0
-  fi
-
-  return 1
+  ps -p "${SSH_AGENT_PID-}" >/dev/null 2>&1
 }
 
 ssh_agent_stop() {
