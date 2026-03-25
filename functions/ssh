@@ -71,10 +71,6 @@ ssh_agent_stop() {
     source <(sed 's|export|unset|' "${SSH_ENV}")
     rm -rf "${SSH_ENV:?}"
   fi
-
-  for pid in $(pgrep 'ssh-agent'); do
-    kill -9 "${pid}"
-  done
 }
 
 ssh_agent_start() {
