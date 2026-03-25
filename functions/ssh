@@ -5,11 +5,13 @@ SSH_ENV="${HOME}/.ssh/environment"
 _ssh_scripts_init() {
   unset SSH_AUTH_SOCK
 
-  if [[ ${SSH_INIT_FROM_FILE:-} == "true" ]]; then
-    ssh_init
+  if [[ -f ${SSH_ENV-} ]]; then
+    source "${SSH_ENV}"
   fi
 
-  return 0
+  if ! ssh_agent_running && [[ $(type -t ssh_agent_init) == "function" ]]; then
+    ssh_agent_init
+  fi
 }
 
 ssh_forward_local() {
@@ -105,15 +107,5 @@ ssh_agent_init() {
         ssh-add -k "${key%.pub}"
       fi
     done < <(find "${HOME}/.ssh" -type f -name '*.pub' -print0)
-  fi
-}
-
-ssh_init() {
-  if [[ -f ${SSH_ENV-} ]]; then
-    source "${SSH_ENV}"
-  fi
-
-  if ! ssh_agent_running && [[ $(type -t ssh_agent_init) == "function" ]]; then
-    ssh_agent_init
   fi
 }
