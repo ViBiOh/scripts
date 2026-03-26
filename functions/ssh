@@ -90,12 +90,12 @@ ssh_agent_init() {
     local AGENT_INITIALIZED="false"
 
     while IFS= read -r -d '' key; do
-      if [[ ${AGENT_INITIALIZED} == "false" ]]; then
-        AGENT_INITIALIZED="true"
-        ssh_agent_start
-      fi
-
       if [[ -e ${key%.pub} ]]; then
+        if [[ ${AGENT_INITIALIZED} == "false" ]]; then
+          AGENT_INITIALIZED="true"
+          ssh_agent_start
+        fi
+
         ssh-add -k "${key%.pub}"
       fi
     done < <(find "${HOME}/.ssh" -type f -name '*.pub' -print0)
