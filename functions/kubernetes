@@ -5,10 +5,6 @@ _kubernetes_scripts_init() {
 }
 
 kubernetes_redis_cli() {
-  _info() {
-    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
-  }
-
   local CONTEXT
   CONTEXT="$(kubectl config get-contexts -o name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context: ")"
 
@@ -16,7 +12,7 @@ kubernetes_redis_cli() {
     return 1
   fi
 
-  _info "Context: ${CONTEXT}"
+  var_info "Context: ${CONTEXT}"
 
   local NAMESPACE
   NAMESPACE="$(kubectl --context "${CONTEXT}" get namespaces --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Namespace: ")"
@@ -25,7 +21,7 @@ kubernetes_redis_cli() {
     return 1
   fi
 
-  _info "Namespace: ${NAMESPACE}"
+  var_info "Namespace: ${NAMESPACE}"
 
   local ENDPOINT
   ENDPOINT="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get endpoints --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Endpoint: ")"
@@ -34,12 +30,12 @@ kubernetes_redis_cli() {
     return 1
   fi
 
-  _info "Endpoint: ${ENDPOINT}"
+  var_info "Endpoint: ${ENDPOINT}"
 
   local AUTH_SECRET
   AUTH_SECRET="$(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get secrets --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Secret: ")"
 
-  _info "Secret: ${AUTH_SECRET}"
+  var_info "Secret: ${AUTH_SECRET}"
 
   local AUTH_PASS
 
@@ -54,7 +50,7 @@ kubernetes_redis_cli() {
   local POD_NAME="redis-cli"
 
   if [[ $(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get pod "${POD_NAME}" 2>/dev/null | wc -l) -eq 0 ]]; then
-    _info "Creating a redis-cli pod"
+    var_info "Creating a redis-cli pod"
 
     cat <<EOF | kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" apply -f -
 apiVersion: v1
@@ -76,44 +72,18 @@ spec:
         - "tail -f /dev/null"
 EOF
 
-    _info "Waiting for Running condition..."
+    var_info "Waiting for Running condition..."
     kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" wait --for=jsonpath='{.status.phase}'=Running "pod/${POD_NAME}"
   fi
 
-  _info "Connecting to the ${POD_NAME} pod..."
+  var_info "Connecting to the ${POD_NAME} pod..."
   kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" exec "${POD_NAME}" --stdin --tty -- iredis -h "${ENDPOINT}" --password "${AUTH_PASS}" || true
 
-  _info "Deleting the ${POD_NAME} pod..."
+  var_info "Deleting the ${POD_NAME} pod..."
   kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" delete pod "${POD_NAME}"
 }
 
 kubernetes_shell() {
-  _info() {
-    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
-  }
-
-  _read_input() {
-    if [[ ${#} -lt 2 ]]; then
-      var_red "Usage: var_read_input VAR_PROMPT VAR_NAME"
-      return 1
-    fi
-
-    local VAR_PROMPT="${1}"
-    shift
-
-    local VAR_NAME="${1}"
-    shift
-
-    if [[ -n ${BASH_VERSION:-} ]]; then
-      read -r -p "${VAR_PROMPT}" "${@}" "${VAR_NAME}" </dev/tty
-    elif [[ -n ${ZSH_VERSION:-} ]]; then
-      read -r "${VAR_NAME}?${VAR_PROMPT}" "${@}" </dev/tty
-    else
-      var_error "Shell not supported for reading user input"
-      return 1
-    fi
-  }
-
   local CONTEXT
   CONTEXT="$(kubectl config get-contexts -o name | fzf --height=20 --ansi --reverse --select-1 --query="${1-}" --prompt "Context: ")"
 
@@ -121,7 +91,7 @@ kubernetes_shell() {
     return 1
   fi
 
-  _info "Context: ${CONTEXT}"
+  var_info "Context: ${CONTEXT}"
 
   local NAMESPACE
   NAMESPACE="$(kubectl --context "${CONTEXT}" get namespaces --output=yaml | yq eval '.items[].metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Namespace: ")"
@@ -130,13 +100,13 @@ kubernetes_shell() {
     return 1
   fi
 
-  _info "Namespace: ${NAMESPACE}"
+  var_info "Namespace: ${NAMESPACE}"
 
   local POD_NAME
   POD_NAME="$(whoami)-shell"
 
   if [[ $(kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" get pod "${POD_NAME}" 2>/dev/null | wc -l) -eq 0 ]]; then
-    _info "Creating a shell pod"
+    var_info "Creating a shell pod"
 
     local IMAGE
     IMAGE="$(printf -- "alpine\nubuntu\nnode\npython\nother" | fzf --height=20 --ansi --reverse --select-1 --query="${3-}" --prompt "Image: ")"
@@ -145,7 +115,7 @@ kubernetes_shell() {
       IMAGE="${4-}"
 
       if [[ -z ${IMAGE:-} ]]; then
-        _read_input "Image name: " IMAGE
+        var_read "Image name: " IMAGE
       fi
     fi
 
@@ -170,27 +140,18 @@ spec:
         - "tail -f /dev/null"
 EOF
 
-    _info "Waiting for Running condition..."
+    var_info "Waiting for Running condition..."
     kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" wait --for=jsonpath='{.status.phase}'=Running "pod/${POD_NAME}"
   fi
 
-  _info "Connecting to the ${POD_NAME} pod..."
+  var_info "Connecting to the ${POD_NAME} pod..."
   kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" exec "${POD_NAME}" --stdin --tty -- "/bin/sh" || true
 
-  _info "Deleting the ${POD_NAME} pod..."
+  var_info "Deleting the ${POD_NAME} pod..."
   kubectl --context "${CONTEXT}" --namespace "${NAMESPACE}" delete pod "${POD_NAME}"
 }
 
 kubernetes_sql_forward() {
-  _print_and_run() {
-    printf -- "%b%s%b\n" "${YELLOW}" "${*}" "${RESET}" 1>&2
-    eval "${*}"
-  }
-
-  _info() {
-    printf -- "%b%b%b\n" "${BLUE}" "${*}" "${RESET}" 1>&2
-  }
-
   _find_port() {
     local START_INDEX=3
     local POSSIBLE_PORTS="9876543"
@@ -217,7 +178,7 @@ kubernetes_sql_forward() {
     return 1
   fi
 
-  _info "Context: ${CONTEXT}"
+  var_info "Context: ${CONTEXT}"
 
   local POD
   POD="$(kubectl --context "${CONTEXT}" get --all-namespaces pods --output yaml | yq eval '.items[] | select(.status.phase == "Running") | .metadata.namespace + "/" + .metadata.name' | fzf --height=20 --ansi --reverse --select-1 --query="${2-}" --prompt "Pod: ")"
@@ -226,7 +187,7 @@ kubernetes_sql_forward() {
     return 1
   fi
 
-  _info "Pod: ${POD}"
+  var_info "Pod: ${POD}"
 
   local NAMESPACE
   NAMESPACE="$(printf '%s' "${POD}" | awk -F '/' '{ print $1 }')"
@@ -237,7 +198,7 @@ kubernetes_sql_forward() {
   local EXPOSED_PORT="5432"
   EXPOSED_PORT="$(_find_port "${EXPOSED_PORT}")"
 
-  _print_and_run kubectl --context "${CONTEXT}" port-forward --namespace "${NAMESPACE}" "pod/${NAME}" --address "127.0.0.1" "${EXPOSED_PORT}:${3:-5432}"
+  var_print_and_run kubectl --context "${CONTEXT}" port-forward --namespace "${NAMESPACE}" "pod/${NAME}" --address "127.0.0.1" "${EXPOSED_PORT}:${3:-5432}"
 }
 
 kubernetes_postgres_backup() {
@@ -294,10 +255,7 @@ kubernetes_postgres_restore() {
 
   local BACKUP_FILE
   BACKUP_FILE="$(
-    if command -v rg >/dev/null 2>&1; then
-      export FZF_DEFAULT_COMMAND='rg --files --sortr path 2> /dev/null'
-    fi
-    fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
+    FZF_DEFAULT_COMMAND='rg --files --sortr path 2> /dev/null' fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
   )"
 
   if [[ -z ${BACKUP_FILE-} ]]; then
@@ -329,10 +287,7 @@ docker_postgres_restore() {
 
   local BACKUP_FILE
   BACKUP_FILE="$(
-    if command -v rg >/dev/null 2>&1; then
-      export FZF_DEFAULT_COMMAND='rg --files --sortr path 2> /dev/null'
-    fi
-    fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
+    FZF_DEFAULT_COMMAND='rg --files --sortr path 2> /dev/null' fzf --height=20 --ansi --reverse --query "${POSTGRES_DB}"
   )"
 
   if [[ -z ${BACKUP_FILE-} ]]; then
