@@ -51,8 +51,6 @@ github_repo_pr_stats() {
   local GITHUB_REPOSITORY="${1}"
   shift
 
-  github_http_init
-
   local pr_page=0
   local pr_page_size=100
   local pr_count="${pr_page_size}"
@@ -68,6 +66,7 @@ github_repo_pr_stats() {
     http_request "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=closed&per_page=${pr_page_size}&page=${pr_page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list ${GITHUB_REPOSITORY} pull-requests on page ${pr_page}"
+      http_reset
       break
     fi
 
@@ -118,8 +117,6 @@ github_repo_stats() {
   local GITHUB_REPOSITORY="${1}"
   shift
 
-  github_http_init
-
   local retry="true"
   local retryCount=0
 
@@ -136,7 +133,6 @@ github_repo_stats() {
 
       if [[ ${retryCount} -gt 10 ]]; then
         var_error "Contributions cannot be compiled, ignoring repo"
-
         return 1
       fi
 
@@ -145,6 +141,7 @@ github_repo_stats() {
 
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to get contributors' stats for ${GITHUB_REPOSITORY}"
+      http_reset
       return 1
     fi
 
@@ -182,8 +179,6 @@ github_org_stats() {
   local REPOSITORY_FILTER_REGEX="${1:-.*}"
   shift || true
 
-  github_http_init
-
   local repo_page=0
   local repo_page_size=100
   local repo_count="${repo_page_size}"
@@ -198,6 +193,7 @@ github_org_stats() {
     http_request "https://api.github.com/orgs/${GITHUB_ORGANIZATION}/repos?per_page=${repo_page_size}&page=${repo_page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list ${GITHUB_ORGANIZATION} repositories on page ${repo_page}"
+      http_reset
       break
     fi
 
@@ -220,6 +216,7 @@ github_org_stats() {
   jq '.' --slurp "${GITHUB_ORGANIZATION}/"*.json >"${GITHUB_ORGANIZATION}.json"
 
   rm -r "${GITHUB_ORGANIZATION}"
+  http_reset
 }
 
 github_org_stats_user() {
@@ -260,6 +257,7 @@ github_clone() {
   http_request "https://api.github.com/user"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to get user information"
+    http_reset
     return 1
   fi
 
@@ -290,6 +288,7 @@ github_clone() {
     http_request --header "Content-Type: application/json" "https://api.github.com/${scope}/repos?type=owner&per_page=${page_size}&page=${page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list user repositories on page ${page}"
+      http_reset
       return 1
     fi
 
@@ -321,6 +320,8 @@ github_clone() {
       fi
     done
   done
+
+  http_reset
 }
 
 github_clean_subscription() {
@@ -340,6 +341,7 @@ github_clean_subscription() {
     http_request "https://api.github.com/notifications?all=true&per_page=${page_size}&page=${page}"
     if [[ ${HTTP_STATUS} != "200" ]]; then
       http_handle_error "Unable to list notifications on page ${page}"
+      http_reset
       break
     fi
 
@@ -362,6 +364,8 @@ github_clean_subscription() {
       rm "${HTTP_OUTPUT}"
     done
   done
+
+  http_reset
 }
 
 github_release() {
@@ -426,9 +430,12 @@ github_release() {
   http_request --request "POST" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" --data "${PAYLOAD}"
   if [[ ${HTTP_STATUS} != "201" ]]; then
     http_handle_error "Unable to create release"
+    http_reset
     return 1
   fi
   rm "${HTTP_OUTPUT}"
+
+  http_reset
 
   var_success "${GITHUB_REPOSITORY}@${RELEASE_NAME} created!"
 
@@ -511,9 +518,10 @@ github_pull_request() {
     )"
   if [[ ${HTTP_STATUS} != "201" ]]; then
     http_handle_error "Unable to create pull request for ${PR_HEAD}"
+    http_reset
     return 1
   fi
 
   jq --raw-output '.html_url' "${HTTP_OUTPUT}"
-  rm "${HTTP_OUTPUT}"
+  http_reset
 }
