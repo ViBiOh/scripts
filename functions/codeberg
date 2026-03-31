@@ -127,3 +127,42 @@ codeberg_set_secret() {
 
   http_reset
 }
+
+codeberg_set_hook() {
+  if [[ ${#} -ne 2 ]]; then
+    var_red "Usage: codeberg_set_hook CODEBERG_REPOSITORY HOOK_URL"
+    return 1
+  fi
+  codeberg_http_init
+
+  local CODEBERG_REPOSITORY="${1}"
+  shift
+
+  local HOOK_URL="${1}"
+  shift
+
+  http_request "https://codeberg.org/api/v1/repos/${CODEBERG_REPOSITORY}/hooks"
+  if [[ ${HTTP_STATUS} == "404" ]]; then
+    VARIABLE_METHOD="POST"
+  fi
+
+  http_request \
+    --request "${VARIABLE_METHOD}" \
+    --header "Content-Type: application/json" \
+    --data "$(json --arg "url" "${HOOK_URL}" '{
+      branch_filter: "main",
+      events: ["push"],
+      config: {
+        url: $url
+      },
+      type: "forgejo"
+    }')" \
+    "https://codeberg.org/api/v1/repos/${CODEBERG_REPOSITORY}/hooks"
+  if [[ ${HTTP_STATUS} != "201" ]]; then
+    http_handle_error "Unable to set ${VARIABLE_NAME} hook of ${CODEBERG_REPOSITORY}"
+    http_reset
+    return 1
+  fi
+
+  http_reset
+}
