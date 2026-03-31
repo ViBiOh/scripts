@@ -49,7 +49,9 @@ http_request() {
 }
 
 http_reset() {
-  rm "${HTTP_OUTPUT}"
+  if [[ -e ${HTTP_OUTPUT} ]]; then
+    rm "${HTTP_OUTPUT}"
+  fi
 
   HTTP_CLIENT_ARGS=()
   export HTTP_CLIENT_ARGS
