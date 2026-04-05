@@ -131,7 +131,6 @@ docker_build() {
     --tag "${BUILT_IMAGE}" \
     --build-arg "VERSION=${IMAGE_VERSION}" \
     --build-arg "GIT_SHA=${GIT_SHA}" \
-    -o "type=registry,oci-mediatypes=true,compression=estargz,force-compression=true" \
     .
 }
 
