@@ -34,6 +34,7 @@ auth_token() {
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to retrieve token for ${1}"
+    http_reset
     exit 1
   fi
 
@@ -58,6 +59,7 @@ scw_login() {
 
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to retrieve token for ${1}"
+    http_reset
     exit 1
   fi
 
@@ -111,6 +113,7 @@ promote() {
     return
   done
 
+  http_reset
   exit 1
 }
 
@@ -167,6 +170,7 @@ main() {
   fi
 
   promote
+  http_reset
 }
 
 main "${@}"

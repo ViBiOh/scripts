@@ -147,6 +147,7 @@ release_upload() {
   http_request --header "Content-Type: application/json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${GIT_TAG}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to get release"
+    http_reset
     return 1
   fi
 
@@ -160,6 +161,7 @@ release_upload() {
     http_request --header "Content-Type: application/x-executable" --request POST "${RESPONSE_URL}?name=$(basename "${asset}")" --data-binary "@${asset}"
     if [[ ${HTTP_STATUS} != "201" ]]; then
       http_handle_error "Unable to upload asset ${asset}"
+      http_reset
       return 1
     fi
 
@@ -189,7 +191,7 @@ script_dir() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_check "var" "git" "github" "http" "version"
+  source "$(script_dir)/meta" && meta_check "var" "git" "http" "version"
 
   local ROOT_DIR
   ROOT_DIR="$(git_root)"
