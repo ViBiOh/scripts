@@ -15,7 +15,7 @@ main() {
   local TEST_OPTIONS=()
 
   if [[ ${GO_TEST_NO_RACE:-} != "true" ]]; then
-    TEST_OPTIONS+=("-race-")
+    TEST_OPTIONS+=("-race")
   fi
 
   (
