@@ -124,7 +124,7 @@ docker_build() {
   export DOCKER_BUILDKIT="1"
 
   var_info "Building and pushing image ${BUILT_IMAGE} for ${DOCKER_PLATFORMS}"
-  docker build \
+  docker buildx build \
     --push \
     --platform "${DOCKER_PLATFORMS}" \
     --file "${DOCKERFILE}" \
