@@ -76,7 +76,7 @@ golang_build() {
 }
 
 docker_dependencies() {
-  docker run -v "$(pwd):/tmp/" --rm "alpine" /bin/sh -c 'apk --update add tzdata ca-certificates zip && cd /usr/share/zoneinfo/ && zip -q -r -0 /tmp/zoneinfo.zip . && cp /etc/ssl/certs/ca-certificates.crt /tmp/ca-certificates.crt'
+  docker run -v "$(pwd):/tmp/" --dns 1.1.1.1 --rm "alpine" /bin/sh -c 'apk --update add tzdata ca-certificates zip && cd /usr/share/zoneinfo/ && zip -q -r -0 /tmp/zoneinfo.zip . && cp /etc/ssl/certs/ca-certificates.crt /tmp/ca-certificates.crt'
 
   if [[ ${RELEASE_NEED_WAIT-} == "true" ]]; then
     # renovate: datasource=github-releases depName=ViBiOh/wait
@@ -124,7 +124,7 @@ docker_build() {
   export DOCKER_BUILDKIT="1"
 
   var_info "Building and pushing image ${BUILT_IMAGE} for ${DOCKER_PLATFORMS}"
-  docker buildx build \
+  docker build \
     --push \
     --platform "${DOCKER_PLATFORMS}" \
     --file "${DOCKERFILE}" \
