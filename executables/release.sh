@@ -190,7 +190,7 @@ script_dir() {
 }
 
 main() {
-  source "$(script_dir)/meta" && meta_check "var" "git" "http" "version"
+  source "$(script_dir)/meta" && meta_check "var" "git" "http"
 
   local ROOT_DIR
   ROOT_DIR="$(git_root)"
