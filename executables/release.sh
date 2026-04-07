@@ -28,7 +28,7 @@ golang_build() {
     local OUTPUT_BINARIES
     mapfile -t OUTPUT_BINARIES < <(go list -f '{{ .Dir }} {{ .Name }}' "${SOURCE_DIR}" | grep "main" | awk '{print $1}')
 
-    local GO_ARCHS="${GO_ARCHS:-linux/amd64 linux/arm linux/arm64 darwin/amd64 darwin/arm64}"
+    local GO_ARCHS="${GO_ARCHS:-linux/amd64 linux/arm64 darwin/arm64}"
 
     for main in "${OUTPUT_BINARIES[@]}"; do
       local EXTENSION
@@ -82,7 +82,7 @@ docker_dependencies() {
     # renovate: datasource=github-releases depName=ViBiOh/wait
     local WAIT_VERSION="v0.1.0"
 
-    for platform in ${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}; do
+    for platform in ${DOCKER_ARCHS:-linux/amd64 linux/arm64}; do
       local BUILD_GOOS
       BUILD_GOOS="$(printf '%s' "${platform}" | awk -F '/' '{ print $1 }')"
       local BUILD_GOARCH
@@ -110,7 +110,7 @@ docker_build() {
   fi
 
   local DOCKER_PLATFORMS
-  DOCKER_PLATFORMS="${DOCKER_ARCHS:-linux/amd64 linux/arm linux/arm64}"
+  DOCKER_PLATFORMS="${DOCKER_ARCHS:-linux/amd64 linux/arm64}"
   DOCKER_PLATFORMS="${DOCKER_PLATFORMS// /,}"
 
   local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}"
