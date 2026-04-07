@@ -123,6 +123,9 @@ docker_build() {
   export DOCKER_CLI_EXPERIMENTAL="enabled"
   export DOCKER_BUILDKIT="1"
 
+  # TODO remove me
+  ls -litrah
+
   var_info "Building and pushing image ${BUILT_IMAGE} for ${DOCKER_PLATFORMS}"
   docker buildx build \
     --push \
