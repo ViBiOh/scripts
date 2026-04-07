@@ -64,7 +64,7 @@ golang_build() {
           fi
 
           var_info "Building binary ${NAME}_${GOOS}_${GOARCH} to ${OUTPUT_DIR}"
-          go build "-ldflags=${LDFLAGS}" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
+          go build -tags timetzdata "-ldflags=${LDFLAGS}" -installsuffix nocgo -o "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}" "${main}"
 
           if [[ -n ${GPG_FINGERPRINT:-} ]]; then
             gpg --no-tty --batch --detach-sign --armor --local-user "${GPG_FINGERPRINT}" "${OUTPUT_DIR}/${NAME}_${GOOS}_${GOARCH}${EXTENSION}"
@@ -76,7 +76,7 @@ golang_build() {
 }
 
 docker_dependencies() {
-  docker run -v "$(pwd):/tmp/" --dns 1.1.1.1 --rm "alpine" /bin/sh -c 'apk --update add tzdata ca-certificates zip && cd /usr/share/zoneinfo/ && zip -q -r -0 /tmp/zoneinfo.zip . && cp /etc/ssl/certs/ca-certificates.crt /tmp/ca-certificates.crt'
+  curl --etag-compare cacert.pem --etag-save cacert.pem --remote-name https://curl.se/ca/cacert.pem
 
   if [[ ${RELEASE_NEED_WAIT-} == "true" ]]; then
     # renovate: datasource=github-releases depName=ViBiOh/wait
