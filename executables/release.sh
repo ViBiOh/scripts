@@ -153,7 +153,7 @@ release_upload() {
   HTTP_CLIENT_ARGS+=("--max-time" "120")
 
   var_read GIT_TAG
-  http_request --header "Content-Type: application/json" "https://${RELEASE_API}/repos/${RELEASE_REPOSITORY}/releases/tags/${GIT_TAG}"
+  http_request --header "Content-Type: application/json" "${RELEASE_API}/repos/${RELEASE_REPOSITORY}/releases/tags/${GIT_TAG}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to get release"
     http_reset
