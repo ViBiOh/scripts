@@ -139,11 +139,21 @@ release_upload() {
     var_warning "Nothing to upload!"
   fi
 
-  http_init_client --header "Authorization: token ${GITHUB_TOKEN}"
+  if [[ -n ${GITHUB_REPOSITORY:-} ]]; then
+    RELEASE_API="${GITHUB_API_URL}"
+    RELEASE_REPOSITORY="${GITHUB_REPOSITORY}"
+    RELEASE_TOKEN="${GITHUB_TOKEN}"
+  elif [[ -n ${FORGEJO_REPOSITORY:-} ]]; then
+    RELEASE_API="${FORGEJO_SERVER_URL}"
+    RELEASE_REPOSITORY="${FORGEJO_REPOSITORY}"
+    RELEASE_TOKEN="${FORGEJO_TOKEN}"
+  fi
+
+  http_init_client --header "Authorization: token ${RELEASE_TOKEN}"
   HTTP_CLIENT_ARGS+=("--max-time" "120")
 
   var_read GIT_TAG
-  http_request --header "Content-Type: application/json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${GIT_TAG}"
+  http_request --header "Content-Type: application/json" "https://${RELEASE_API}/repos/${RELEASE_REPOSITORY}/releases/tags/${GIT_TAG}"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to get release"
     http_reset
@@ -166,6 +176,8 @@ release_upload() {
 
     rm "${HTTP_OUTPUT}"
   done
+
+  http_reset
 }
 
 release_usage() {
@@ -173,7 +185,7 @@ release_usage() {
   printf -- "clean\n\tClean output dir %s\n" "${OUTPUT_DIR}"
   printf -- "build\n\tBuild artifacts\n"
   printf -- "docker\n\tBuild docker images\n"
-  printf -- "assets\n\tUpload output dir content to GitHub release\n"
+  printf -- "assets\n\tUpload output dir content to repository release\n"
   printf -- "clean\n\tClean created output directory\n"
 }
 
