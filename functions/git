@@ -109,19 +109,6 @@ git_pull_all() {
   git_browse 'git default --quiet && git pull --quiet && git sweep'
 }
 
-git_remote_repository() {
-  if ! git_is_inside; then
-    return
-  fi
-
-  local REMOTE_URL
-  REMOTE_URL="$(git remote get-url --push "$(git remote show | head -1)")"
-
-  if [[ ${REMOTE_URL} =~ ^.*@.*:(.*)\/([^\.]*)(.git)?$ ]]; then
-    printf -- "%s/%s" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
-  fi
-}
-
 git_is_merge_commit() {
   if [[ ${1} =~ Merge\ (pull\ request|branch) ]]; then
     return 0
