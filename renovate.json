@@ -9,7 +9,7 @@
         ".*"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>[^\\s]+?)(?: (lookupName|packageName)=(?<packageName>[^\\s]+?))?(?: versioning=(?<versioning>[a-z-0-9]+?))?\\s.+?_VERSION=\"?(?<currentValue>.+?)\"?\\s"
+        "# renovate: datasource=(?<datasource>[^\\s]+)(?: registryUrl=(?<registryUrl>[^\\s]+))?(?: packageName=(?<packageName>[^\\s]+))?\\s.+?_VERSION=\"?(?<currentValue>.+?)\"?\\s"
       ]
     }
   ]

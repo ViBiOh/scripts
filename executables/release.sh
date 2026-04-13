@@ -79,7 +79,7 @@ docker_dependencies() {
   curl --etag-compare cacert.pem --etag-save cacert.pem --remote-name https://curl.se/ca/cacert.pem
 
   if [[ ${RELEASE_NEED_WAIT-} == "true" ]]; then
-    # renovate: datasource=github-releases depName=ViBiOh/wait
+    # renovate: datasource=forgejo-releases registryUrl=https://codeberg.org packageName=ViBiOh/wait
     local WAIT_VERSION="v0.2.0"
 
     for platform in ${DOCKER_ARCHS:-linux/amd64 linux/arm64}; do
