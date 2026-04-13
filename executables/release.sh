@@ -80,7 +80,7 @@ docker_dependencies() {
 
   if [[ ${RELEASE_NEED_WAIT-} == "true" ]]; then
     # renovate: datasource=forgejo-releases registryUrl=https://codeberg.org packageName=ViBiOh/wait
-    local WAIT_VERSION="v0.2.0"
+    local WAIT_VERSION="v0.2.1"
 
     for platform in ${DOCKER_ARCHS:-linux/amd64 linux/arm64}; do
       local BUILD_GOOS
