@@ -178,7 +178,7 @@ git_conventional_commit_guidelines() {
 git_valid_description_guideline() {
   meta_check "var"
 
-  var_warning "\nYou have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters). Current size is ${#1}"
+  var_warning "You have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters). Current size is ${#1}"
 }
 
 git_last_tag() {
