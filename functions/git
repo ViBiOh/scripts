@@ -158,7 +158,7 @@ git_is_valid_description() {
   return 0
 }
 
-git_conventional_commit_guidelines() {
+_git_conventional_commit_guidelines() {
   meta_check "var"
 
   var_warning "Guidelines for prefixing commit message from conventionalcommits.org\n"
@@ -175,7 +175,7 @@ git_conventional_commit_guidelines() {
   printf -- "\n\t%brevert: %bfeat%b(api)%b:%b Adding mandatory parameter on signup\n\n" "${RED}" "${GREEN}" "${BLUE}" "${GREEN}" "${RESET}"
 }
 
-git_valid_description_guideline() {
+_git_valid_description_guideline() {
   meta_check "var"
 
   var_warning "You have to use a short commit description (max ${COMMIT_MAX_LENGTH:-70} characters). Current size is ${#1}"
