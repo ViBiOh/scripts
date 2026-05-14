@@ -21,9 +21,6 @@ main() {
   (
     printf -- "%s\n" "${MODE}" >"${COVERAGE_OUTPUT}"
 
-    printf -- "Running tests for '%s' with options\n" "${PACKAGES:-./...}" >/dev/stderr
-    printf -- "\t%s\n" "${TEST_OPTIONS[@]}" >/dev/stderr
-
     for pkg in $(go list "${PACKAGES:-./...}"); do
       go test -count=1 "${TEST_OPTIONS[@]}" "${pkg}"
 
