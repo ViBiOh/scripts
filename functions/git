@@ -12,8 +12,8 @@ _git_scripts_init() {
     CONVENTIONAL_COMMIT_SCOPES['feat']=$(printf 'A new feature for user %b(production change)%b' "${RED}" "${RESET}")
     CONVENTIONAL_COMMIT_SCOPES['fix']=$(printf 'A bug fix for user %b(production change)%b' "${RED}" "${RESET}")
     CONVENTIONAL_COMMIT_SCOPES['perf']=$(printf 'A performance improvement for user %b(production change)%b' "${RED}" "${RESET}")
-    CONVENTIONAL_COMMIT_SCOPES['refactor']=$(printf 'A change that is not a feature not a bug %b(production change)%b' "${RED}" "${RESET}")
-    CONVENTIONAL_COMMIT_SCOPES['style']='A change that do not affect the meaning of the code'
+    CONVENTIONAL_COMMIT_SCOPES['refactor']=$(printf 'A change that is not a feature nor a bug %b(production change)%b' "${RED}" "${RESET}")
+    CONVENTIONAL_COMMIT_SCOPES['style']='A change that does not affect the meaning of the code'
     CONVENTIONAL_COMMIT_SCOPES['test']='A new test or correcting existing tests'
   fi
 }
@@ -79,17 +79,21 @@ git_is_commit_wip() {
 }
 
 git_is_conventional_commit() {
-
   local SCOPES
   printf -v SCOPES "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"
   SCOPES="${SCOPES%|}"
 
+  local OLD_NOCASEMATCH
+  OLD_NOCASEMATCH="$(shopt -p nocasematch 2>/dev/null || true)"
   shopt -s nocasematch
-  if [[ ${1} =~ ^(revert:\ )?(${SCOPES})(\(.+\))?\!?:\ [a-zA-Z0-9\[\(]+ ]]; then
-    return 0
-  fi
 
-  return 1
+  local RESULT=1
+  if [[ ${1} =~ ^(revert:\ )?(${SCOPES})(\(.+\))?\!?:\ [a-zA-Z0-9\[\(]+ ]]; then
+    RESULT=0
+  fi
+  eval "${OLD_NOCASEMATCH:-shopt -u nocasematch}"
+
+  return ${RESULT}
 }
 
 git_is_valid_description() {
@@ -167,7 +171,10 @@ git_changelog() {
   printf -v SCOPES "%s|" "${!CONVENTIONAL_COMMIT_SCOPES[@]}"
   SCOPES="${SCOPES%|}"
 
+  local OLD_NOCASEMATCH
+  OLD_NOCASEMATCH="$(shopt -p nocasematch 2>/dev/null || true)"
   shopt -s nocasematch
+
   for hash in $(git log --no-merges --pretty=format:'%h' "${GIT_TO}...${GIT_FROM}"); do
     local VERSION_MESSAGE=""
     local HASH=""
@@ -238,6 +245,8 @@ git_changelog() {
     fi
   done
 
+  eval "${OLD_NOCASEMATCH:-shopt -u nocasematch}"
+
   if [[ ${#FEATURES[@]} -gt 0 ]]; then
     printf -- "# Features\n\n%s\n\n" "$(printf -- "%s\n" "${FEATURES[@]}")"
   fi
@@ -288,10 +297,8 @@ git_sync() {
   local DRY="${1:-false}"
   shift || true
 
-  git_root
-  isGit=$?
-  if [[ ${isGit} -ne 0 ]]; then
-    return ${isGit}
+  if ! git_is_inside; then
+    return 1
   fi
 
   local REMOTE_PATH_PREFIX="~/${REMOTE_PATH}"

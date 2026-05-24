@@ -7,7 +7,7 @@ if [[ ${TRACE:-0} == "1" ]]; then
 fi
 
 main() {
-  local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/main/"
+  local REMOTE_DEPENDENCIES_URL="https://raw.githubusercontent.com/ViBiOh/scripts/main"
   local SCRIPTS_PATH="./scripts"
 
   printf -- "Bootstrapping to %s\n" "${SCRIPTS_PATH}"
@@ -46,7 +46,5 @@ main() {
     source "./meta" && meta_init "${@}"
   )
 }
-
-shift $((OPTIND - 1))
 
 main "${@}"

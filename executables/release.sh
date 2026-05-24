@@ -76,7 +76,7 @@ golang_build() {
 }
 
 docker_dependencies() {
-  curl --etag-compare cacert.pem --etag-save cacert.pem --remote-name https://curl.se/ca/cacert.pem
+  curl --disable --etag-compare cacert.pem --etag-save cacert.pem --remote-name https://curl.se/ca/cacert.pem
 
   if [[ ${RELEASE_NEED_WAIT-} == "true" ]]; then
     # renovate: datasource=forgejo-releases registryUrl=https://codeberg.org packageName=ViBiOh/wait
@@ -113,12 +113,12 @@ docker_build() {
   DOCKER_PLATFORMS="${DOCKER_ARCHS:-linux/amd64 linux/arm64}"
   DOCKER_PLATFORMS="${DOCKER_PLATFORMS// /,}"
 
-  local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}"
-
   var_read DOCKER_IMAGE
   var_read IMAGE_VERSION
   var_read GIT_SHA
   var_read DOCKERFILE "Dockerfile"
+
+  local BUILT_IMAGE="${DOCKER_IMAGE}:${IMAGE_VERSION}"
 
   export DOCKER_CLI_EXPERIMENTAL="enabled"
   export DOCKER_BUILDKIT="1"
@@ -182,11 +182,11 @@ release_upload() {
 
 release_usage() {
   printf -- "Usage of %s\n" "${0}"
-  printf -- "clean\n\tClean output dir %s\n" "${OUTPUT_DIR}"
   printf -- "build\n\tBuild artifacts\n"
+  printf -- "make\n\tBuild via Makefile\n"
   printf -- "docker\n\tBuild docker images\n"
   printf -- "assets\n\tUpload output dir content to repository release\n"
-  printf -- "clean\n\tClean created output directory\n"
+  printf -- "clean\n\tClean output dir %s\n" "${OUTPUT_DIR}"
 }
 
 script_dir() {
