@@ -121,6 +121,7 @@ docker_build() {
   var_info "Building and pushing image ${BUILT_IMAGE} for ${DOCKER_PLATFORMS}"
   docker buildx build \
     --push \
+    --progress "quiet" \
     --platform "${DOCKER_PLATFORMS}" \
     --file "${DOCKERFILE}" \
     --tag "${BUILT_IMAGE}" \
