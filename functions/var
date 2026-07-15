@@ -41,9 +41,7 @@ var_read() {
       var_read_input "${VAR_NAME}${VAR_DEFAULT_DISPLAY}=" "READ_VALUE" ${VAR_SECRET_ARG?}
     fi
 
-    local VAR_SAFE_VALUE
-    VAR_SAFE_VALUE="$(printf -- "%s" "${READ_VALUE:-${VAR_DEFAULT}}" | sed "s|'|\\\'|g")"
-    eval "${VAR_NAME}=$'${VAR_SAFE_VALUE}'"
+    printf -v "${VAR_NAME}" '%s' "${READ_VALUE:-${VAR_DEFAULT}}"
 
     if [[ ${VAR_SECRET_ARG} == "-s" ]]; then
       printf -- "\n" 1>&2
@@ -83,9 +81,7 @@ var_shift_or_read() {
 
   local VAR_VALUE="${1-}"
   if [[ -n ${VAR_VALUE:-} ]]; then
-    local VAR_SAFE_VALUE
-    VAR_SAFE_VALUE="$(printf -- "%s" "${VAR_VALUE}" | sed "s|'|\\\'|g")"
-    eval "${VAR_NAME}=$'${VAR_SAFE_VALUE}'"
+    printf -v "${VAR_NAME}" '%s' "${VAR_VALUE}"
 
     printf -- "%s=%s\n" "${VAR_NAME}" "${!VAR_NAME}" 1>&2
     return
