@@ -156,9 +156,9 @@ git_changelog() {
   fi
 
   local GIT_TO="${1:-HEAD}"
-  shift || true
+  (($# > 0)) && shift
   local GIT_FROM="${1:-$(git_last_tag)}"
-  shift || true
+  (($# > 0)) && shift
 
   local FEATURES=()
   local FIXES=()
@@ -295,7 +295,7 @@ git_sync() {
   local REMOTE_PATH="${1}"
   shift
   local DRY="${1:-false}"
-  shift || true
+  (($# > 0)) && shift
 
   if ! git_is_inside; then
     return 1

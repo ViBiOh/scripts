@@ -9,6 +9,28 @@ _var_scripts_init() {
   export RESET='\033[0m'
 }
 
+_var_assign() {
+  if [[ -n ${BASH_VERSION:-} ]]; then
+    printf -v "${1}" '%s' "${2}"
+  elif [[ -n ${ZSH_VERSION:-} ]]; then
+    typeset -g "${1}=${2}"
+  else
+    var_error "Shell not supported for variable assignment"
+    return 1
+  fi
+}
+
+_var_deref() {
+  if [[ -n ${BASH_VERSION:-} ]]; then
+    printf -- '%s' "${!1-}"
+  elif [[ -n ${ZSH_VERSION:-} ]]; then
+    printf -- '%s' "${(P)1-}"
+  else
+    var_error "Shell not supported for variable dereference"
+    return 1
+  fi
+}
+
 var_read() {
   if [[ ${#} -lt 1 ]]; then
     var_red "Usage: var_read VAR_NAME [VAR_DEFAULT] [VAR_SECRET]"
@@ -18,9 +40,9 @@ var_read() {
   local VAR_NAME="${1}"
   shift
   local VAR_DEFAULT="${1-}"
-  shift || true
+  (($# > 0)) && shift
   local VAR_SECRET="${1-}"
-  shift || true
+  (($# > 0)) && shift
 
   local VAR_SECRET_ARG=""
   if [[ ${VAR_SECRET-} == "secret" ]]; then
@@ -36,18 +58,18 @@ var_read() {
     fi
   fi
 
-  if [[ -z ${!VAR_NAME:-} ]]; then
+  if [[ -z $(_var_deref "${VAR_NAME}") ]]; then
     if [[ -z ${SCRIPTS_NO_INTERACTIVE-} ]]; then
       var_read_input "${VAR_NAME}${VAR_DEFAULT_DISPLAY}=" "READ_VALUE" ${VAR_SECRET_ARG?}
     fi
 
-    printf -v "${VAR_NAME}" '%s' "${READ_VALUE:-${VAR_DEFAULT}}"
+    _var_assign "${VAR_NAME}" "${READ_VALUE:-${VAR_DEFAULT}}"
 
     if [[ ${VAR_SECRET_ARG} == "-s" ]]; then
       printf -- "\n" 1>&2
     fi
   elif [[ ${VAR_SECRET_ARG} != "-s" ]]; then
-    printf -- "%s=%s\n" "${VAR_NAME}" "${!VAR_NAME}" 1>&2
+    printf -- "%s=%s\n" "${VAR_NAME}" "$(_var_deref "${VAR_NAME}")" 1>&2
   else
     printf -- "Using secret %s\n" "${VAR_NAME}" 1>&2
   fi
@@ -81,9 +103,9 @@ var_shift_or_read() {
 
   local VAR_VALUE="${1-}"
   if [[ -n ${VAR_VALUE:-} ]]; then
-    printf -v "${VAR_NAME}" '%s' "${VAR_VALUE}"
+    _var_assign "${VAR_NAME}" "${VAR_VALUE}"
 
-    printf -- "%s=%s\n" "${VAR_NAME}" "${!VAR_NAME}" 1>&2
+    printf -- "%s=%s\n" "${VAR_NAME}" "$(_var_deref "${VAR_NAME}")" 1>&2
     return
   fi
 
