@@ -149,16 +149,31 @@ release_upload() {
   HTTP_CLIENT_ARGS+=("--max-time" "120")
 
   var_read GIT_TAG
-  http_request --header "Content-Type: application/json" "${RELEASE_API}/repos/${RELEASE_REPOSITORY}/releases/tags/${GIT_TAG}"
+  http_request --header "Content-Type: application/json" "${RELEASE_API}/repos/${RELEASE_REPOSITORY}/releases?per_page=100"
   if [[ ${HTTP_STATUS} != "200" ]]; then
     http_handle_error "Unable to get release"
     http_reset
     return 1
   fi
 
+  local RELEASE_ID
+  RELEASE_ID="$(jq --raw-output --arg name "${GIT_TAG}" '.[] | select(.name == $name) | .id' "${HTTP_OUTPUT}")"
+
+  if [[ -z ${RELEASE_ID:-} ]]; then
+    var_error "Release not found"
+    http_reset
+    return 1
+  fi
+
   local RESPONSE_URL
-  RESPONSE_URL="$(jq --raw-output .upload_url "${HTTP_OUTPUT}" | sed 's|{.*||')"
+  RESPONSE_URL="$(jq --raw-output --arg name "${GIT_TAG}" '.[] | select(.name == $name) | .upload_url' "${HTTP_OUTPUT}" | sed 's|{.*||')"
   rm "${HTTP_OUTPUT}"
+
+  if [[ -z ${RESPONSE_URL:-} ]]; then
+    var_error "Upload URL not found"
+    http_reset
+    return 1
+  fi
 
   for asset in "${OUTPUT_DIR}"/*; do
     var_info "Uploading asset ${asset}"
@@ -172,6 +187,19 @@ release_upload() {
 
     rm "${HTTP_OUTPUT}"
   done
+
+  local PAYLOAD
+  PAYLOAD="$(jq --compact-output --null-input \
+    --arg tag "${GIT_TAG}" \
+    --argjson draft "false" \
+    '{tag_name: $tag, draft: $draft}')"
+
+  http_request --request "PATCH" --header "Content-Type: application/json" "${RELEASE_API}/repos/${RELEASE_REPOSITORY}/releases/${RELEASE_ID}" --data "${PAYLOAD}"
+  if [[ ${HTTP_STATUS} != "200" ]]; then
+    http_handle_error "Unable to publish release"
+    http_reset
+    return 1
+  fi
 
   http_reset
 }
